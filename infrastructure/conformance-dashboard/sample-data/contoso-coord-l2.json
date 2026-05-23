@@ -1,0 +1,30 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "coordinator_did": "did:wcp:contoso-coord-1",
+  "implementation": {
+    "name": "contoso-fleet-coordinator",
+    "version": "1.2.0",
+    "language": "Go",
+    "vendor": "Contoso Logistics Co.",
+    "repository_url": "https://example.com/contoso-fleet-coordinator"
+  },
+  "test_suite_version": "v1.0-rc3",
+  "levels": [
+    {
+      "level": 1,
+      "passed": true,
+      "tests_run": 42,
+      "tests_passed": 42
+    },
+    {
+      "level": 2,
+      "passed": true,
+      "tests_run": 28,
+      "tests_passed": 28
+    }
+  ],
+  "run_at": "2026-03-04T11:30:00Z",
+  "notes": "Self-attested only; no third-party witness. L3 not attempted on this run; planned for next release.",
+  "signed_at": "2026-03-04T11:42:00Z",
+  "signature": "EXAMPLE_COORDINATOR_SIGNATURE_PLACEHOLDER"
+}

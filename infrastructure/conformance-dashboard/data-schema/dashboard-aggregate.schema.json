@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp.example/schema/dashboard-aggregate.json",
+  "title": "WCP Conformance Dashboard Aggregate View",
+  "description": "Internal schema for the dashboard's aggregated view across multiple coordinator results.",
+  "type": "object",
+  "required": ["generated_at", "implementations"],
+  "properties": {
+    "generated_at": {"type": "string", "format": "date-time"},
+    "test_suite_version_filter": {"type": "string"},
+    "implementations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "coordinator_did",
+          "implementation_name",
+          "highest_level_passed",
+          "results"
+        ],
+        "properties": {
+          "coordinator_did": {"type": "string"},
+          "implementation_name": {"type": "string"},
+          "implementation_version": {"type": "string"},
+          "language": {"type": "string"},
+          "vendor": {"type": "string"},
+          "repository_url": {"type": "string"},
+          "highest_level_passed": {"type": "integer", "enum": [0, 1, 2, 3]},
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["level", "passed", "tests_passed", "tests_run", "run_at"],
+              "properties": {
+                "level": {"type": "integer"},
+                "passed": {"type": "boolean"},
+                "tests_passed": {"type": "integer"},
+                "tests_run": {"type": "integer"},
+                "run_at": {"type": "string", "format": "date-time"}
+              }
+            }
+          },
+          "witness_count": {"type": "integer"},
+          "last_updated": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

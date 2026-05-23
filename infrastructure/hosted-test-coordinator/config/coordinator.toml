@@ -1,0 +1,56 @@
+# WCP coordinator configuration: test-mode defaults.
+#
+# All sensitive values come from environment variables (see secrets/.env).
+# This file is committed to version control; .env is not.
+
+schema_version = "wcp/1.0-rc1"
+
+[server]
+listen_host = "0.0.0.0"
+listen_port = 8000
+websocket_path = "/wcp/ws"
+health_path = "/health"
+metrics_path = "/metrics"
+max_connections = 5000
+heartbeat_interval_seconds = 30
+heartbeat_miss_threshold = 3
+
+[identity]
+# coordinator DID and signing key come from env / mounted file
+did = "${COORDINATOR_DID}"
+key_file = "${WCP_COORDINATOR_KEY_FILE}"
+
+[storage]
+audit_chain_retention_days = 30
+# operator-side bucket for daily pg_dump uploads; empty disables backup
+backup_bucket_url = ""
+
+[settlement]
+# Sandbox provider returns scripted success/failure; no real money moves.
+provider = "sandbox-noop"
+
+[trust]
+# Open trust posture: any well-formed DID may register.
+# Production deployments override these in their config.
+agent_did_allowlist = []   # empty = allow all
+worker_did_allowlist = []  # empty = allow all
+require_attestation_for_capability_publish = false
+
+[rate_limits]
+agent_task_post_per_minute = 10
+worker_task_claim_per_minute = 30
+ws_messages_per_second_per_connection = 50
+
+[federation]
+# Federation peers (RFC 0016) populated per deployment; empty = standalone.
+peers = []
+
+[preview]
+# Enable the v1.1-candidate preview RFC modules on this test coordinator.
+# Production deployments selecting v1.0 strict mode set these to false.
+enable_wcp_lite = true             # RFC 0029
+enable_multibase = true            # RFC 0031
+enable_federation_settlement = true # RFC 0032
+enable_trust_classes = true        # RFC 0033
+enable_external_trust_roots = true  # RFC 0034
+emit_preview_warning_log = true

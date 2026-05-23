@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>wcp-reference-coordinator - Conformance Detail (Mockup)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+           max-width: 1000px; margin: 1.5em auto; padding: 0 1em; color: #1a1a1a; background: #fafafa; }
+    h1 { margin-bottom: 0.1em; }
+    .subtitle { color: #666; font-size: 0.9em; margin-bottom: 1.5em; }
+    .breadcrumb { color: #777; font-size: 0.85em; margin-bottom: 1em; }
+    .breadcrumb a { color: #2a6db0; text-decoration: none; }
+    .panel { background: white; border-radius: 6px; padding: 1.2em 1.4em;
+             margin-bottom: 1em; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .meta-grid { display: grid; grid-template-columns: 140px 1fr;
+                 gap: 0.4em 1em; font-size: 0.92em; }
+    .meta-key { color: #666; }
+    .level-section { margin-top: 1em; }
+    .level-header { display: flex; align-items: center; gap: 0.8em;
+                    margin-bottom: 0.6em; }
+    .level-badge { padding: 0.3em 0.7em; border-radius: 4px; font-weight: 600;
+                   font-size: 0.9em; }
+    .pass { background: #c4f0d4; color: #1a5a30; }
+    .fail { background: #f8d4d4; color: #5a1a1a; }
+    .level-summary { color: #555; font-size: 0.9em; }
+    .test-list { list-style: none; padding: 0; margin: 0.5em 0 0 0; }
+    .test-list li { padding: 0.4em 0.6em; font-size: 0.88em; border-radius: 4px; }
+    .test-list li.failure { background: #fcecec; }
+    .test-list li.skip { background: #f0eee4; color: #6b5a00; }
+    .test-id { font-family: ui-monospace, "SF Mono", monospace; font-weight: 600; }
+    .signature { font-family: ui-monospace, "SF Mono", monospace; font-size: 0.82em;
+                 color: #555; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb"><a href="dashboard.html">&larr; All implementations</a></div>
+  <h1>wcp-reference-coordinator</h1>
+  <div class="subtitle">Python &middot; WCP Project &middot; v1.0-rc4</div>
+
+  <div class="panel">
+    <div class="meta-grid">
+      <div class="meta-key">Coordinator DID</div>
+      <div><code>did:wcp:reference-impl-1</code></div>
+      <div class="meta-key">Implementation</div>
+      <div>wcp-reference-coordinator v1.0-rc4</div>
+      <div class="meta-key">Test suite</div>
+      <div>v1.0-rc4</div>
+      <div class="meta-key">Last run</div>
+      <div>2026-05-20T08:14:30Z</div>
+      <div class="meta-key">Witnesses</div>
+      <div>2 (did:wcp:witness-a, did:wcp:witness-b)</div>
+      <div class="meta-key">Manifest URL</div>
+      <div><code>https://reference.example/wcp/conformance.json</code></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="level-section">
+      <div class="level-header">
+        <span class="level-badge pass">L1 PASS</span>
+        <span class="level-summary">42 / 42 tests passed</span>
+      </div>
+    </div>
+
+    <div class="level-section">
+      <div class="level-header">
+        <span class="level-badge pass">L2 PASS</span>
+        <span class="level-summary">28 / 28 tests passed</span>
+      </div>
+    </div>
+
+    <div class="level-section">
+      <div class="level-header">
+        <span class="level-badge pass">L3 PASS</span>
+        <span class="level-summary">17 / 17 tests passed (jurisdictions: DE, US-CA, JP, SG, NL)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Signature</h3>
+    <div class="signature">EXAMPLE_SIGNATURE_BASE64URL_PLACEHOLDER_REPLACE_WITH_ACTUAL</div>
+    <p style="font-size:0.85em;color:#666;margin-top:0.6em;">
+      Verified against <code>z6MkExamplePlaceholderPubkey</code>. Manifest fetched 2026-05-23.
+    </p>
+  </div>
+</body>
+</html>

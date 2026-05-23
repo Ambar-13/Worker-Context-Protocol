@@ -1,0 +1,62 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "coordinator_did": "did:wcp:acme-coord-prod",
+  "implementation": {
+    "name": "acme-coord",
+    "version": "0.9.4",
+    "language": "Rust",
+    "vendor": "Acme Robotics, Inc.",
+    "repository_url": "https://example.com/acme-coord"
+  },
+  "test_suite_version": "v1.0-rc4",
+  "levels": [
+    {
+      "level": 1,
+      "passed": true,
+      "tests_run": 42,
+      "tests_passed": 42
+    },
+    {
+      "level": 2,
+      "passed": true,
+      "tests_run": 28,
+      "tests_passed": 28
+    },
+    {
+      "level": 3,
+      "passed": false,
+      "tests_run": 17,
+      "tests_passed": 14,
+      "jurisdictions_tested": ["DE", "US-CA", "JP"],
+      "failures": [
+        {
+          "test_id": "L3-JP-data-residency-01",
+          "reason": "non-JP-resident audit copy not blocked",
+          "observed": "audit replica created in eu-central-1",
+          "expected": "block per data-residency policy"
+        },
+        {
+          "test_id": "L3-DE-dispute-escalation-02",
+          "reason": "override authority signature not verified",
+          "observed": "override accepted without verification",
+          "expected": "verify signature against did:wcp override authority"
+        },
+        {
+          "test_id": "L3-US-CA-CCPA-retention-03",
+          "reason": "audit chain entries retained past 12 months",
+          "observed": "entries from 2025 still present in queryable store",
+          "expected": "tombstone or move to cold archive after 12mo"
+        }
+      ]
+    }
+  ],
+  "run_at": "2026-05-18T14:00:00Z",
+  "witness": {
+    "did": "did:wcp:witness-c",
+    "name": "Independent Witness C",
+    "signature": "EXAMPLE_WITNESS_SIGNATURE_PLACEHOLDER"
+  },
+  "notes": "L3 failures under remediation; expected fix in 0.9.5.",
+  "signed_at": "2026-05-18T14:08:11Z",
+  "signature": "EXAMPLE_COORDINATOR_SIGNATURE_PLACEHOLDER"
+}

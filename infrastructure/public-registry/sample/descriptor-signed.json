@@ -1,0 +1,18 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "did": "did:wcp:example-coordinator",
+  "endpoint": "wss://wcp.example.com/wcp/ws",
+  "operator": "Example Operations, Ltd.",
+  "operator_country": "DE",
+  "operator_legal_form": "GmbH",
+  "jurisdictions_served": ["DE", "AT", "CH"],
+  "descriptor_types_accepted": ["transport", "inspection"],
+  "worker_classes_accepted": ["autonomous_robot", "human"],
+  "conformance_level": 2,
+  "conformance_attestation_url": "https://example.com/wcp-conformance.json",
+  "settlement_currencies": ["EUR"],
+  "federation_peers": [],
+  "public_key_multibase": "z6MkExamplePlaceholderPublicKeyMultibaseString",
+  "signed_at": "2026-06-01T12:00:00Z",
+  "signature": "EXAMPLE_SIGNATURE_NOT_VALID_REPLACE_WITH_REAL_ED25519_BASE64URL"
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "coordinator_did": "did:wcp:reference-impl-1",
+  "implementation": {
+    "name": "wcp-reference-coordinator",
+    "version": "v1.0-rc4",
+    "language": "Python",
+    "vendor": "WCP Project",
+    "repository_url": "https://github.com/example/wcp-spec"
+  },
+  "test_suite_version": "v1.0-rc4",
+  "levels": [
+    {
+      "level": 1,
+      "passed": true,
+      "tests_run": 42,
+      "tests_passed": 42
+    },
+    {
+      "level": 2,
+      "passed": true,
+      "tests_run": 28,
+      "tests_passed": 28
+    },
+    {
+      "level": 3,
+      "passed": true,
+      "tests_run": 17,
+      "tests_passed": 17,
+      "jurisdictions_tested": ["DE", "US-CA", "JP", "SG", "NL"]
+    }
+  ],
+  "run_at": "2026-05-20T08:14:30Z",
+  "witness": {
+    "did": "did:wcp:witness-a",
+    "name": "Independent Witness A",
+    "signature": "EXAMPLE_WITNESS_SIGNATURE_PLACEHOLDER"
+  },
+  "notes": "Reference run on commit d939517; all preview modules disabled for the v1.0 strict run.",
+  "signed_at": "2026-05-20T08:20:00Z",
+  "signature": "EXAMPLE_COORDINATOR_SIGNATURE_PLACEHOLDER"
+}

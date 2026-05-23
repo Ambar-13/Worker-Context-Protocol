@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: registry-postgres
+    environment:
+      POSTGRES_USER: wcp
+      POSTGRES_PASSWORD: wcp_registry_password
+      POSTGRES_DB: wcp_registry
+    volumes:
+      - registry-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wcp -d wcp_registry"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  registry:
+    image: python:3.12-slim
+    container_name: wcp-registry
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir
+                fastapi==0.115.0 uvicorn==0.30.6
+                sqlalchemy==2.0.34 psycopg2-binary==2.9.9
+                pydantic==2.9.2 jinja2==3.1.4 pynacl==1.5.0 websockets==13.1
+             && uvicorn app.main:app --host 0.0.0.0 --port 8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      REGISTRY_DB_URL: postgresql://wcp:wcp_registry_password@postgres:5432/wcp_registry
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./app:/app/app:ro
+
+volumes:
+  registry-pg-data:

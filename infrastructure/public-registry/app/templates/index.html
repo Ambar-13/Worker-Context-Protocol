@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WCP Public Coordinator Registry</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+           max-width: 1000px; margin: 2em auto; padding: 0 1em; color: #1a1a1a; }
+    h1 { font-size: 1.6em; margin-bottom: 0.2em; }
+    .meta { color: #666; font-size: 0.85em; margin-bottom: 1.5em; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.95em; }
+    th, td { border-bottom: 1px solid #ddd; padding: 0.5em 0.6em; text-align: left;
+             vertical-align: top; }
+    th { background: #fafafa; font-weight: 600; }
+    tr:hover { background: #fcfcfc; }
+    .did { font-family: ui-monospace, "SF Mono", monospace; font-size: 0.9em; }
+    .endpoint { font-family: ui-monospace, "SF Mono", monospace; font-size: 0.85em; color: #444; }
+    .level { display: inline-block; padding: 0.1em 0.5em; border-radius: 4px;
+             font-size: 0.85em; font-weight: 600; }
+    .level-1 { background: #e8e8e8; color: #555; }
+    .level-2 { background: #fce8c4; color: #6b4a00; }
+    .level-3 { background: #c4f0d4; color: #1a5a30; }
+    .empty { color: #999; font-style: italic; padding: 2em; text-align: center; }
+    .notice { background: #fdf8e3; border: 1px solid #ebd9a8; padding: 0.8em 1em;
+              border-radius: 4px; margin-bottom: 1.5em; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>WCP Public Coordinator Registry</h1>
+  <div class="meta">snapshot: {{ now }}</div>
+  <div class="notice">
+    Inclusion in this registry confers no trust. Agents and workers
+    must independently verify trust anchors per RFC 0016 before
+    federating with or claiming work from any coordinator listed here.
+  </div>
+  {% if items %}
+  <table>
+    <thead>
+      <tr>
+        <th>DID</th>
+        <th>Endpoint</th>
+        <th>Operator</th>
+        <th>Country</th>
+        <th>Level</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for c in items %}
+      <tr>
+        <td class="did">{{ c.did }}</td>
+        <td class="endpoint">{{ c.endpoint }}</td>
+        <td>{{ c.operator }}</td>
+        <td>{{ c.country }}</td>
+        <td><span class="level level-{{ c.level }}">L{{ c.level }}</span></td>
+        <td>{{ c.updated_at }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No coordinators registered yet.</div>
+  {% endif %}
+</body>
+</html>

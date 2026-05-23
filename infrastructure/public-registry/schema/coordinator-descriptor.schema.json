@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp-registry.example/schema/coordinator-descriptor.json",
+  "title": "WCP Coordinator Descriptor",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "did",
+    "endpoint",
+    "operator",
+    "operator_country",
+    "jurisdictions_served",
+    "descriptor_types_accepted",
+    "worker_classes_accepted",
+    "conformance_level",
+    "public_key_multibase",
+    "signed_at",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "wcp/1.0-rc1"
+    },
+    "did": {
+      "type": "string",
+      "pattern": "^did:wcp:[A-Za-z0-9._-]+$"
+    },
+    "endpoint": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^wss?://"
+    },
+    "operator": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operator_country": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "ISO 3166-1 alpha-2 country code"
+    },
+    "operator_legal_form": {
+      "type": "string"
+    },
+    "jurisdictions_served": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$"
+      },
+      "minItems": 1,
+      "description": "ISO 3166-1 alpha-2 country codes, optionally with subdivision"
+    },
+    "descriptor_types_accepted": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "worker_classes_accepted": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "human",
+          "autonomous_robot",
+          "teleoperated_system",
+          "hybrid_human_robot"
+        ]
+      },
+      "minItems": 1
+    },
+    "conformance_level": {
+      "type": "integer",
+      "enum": [1, 2, 3],
+      "description": "WCP conformance level per conformance/test-suite/"
+    },
+    "conformance_attestation_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "settlement_currencies": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{3}$",
+        "description": "ISO 4217 currency code"
+      }
+    },
+    "federation_peers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^did:wcp:[A-Za-z0-9._-]+$"
+      }
+    },
+    "public_key_multibase": {
+      "type": "string",
+      "pattern": "^[a-zA-HJ-NP-Z0-9]+$"
+    },
+    "signed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64url-encoded Ed25519 signature over the canonicalised descriptor"
+    }
+  },
+  "additionalProperties": false
+}

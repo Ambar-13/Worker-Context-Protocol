@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp.example/schema/conformance-result.json",
+  "title": "WCP Conformance Result Manifest",
+  "description": "A self-signed manifest a coordinator publishes to attest its conformance test results.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "coordinator_did",
+    "implementation",
+    "test_suite_version",
+    "levels",
+    "run_at",
+    "signed_at",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "wcp/1.0-rc1"
+    },
+    "coordinator_did": {
+      "type": "string",
+      "pattern": "^did:wcp:[A-Za-z0-9._-]+$"
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Implementation name (e.g., 'wcp-reference-coordinator', 'acme-coord')"
+        },
+        "version": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "vendor": {
+          "type": "string"
+        },
+        "repository_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "test_suite_version": {
+      "type": "string",
+      "description": "Tag of conformance/test-suite (e.g., 'v1.0-rc3')"
+    },
+    "levels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["level", "passed", "tests_run", "tests_passed"],
+        "properties": {
+          "level": {"type": "integer", "enum": [1, 2, 3]},
+          "passed": {"type": "boolean"},
+          "tests_run": {"type": "integer", "minimum": 0},
+          "tests_passed": {"type": "integer", "minimum": 0},
+          "failures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["test_id", "reason"],
+              "properties": {
+                "test_id": {"type": "string"},
+                "reason": {"type": "string"},
+                "observed": {"type": "string"},
+                "expected": {"type": "string"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["test_id", "reason"],
+              "properties": {
+                "test_id": {"type": "string"},
+                "reason": {"type": "string"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "jurisdictions_tested": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$"
+            },
+            "description": "Required for Level 3 entries"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "run_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "witness": {
+      "type": "object",
+      "description": "Optional third-party witness who observed the test run.",
+      "required": ["did", "signature"],
+      "properties": {
+        "did": {"type": "string"},
+        "name": {"type": "string"},
+        "signature": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "signed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64url-encoded Ed25519 signature over the canonicalised manifest"
+    }
+  },
+  "additionalProperties": false
+}

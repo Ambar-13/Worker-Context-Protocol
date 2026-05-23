@@ -1,0 +1,100 @@
+{
+  "annotations": {"list": []},
+  "description": "Top-level operational view of a WCP coordinator. Panels cover connection counts, task throughput, audit chain integrity, and settlement.",
+  "editable": false,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Active worker connections",
+      "id": 1,
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "wcp_active_worker_connections"}]
+    },
+    {
+      "type": "stat",
+      "title": "Active agent connections",
+      "id": 2,
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [{"expr": "wcp_active_agent_connections"}]
+    },
+    {
+      "type": "stat",
+      "title": "Tasks posted (5m)",
+      "id": 3,
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [{"expr": "rate(wcp_tasks_posted_total[5m])"}]
+    },
+    {
+      "type": "stat",
+      "title": "Tasks attested (5m)",
+      "id": 4,
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "rate(wcp_tasks_attested_total[5m])"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Task state transitions per second",
+      "id": 10,
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+      "targets": [
+        {"expr": "rate(wcp_task_state_transitions_total[1m])", "legendFormat": "{{from}} -> {{to}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Heartbeat misses",
+      "id": 11,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [
+        {"expr": "rate(wcp_heartbeat_misses_total[1m])"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Audit chain append latency p99",
+      "id": 12,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "targets": [
+        {"expr": "histogram_quantile(0.99, rate(wcp_audit_chain_append_seconds_bucket[5m]))"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Audit chain integrity (1 = OK)",
+      "id": 13,
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+      "targets": [{"expr": "wcp_audit_chain_integrity"}]
+    },
+    {
+      "type": "stat",
+      "title": "Settle attempts (sandbox)",
+      "id": 14,
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+      "targets": [{"expr": "rate(wcp_settle_attempts_total[5m])"}]
+    },
+    {
+      "type": "stat",
+      "title": "Settle failures (sandbox)",
+      "id": 15,
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 20},
+      "targets": [{"expr": "rate(wcp_settle_failures_total[5m])"}]
+    },
+    {
+      "type": "stat",
+      "title": "Disputed claims",
+      "id": 16,
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "wcp_claims_disputed"}]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["wcp", "coordinator"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "browser",
+  "title": "WCP Coordinator Overview",
+  "uid": "wcp-overview",
+  "version": 1
+}
