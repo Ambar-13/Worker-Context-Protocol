@@ -167,3 +167,33 @@ Builds on Level 2.
 - Stale reputation rejected
 - Cross-coordinator weight applied per local policy
 - Mixed own + cross reputation in matching
+
+---
+
+## v1.0-rc1 conformance posture (v1.0-rc3 addendum)
+
+For v1.0-rc1 conformance:
+
+- **Level 1 is mandatory.** A coordinator that does not pass Level 1 cannot claim WCP conformance at any level.
+- **Level 2 is optional but recommended.** Operators in regulated, safety-critical, or high-value contexts SHOULD pass Level 2. The post-v1.0-rc1 RFCs (0033 attestation key trust classes, 0034 external trust-root signed evidence) are tracked in Level 2 case extensions in `conformance/test-suite/level2.json`.
+- **Level 3 is optional and gated on federation.** A coordinator without federation peers cannot meaningfully pass Level 3. v1.0 final requires at least one independent implementation passing Level 3 to demonstrate federation interoperability.
+
+Test bundles:
+
+- `conformance/test-suite/level1.json`: Level 1 cases (current; v1.0-rc1)
+- `conformance/test-suite/level2.json`: Level 2 cases (added in v1.0-rc3)
+- `conformance/test-suite/level3.json`: Level 3 cases (added in v1.0-rc3; many gated on federation infrastructure)
+
+Some Level 3 cases will not pass against a single-coordinator deployment. The two-coordinator federation demo at `examples/federation-demo/` provides the v1.1 reference for closing those gaps; until the demo's federation pattern is integrated into the conformance harness, Level 3 cases that require two peering coordinators are documented as known v1.1 implementation gaps in their bundle.
+
+## Jurisdictional fixture coverage
+
+Capability fixtures under `conformance/fixtures/valid/` now span multiple jurisdictions:
+
+- `capability-human.json` and `capability-autonomous_robot.json` (legacy, Asia timezone)
+- `capability-human-london.json`, `capability-autonomous_robot-london.json` (Europe/London)
+- `capability-human-losangeles.json`, `capability-autonomous_robot-losangeles.json` (America/Los_Angeles)
+
+The fixtures use generic DIDs (did:wcp:worker-london-1, did:wcp:operator-la-1, etc.) and distinct attestation key placeholders. They exercise the spec's vendor neutrality and jurisdictional independence.
+
+For v1.1 additions: the field-research, healthcare-logistics, and disaster-response domains will gain their own fixtures with domain-appropriate certifications (FAA Part 107 for drone operators, HITRUST/HIPAA-equivalent for healthcare couriers, ICS-203 for incident responders) per RFC 0034 external trust-root mapping.

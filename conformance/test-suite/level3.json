@@ -1,0 +1,224 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "level": 3,
+  "description": "WCP v1.0-rc1 Level 3 (Settlement integration and federation) test bundle. Level 3 conformance requires Level 1, Level 2, plus all cases here.",
+  "cases": [
+    {
+      "id": "L3.escrow.hold_on_post_capture_on_attest",
+      "level": 3,
+      "description": "Two-phase escrow: hold-on-post, capture-on-attest happy path",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "100.00",
+            "escrow_provider": "example-escrow",
+            "split": [{"party": "did:wcp:worker-london-1", "pct": 100}]
+          }
+        }
+      },
+      "expected": {"result_keys": ["task_id", "escrow_held"]}
+    },
+    {
+      "id": "L3.escrow.hold_then_refund_on_abort",
+      "level": 3,
+      "description": "Two-phase escrow: hold-on-post, refund-on-abort happy path",
+      "method": "tasks/abort",
+      "params_template": {
+        "task_id": "{{held_task_id}}",
+        "reason": "operator-initiated abort"
+      },
+      "expected": {"result_keys": ["refund_initiated"]}
+    },
+    {
+      "id": "L3.escrow.dispute_window_elapsed_auto_capture",
+      "level": 3,
+      "description": "Two-phase escrow: dispute-window-elapsed auto-capture",
+      "method": "audit/observe",
+      "params_template": {
+        "task_id": "{{attested_task_id_with_elapsed_dispute_window}}",
+        "expected_event": "settlement_captured"
+      },
+      "expected": {"result_keys": ["settlement_captured", "capture_timestamp"]}
+    },
+    {
+      "id": "L3.split.three_party_sums_to_100",
+      "level": 3,
+      "description": "Settlement split: 3-party split (worker, operator, insurance pool) sums to 100% post-execution",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "100.00",
+            "escrow_provider": "example-escrow",
+            "split": [
+              {"party": "did:wcp:worker-london-1", "pct": 85},
+              {"party": "did:wcp:operator-london", "pct": 10},
+              {"party": "did:wcp:insurance-pool-eu", "pct": 5}
+            ]
+          }
+        }
+      },
+      "expected": {"result_keys": ["task_id", "escrow_held"]}
+    },
+    {
+      "id": "L3.split.99pct_rejected",
+      "level": 3,
+      "description": "Settlement split: 3-party split summing to 99% rejected at post-time",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "100.00",
+            "escrow_provider": "example-escrow",
+            "split": [
+              {"party": "did:wcp:worker-london-1", "pct": 84},
+              {"party": "did:wcp:operator-london", "pct": 10},
+              {"party": "did:wcp:insurance-pool-eu", "pct": 5}
+            ]
+          }
+        }
+      },
+      "expected": {"error_code": -41005}
+    },
+    {
+      "id": "L3.split.101pct_rejected",
+      "level": 3,
+      "description": "Settlement split: 3-party split summing to 101% rejected at post-time",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "100.00",
+            "escrow_provider": "example-escrow",
+            "split": [
+              {"party": "did:wcp:worker-london-1", "pct": 86},
+              {"party": "did:wcp:operator-london", "pct": 10},
+              {"party": "did:wcp:insurance-pool-eu", "pct": 5}
+            ]
+          }
+        }
+      },
+      "expected": {"error_code": -41005}
+    },
+    {
+      "id": "L3.federation.capability_discovery_via_trust_anchor",
+      "level": 3,
+      "description": "Federation: agent on Coordinator A subscribes with filter.federation:true; capability registered on Coordinator B surfaces via trust anchor",
+      "method": "capabilities/subscribe",
+      "params_template": {
+        "agent_did": "{{agent_on_coord_a}}",
+        "filter": {
+          "federation": true,
+          "worker_class": ["autonomous_robot", "human"]
+        }
+      },
+      "expected": {"result_keys": ["subscription_id", "federation_peers_subscribed"]}
+    },
+    {
+      "id": "L3.federation.tasks_claim_respects_local_policy",
+      "level": 3,
+      "description": "Federation: tasks/claim across federation respects local jurisdiction policy_windows",
+      "method": "tasks/claim",
+      "params_template": {
+        "task_id": "{{task_posted_on_coord_a}}",
+        "worker_did": "{{worker_on_coord_b}}",
+        "acceptance_attestation": "{{sig}}"
+      },
+      "expected": {"result_keys": ["claim_id"]}
+    },
+    {
+      "id": "L3.federation.reputation_portability",
+      "level": 3,
+      "description": "Federation: reputation portability - worker DID resolves consistent reputation history across two coordinators sharing a trust anchor",
+      "method": "reputation/query",
+      "params_template": {
+        "worker_did": "{{worker_with_federated_history}}",
+        "queried_from_coordinator": "coord-alpha",
+        "trust_anchor_with": "coord-beta"
+      },
+      "expected": {"result_keys": ["reputation", "history_entries", "cross_coordinator_consistency_verified"]}
+    },
+    {
+      "id": "L3.federation.cross_coordinator_audit_verify",
+      "level": 3,
+      "description": "Cross-coordinator audit chain verification: proof from Coordinator A verifies on Coordinator B",
+      "method": "audit/verify_federated",
+      "params_template": {
+        "audit_chain_export": "{{audit_chain_from_coord_a}}",
+        "verifying_coordinator": "coord-beta",
+        "expected_signer_chain_root": "{{coord_a_did}}"
+      },
+      "expected": {"result_keys": ["chain_verifies", "signer_chain_complete"]}
+    }
+  ],
+  "notes": [
+    "Many Level 3 cases require federation infrastructure not yet implemented in the v1.0-rc1 reference coordinator. The two-coordinator federation demo at examples/federation-demo/ is the v1.1 implementation deliverable that closes these gaps.",
+    "Cases L3.federation.* will fail against the current single-coordinator reference until the federation demo's two-coordinator setup is integrated into the conformance harness. Documented as known gap; v1.1 closes.",
+    "RFC 0032 (Cross-coordinator settlement clearing) extends Level 3 with the federation-settlement-transfer audit entry kind. The L3.federation.settle-clear-modelii test case (in the RFC) becomes a Level 3 conformance case once RFC 0032 is accepted."
+  ]
+}

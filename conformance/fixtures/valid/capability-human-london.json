@@ -1,0 +1,27 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "worker_id": "did:wcp:worker-london-1",
+  "principal_id": "did:wcp:operator-london-1",
+  "class": "human",
+  "required": {
+    "current_location": {"venue_id": "warehouse-london-east-1", "map_id": "loading-dock-grid-7"},
+    "available_windows": [
+      {"rrule": "FREQ=DAILY;BYHOUR=6-18", "timezone": "Europe/London"}
+    ],
+    "attestation_methods_supported": [
+      "sensor-witness", "third-party-witness",
+      "cryptographic-presence", "owner-sign-off"
+    ],
+    "certifications": [
+      {"kind": "forklift_operator_certificate", "issuing_authority": "did:wcp:authority-uk-hse", "expiry": "2027-12-31"}
+    ],
+    "policy_windows": [{"type": "geographic", "scope": "Europe/London"}],
+    "attestation_keys": [
+      {"kty": "OKP", "crv": "Ed25519", "x": "PLACEHOLDER_LONDON_HUMAN_KEY_BYTES_BASE64URL"}
+    ],
+    "as_of": "2026-05-23T00:00:00Z"
+  },
+  "class_extension": {
+    "skills": ["pallet_move_eu1", "dock_load_unload"]
+  }
+}

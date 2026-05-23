@@ -1,0 +1,250 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "level": 2,
+  "description": "WCP v1.0-rc1 Level 2 (Attestation correctness) test bundle. Level 2 conformance requires Level 1 plus all cases here.",
+  "cases": [
+    {
+      "id": "L2.sensor_witness.valid_evidence_accepted",
+      "level": 2,
+      "description": "Verifier accepts a valid sensor-witness attestation with matching evidence_schema",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "schema_version": "wcp/1.0-rc1",
+            "mode": "sensor-witness",
+            "kind": "gps_track",
+            "payload": {"track": [{"lat": 51.5074, "lng": -0.1278, "ts": "{{now_iso}}"}]},
+            "payload_hash": "{{hash}}",
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}",
+            "collected_at": "{{now_iso}}"
+          }
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.sensor_witness.missing_required_kind_rejected",
+      "level": 2,
+      "description": "Verifier rejects sensor-witness attestation missing a required evidence kind",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "sensor-witness",
+            "kind": "photo_with_exif",
+            "payload": {},
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}"
+          }
+        ]
+      },
+      "expected": {"error_code": -41001}
+    },
+    {
+      "id": "L2.third_party_witness.valid_cosigner_accepted",
+      "level": 2,
+      "description": "Verifier accepts third-party-witness attestation with valid co-signer DID and signature",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "third-party-witness",
+            "kind": "cosigner_attestation",
+            "payload": {"cosigner_did": "{{cosigner_did}}", "task_state": "completed"},
+            "signature": "{{cosigner_sig}}",
+            "signer_did": "{{cosigner_did}}",
+            "collected_at": "{{now_iso}}"
+          }
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.third_party_witness.mismatched_sig_rejected",
+      "level": 2,
+      "description": "Verifier rejects third-party-witness with mismatched co-signer signature",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "third-party-witness",
+            "kind": "cosigner_attestation",
+            "payload": {"cosigner_did": "{{cosigner_did}}"},
+            "signature": "tampered_signature_does_not_verify",
+            "signer_did": "{{cosigner_did}}"
+          }
+        ]
+      },
+      "expected": {"error_code": -41002}
+    },
+    {
+      "id": "L2.cryptographic_presence.valid_ephemeral_accepted",
+      "level": 2,
+      "description": "Verifier accepts cryptographic-presence with valid ephemeral key proof",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "cryptographic-presence",
+            "kind": "ephemeral_key_proof",
+            "payload": {
+              "ephemeral_pubkey": "{{ephemeral_pubkey}}",
+              "issued_at": "{{now_iso}}",
+              "expires_at": "{{now_plus_300s}}"
+            },
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}"
+          }
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.cryptographic_presence.expired_ephemeral_rejected",
+      "level": 2,
+      "description": "Verifier rejects cryptographic-presence with expired ephemeral key (issued >5min ago)",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "cryptographic-presence",
+            "kind": "ephemeral_key_proof",
+            "payload": {
+              "ephemeral_pubkey": "{{ephemeral_pubkey}}",
+              "issued_at": "{{now_minus_10min}}",
+              "expires_at": "{{now_minus_5min}}"
+            },
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}"
+          }
+        ]
+      },
+      "expected": {"error_code": -41003}
+    },
+    {
+      "id": "L2.owner_signoff.valid_owner_sig_accepted",
+      "level": 2,
+      "description": "Verifier accepts owner-sign-off with valid owner DID signature",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "owner-sign-off",
+            "kind": "owner_completion_signature",
+            "payload": {"owner_did": "{{owner_did}}", "task_state": "completed"},
+            "signature": "{{owner_sig}}",
+            "signer_did": "{{owner_did}}"
+          }
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.threshold.M_of_N_2of3_2valid_passes",
+      "level": 2,
+      "description": "M-of-N threshold M=2, N=3 with 2 valid attestations passes",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id_for_2of3}}",
+        "evidence": [
+          {"mode": "sensor-witness", "kind": "gps_track", "payload": {}, "signature": "{{sig1}}", "signer_did": "{{worker_did}}"},
+          {"mode": "owner-sign-off", "kind": "owner_completion_signature", "payload": {}, "signature": "{{sig2}}", "signer_did": "{{owner_did}}"}
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.threshold.M_of_N_2of3_1valid_1invalid_fails",
+      "level": 2,
+      "description": "M-of-N threshold M=2, N=3 with 1 valid + 1 invalid attestation fails",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id_for_2of3}}",
+        "evidence": [
+          {"mode": "sensor-witness", "kind": "gps_track", "payload": {}, "signature": "{{sig_valid}}", "signer_did": "{{worker_did}}"},
+          {"mode": "owner-sign-off", "kind": "owner_completion_signature", "payload": {}, "signature": "invalid_signature_bytes", "signer_did": "{{owner_did}}"}
+        ]
+      },
+      "expected": {"error_code": -41002}
+    },
+    {
+      "id": "L2.override.authority_invoked_audit_chain_records",
+      "level": 2,
+      "description": "Override authority correctly recorded in audit chain when invoked",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "override": {
+          "authority_did": "{{override_authority_did}}",
+          "reason": "test override invocation",
+          "signature": "{{override_sig}}"
+        },
+        "evidence": []
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id", "override_recorded"]}
+    },
+    {
+      "id": "L2.audit_chain.hash_continuity_preserved",
+      "level": 2,
+      "description": "Audit chain hash continuity preserved across multiple attestation events",
+      "method": "audit/verify",
+      "params_template": {
+        "claim_id": "{{claim_id_with_chain}}"
+      },
+      "expected": {"result_keys": ["chain_intact", "entries_verified"]}
+    },
+    {
+      "id": "L2.timestamp.within_drift_accepted",
+      "level": 2,
+      "description": "Attestation timestamp drift within time-synchronization tolerance accepted",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "sensor-witness",
+            "kind": "gps_track",
+            "payload": {},
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}",
+            "collected_at": "{{now_minus_5s}}"
+          }
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.timestamp.beyond_drift_rejected",
+      "level": 2,
+      "description": "Attestation timestamp outside time-sync tolerance rejected",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "mode": "sensor-witness",
+            "kind": "gps_track",
+            "payload": {},
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}",
+            "collected_at": "{{now_minus_120s}}"
+          }
+        ]
+      },
+      "expected": {"error_code": -41004}
+    }
+  ],
+  "notes": [
+    "Some cases may fail against the v1.0-rc1 reference coordinator if specific verifier features (e.g., time-drift tolerance enforcement, override authority audit-chain recording) are not yet implemented. Document such gaps as known v1.1 implementation deliverables.",
+    "Template placeholders ({{worker_did}}, {{sig}}, etc.) are substituted by the conformance runner at execution time from the fixtures in ../fixtures/."
+  ]
+}

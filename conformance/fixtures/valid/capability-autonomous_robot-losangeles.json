@@ -1,0 +1,28 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "worker_id": "did:wcp:robot-la-port-fleet2-unit11",
+  "principal_id": "did:wcp:operator-la-1",
+  "class": "autonomous_robot",
+  "required": {
+    "current_location": {"venue_id": "port-la-terminal-3", "map_id": "yard-grid-c"},
+    "available_windows": [
+      {"rrule": "FREQ=DAILY;BYHOUR=0-23", "timezone": "America/Los_Angeles"}
+    ],
+    "attestation_methods_supported": [
+      "sensor-witness", "cryptographic-presence", "third-party-witness"
+    ],
+    "certifications": [
+      {"kind": "uscg_subchapter_t_marine_amr", "issuing_authority": "did:wcp:authority-usa-uscg", "expiry": "2027-12-31"}
+    ],
+    "policy_windows": [{"type": "geographic", "scope": "America/Los_Angeles"}],
+    "attestation_keys": [
+      {"kty": "OKP", "crv": "Ed25519", "x": "PLACEHOLDER_LA_ROBOT_KEY_BYTES_BASE64URL"}
+    ],
+    "as_of": "2026-05-23T00:00:00Z"
+  },
+  "class_extension": {
+    "kinematics": {"max_payload_kg": 2000, "max_speed_mps": 0.8},
+    "sensors": ["lidar_3d", "thermal_imaging", "imu", "gps_l1l5", "wheel_odometry"],
+    "platform_vendor": "example-port-robot-vendor-v1"
+  }
+}

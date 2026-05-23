@@ -1,0 +1,95 @@
+version: "3.9"
+# Two-coordinator federation demo.
+# Brings up coord-alpha (port 9000) and coord-beta (port 9001), each with its
+# own Postgres and Redis. Both coordinators run the same wcp_coordinator
+# reference image but are configured as federation peers via setup.sh.
+
+services:
+
+  postgres-alpha:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: wcp_alpha
+      POSTGRES_USER: wcp
+      POSTGRES_PASSWORD: wcp_demo_password
+    volumes:
+      - postgres-alpha-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  postgres-beta:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: wcp_beta
+      POSTGRES_USER: wcp
+      POSTGRES_PASSWORD: wcp_demo_password
+    volumes:
+      - postgres-beta-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  redis-alpha:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  redis-beta:
+    image: redis:7
+    ports:
+      - "6380:6379"
+
+  coord-alpha:
+    image: python:3.13-slim
+    working_dir: /app
+    volumes:
+      - ../../wcp_coordinator:/app/wcp_coordinator:ro
+      - ../../wcp_dev_runtime:/app/wcp_dev_runtime:ro
+      - ../../wcp_sdk_python:/app/wcp_sdk_python:ro
+    command: >
+      bash -lc "
+      pip install --quiet --no-cache-dir 'fastapi' 'uvicorn[standard]' 'sqlalchemy>=2.0' 'cryptography' 'psycopg[binary]' 'redis' &&
+      pip install --quiet --no-cache-dir -e /app/wcp_sdk_python -e /app/wcp_coordinator &&
+      python -m uvicorn wcp_dev_runtime.coordinator_dev_app:app --host 0.0.0.0 --port 9000
+      "
+    environment:
+      WCP_COORDINATOR_NAME: coord-alpha
+      WCP_COORDINATOR_DID: did:wcp:coord-alpha-demo-key
+      WCP_POSTGRES_URL: postgresql+psycopg://wcp:wcp_demo_password@postgres-alpha:5432/wcp_alpha
+      WCP_REDIS_URL: redis://redis-alpha:6379/0
+      WCP_FEDERATION_PEER_NAME: coord-beta
+      WCP_FEDERATION_PEER_URL: ws://coord-beta:9001/wcp/ws
+    ports:
+      - "9000:9000"
+    depends_on:
+      - postgres-alpha
+      - redis-alpha
+
+  coord-beta:
+    image: python:3.13-slim
+    working_dir: /app
+    volumes:
+      - ../../wcp_coordinator:/app/wcp_coordinator:ro
+      - ../../wcp_dev_runtime:/app/wcp_dev_runtime:ro
+      - ../../wcp_sdk_python:/app/wcp_sdk_python:ro
+    command: >
+      bash -lc "
+      pip install --quiet --no-cache-dir 'fastapi' 'uvicorn[standard]' 'sqlalchemy>=2.0' 'cryptography' 'psycopg[binary]' 'redis' &&
+      pip install --quiet --no-cache-dir -e /app/wcp_sdk_python -e /app/wcp_coordinator &&
+      python -m uvicorn wcp_dev_runtime.coordinator_dev_app:app --host 0.0.0.0 --port 9001
+      "
+    environment:
+      WCP_COORDINATOR_NAME: coord-beta
+      WCP_COORDINATOR_DID: did:wcp:coord-beta-demo-key
+      WCP_POSTGRES_URL: postgresql+psycopg://wcp:wcp_demo_password@postgres-beta:5432/wcp_beta
+      WCP_REDIS_URL: redis://redis-beta:6379/0
+      WCP_FEDERATION_PEER_NAME: coord-alpha
+      WCP_FEDERATION_PEER_URL: ws://coord-alpha:9000/wcp/ws
+    ports:
+      - "9001:9001"
+    depends_on:
+      - postgres-beta
+      - redis-beta
+
+volumes:
+  postgres-alpha-data:
+  postgres-beta-data:

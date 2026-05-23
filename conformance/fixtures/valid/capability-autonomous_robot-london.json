@@ -1,0 +1,28 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "worker_id": "did:wcp:amr-london-fleet7-unit42",
+  "principal_id": "did:wcp:operator-london-1",
+  "class": "autonomous_robot",
+  "required": {
+    "current_location": {"venue_id": "warehouse-london-east-1", "map_id": "aisle-grid-b"},
+    "available_windows": [
+      {"rrule": "FREQ=DAILY;BYHOUR=0-23", "timezone": "Europe/London"}
+    ],
+    "attestation_methods_supported": [
+      "sensor-witness", "cryptographic-presence"
+    ],
+    "certifications": [
+      {"kind": "iso_3691_4_amr_compliant", "issuing_authority": "did:wcp:authority-iso-3691", "expiry": "2028-12-31"}
+    ],
+    "policy_windows": [{"type": "geographic", "scope": "Europe/London"}],
+    "attestation_keys": [
+      {"kty": "OKP", "crv": "Ed25519", "x": "PLACEHOLDER_LONDON_AMR_KEY_BYTES_BASE64URL"}
+    ],
+    "as_of": "2026-05-23T00:00:00Z"
+  },
+  "class_extension": {
+    "kinematics": {"max_payload_kg": 500, "max_speed_mps": 1.5},
+    "sensors": ["lidar_2d", "imu", "wheel_odometry", "rfid_reader"],
+    "platform_vendor": "example-amr-vendor-v3"
+  }
+}

@@ -28,12 +28,31 @@ console = Console()
     is_flag=True,
     help="Disable hot reload (uvicorn --reload off)",
 )
-def dev(port: int, skip_coordinator: bool, no_reload: bool) -> None:
+@click.option(
+    "--example",
+    default=None,
+    type=str,
+    help=(
+        "Run a bundled example end-to-end (e.g. 'federation-demo' for the "
+        "two-coordinator federation demo). Bypasses normal dev mode; spins up "
+        "the example's docker-compose stack via the example's run scripts."
+    ),
+)
+def dev(port: int, skip_coordinator: bool, no_reload: bool, example: str | None) -> None:
     """Run a local coordinator + the worker in the current directory.
 
     Detects the scaffolded project by reading `wcp.yaml` or by finding
     `worker.py` / `agent.py` in the current working directory.
+
+    When --example is provided, runs the named bundled example instead. The
+    federation-demo example brings up two coordinators (coord-alpha on port
+    9000, coord-beta on port 9001) plus their databases, provisions a trust
+    anchor, and runs a worker + agent pair across the federation boundary.
     """
+    if example is not None:
+        _run_bundled_example(example)
+        return
+
     cwd = Path.cwd()
     procs: list[subprocess.Popen[bytes]] = []
 
@@ -106,3 +125,65 @@ def _terminate_all(procs: list[subprocess.Popen[bytes]]) -> None:
                 p.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 p.kill()
+
+
+def _run_bundled_example(example: str) -> None:
+    """Run a bundled example end-to-end via its docker-compose + verify.sh."""
+    here = Path(__file__).resolve()
+    # The CLI is at wcp_cli/wcp_cli/commands/dev.py; examples are at
+    # ../../../examples/<example> in the repo layout.
+    repo_root = here.parents[3]
+    example_dir = repo_root / "examples" / example
+    if not example_dir.is_dir():
+        console.print(
+            f"[red]error[/red] unknown example '{example}'. "
+            f"available examples: {sorted([p.name for p in (repo_root / 'examples').iterdir() if p.is_dir()])}"
+        )
+        sys.exit(1)
+
+    compose_file = example_dir / "docker-compose.yml"
+    setup_sh = example_dir / "setup.sh"
+    verify_sh = example_dir / "verify.sh"
+
+    if compose_file.exists():
+        console.print(f"[cyan]dev[/cyan] starting docker compose for example '{example}'...")
+        rc = subprocess.call(
+            ["docker", "compose", "-f", str(compose_file), "up", "-d"],
+            cwd=str(example_dir),
+        )
+        if rc != 0:
+            console.print(
+                "[yellow]warn[/yellow] docker compose up returned non-zero; "
+                "continuing with setup/verify in best-effort mode"
+            )
+    else:
+        console.print(
+            f"[yellow]warn[/yellow] no docker-compose.yml found in {example_dir}"
+        )
+
+    if setup_sh.exists():
+        console.print(f"[cyan]dev[/cyan] running setup.sh for example '{example}'...")
+        subprocess.call([str(setup_sh)], cwd=str(example_dir))
+
+    if verify_sh.exists():
+        console.print(f"[cyan]dev[/cyan] running verify.sh for example '{example}'...")
+        rc = subprocess.call([str(verify_sh)], cwd=str(example_dir))
+        if rc != 0:
+            console.print(
+                f"[yellow]warn[/yellow] verify.sh exited with code {rc}; "
+                "see example README.md for known v1.1 implementation gaps"
+            )
+        else:
+            console.print("[green]ok[/green] example verify.sh PASS")
+    else:
+        console.print(f"[yellow]warn[/yellow] no verify.sh in {example_dir}")
+
+    console.print(
+        f"\n[cyan]dev[/cyan] example '{example}' setup complete. To explore:\n"
+        f"  cd {example_dir}\n"
+        f"  cat README.md\n"
+        f"  python worker_*.py    # run a worker\n"
+        f"  python agent_*.py     # run an agent\n"
+        f"  ./verify.sh           # re-verify\n"
+        f"  docker compose down -v  # cleanup\n"
+    )

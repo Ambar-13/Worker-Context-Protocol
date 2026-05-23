@@ -60,6 +60,10 @@ The four attestation modes (`sensor-witness`, `third-party-witness`, `cryptograp
 
 Registry growth requires discipline to avoid duplicate kinds. A new kind that overlaps an existing one should be rejected with a comment pointing to the existing one.
 
+## External trust-root family
+
+The evidence kind family `external-trust-root.<root-identifier>` is registered separately from the per-mode kinds above. It covers evidence signed against trust roots outside the `did:wcp` method (X.509 chains, JWKS endpoints, non-`did:wcp` DIDs). The family is governed by RFC 0034 (External Trust-Root Signed Evidence); new entries in this family are proposed via the RFC process and append to RFC 0034's per-root registration table rather than to the per-mode table in this RFC.
+
 ## Prior art
 
 OpenID Connect's claims registry uses a similar RFC-extensible approach.
