@@ -1,0 +1,46 @@
+app = "wcp-coordinator"
+primary_region = "iad"
+
+[build]
+  image = "python:3.13-slim"
+
+[deploy]
+  release_command = "pip install fastapi uvicorn 'sqlalchemy>=2.0' cryptography wcp-sdk 'psycopg[binary]'"
+
+[env]
+  PORT = "8000"
+
+[[services]]
+  internal_port = 8000
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 500
+
+  [[services.tcp_checks]]
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "30s"
+
+  [[services.http_checks]]
+    interval = "10s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/wcp/health"
+    protocol = "http"
+
+[processes]
+  app = "python -m uvicorn wcp_dev_runtime.coordinator_dev_app:app --host 0.0.0.0 --port 8000"
+
+# Provision Postgres via `fly postgres create` and set WCP_DATABASE_URL.
+# See PRODUCTION_HARDENING.md before public traffic.

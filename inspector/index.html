@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>WCP Inspector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --ok: #3fb950;
+      --warn: #d29922;
+      --err: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      background: var(--bg); color: var(--text);
+    }
+    header {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: baseline; gap: 24px;
+    }
+    header h1 { margin: 0; font-size: 1.3em; }
+    header .meta { color: var(--muted); font-size: 0.9em; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 24px; }
+    section.panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 16px; min-height: 200px;
+    }
+    section.panel h2 { margin-top: 0; font-size: 1em; color: var(--accent); }
+    .status-ok   { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    .status-err  { color: var(--err); }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      background: var(--bg); border: 1px solid var(--border);
+      font-size: 0.85em; margin-right: 6px;
+    }
+    pre.entry {
+      margin: 0 0 8px 0; padding: 8px; background: var(--bg); border-radius: 4px;
+      border: 1px solid var(--border); overflow-x: auto; font-size: 0.85em;
+    }
+    .note {
+      background: rgba(88,166,255,0.08); border-left: 3px solid var(--accent);
+      padding: 10px 14px; border-radius: 4px; font-size: 0.9em; color: var(--muted);
+    }
+    footer { padding: 12px 24px; color: var(--muted); font-size: 0.8em; border-top: 1px solid var(--border); }
+    code.did { color: var(--accent); }
+  </style>
+</head>
+<body x-data="inspector()" x-init="connect()">
+  <header>
+    <h1>WCP Inspector</h1>
+    <span class="meta">v1.0-rc2</span>
+    <span class="meta" x-text="'coordinator: ' + (coordinatorUrl || 'connecting...')"></span>
+    <span class="pill" :class="connected ? 'status-ok' : 'status-err'"
+          x-text="connected ? 'connected' : 'disconnected'"></span>
+    <span class="meta" x-text="lastUpdate ? 'updated ' + lastUpdate : ''"></span>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Coordinator health</h2>
+      <template x-if="snapshot.health">
+        <pre class="entry" x-text="JSON.stringify(snapshot.health, null, 2)"></pre>
+      </template>
+    </section>
+    <section class="panel">
+      <h2>Active tasks</h2>
+      <template x-if="(snapshot.panels?.active_tasks || []).length === 0">
+        <p style="color: var(--muted)">No active tasks (or admin endpoints not yet exposed; see note below).</p>
+      </template>
+      <template x-for="t in snapshot.panels?.active_tasks || []" :key="t.task_id">
+        <pre class="entry" x-text="JSON.stringify(t, null, 2)"></pre>
+      </template>
+    </section>
+    <section class="panel">
+      <h2>Audit chain (tail)</h2>
+      <template x-if="(snapshot.panels?.audit_chain_tail || []).length === 0">
+        <p style="color: var(--muted)">No audit entries yet.</p>
+      </template>
+      <template x-for="e in snapshot.panels?.audit_chain_tail || []" :key="e.entry_id">
+        <pre class="entry" x-text="JSON.stringify(e, null, 2)"></pre>
+      </template>
+    </section>
+    <section class="panel">
+      <h2>RPC traffic</h2>
+      <template x-if="(snapshot.panels?.rpc_traffic || []).length === 0">
+        <p style="color: var(--muted)">Idle.</p>
+      </template>
+      <template x-for="r in snapshot.panels?.rpc_traffic || []" :key="r.id">
+        <pre class="entry" x-text="JSON.stringify(r, null, 2)"></pre>
+      </template>
+    </section>
+    <section class="panel" style="grid-column: 1 / -1">
+      <h2>Note</h2>
+      <p class="note" x-text="snapshot.note"></p>
+    </section>
+  </main>
+  <footer>
+    Read-only by default. Audit chain rendered when the coordinator exposes
+    <code>/wcp/admin/audit-tail</code> (RFC tracked).
+  </footer>
+
+  <script>
+    function inspector() {
+      return {
+        snapshot: { health: null, panels: {}, note: 'connecting...' },
+        connected: false,
+        coordinatorUrl: '',
+        lastUpdate: '',
+        async connect() {
+          // Load coordinator URL for the header.
+          try {
+            const r = await fetch('/api/coordinator-url');
+            const j = await r.json();
+            this.coordinatorUrl = j.ws;
+          } catch {}
+          const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://')
+                       + location.host + '/ws';
+          const ws = new WebSocket(wsUrl);
+          ws.onopen = () => { this.connected = true; };
+          ws.onclose = () => { this.connected = false; setTimeout(() => this.connect(), 2000); };
+          ws.onerror = () => { this.connected = false; };
+          ws.onmessage = ev => {
+            try {
+              this.snapshot = JSON.parse(ev.data);
+              this.lastUpdate = new Date().toLocaleTimeString();
+            } catch {}
+          };
+        },
+      };
+    }
+  </script>
+</body>
+</html>

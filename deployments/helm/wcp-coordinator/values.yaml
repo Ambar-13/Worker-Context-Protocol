@@ -1,0 +1,50 @@
+replicaCount: 2
+
+image:
+  repository: python
+  tag: "3.13-slim"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: coordinator.example.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+postgresql:
+  enabled: true
+  auth:
+    database: wcp
+    username: wcp
+    existingSecret: wcp-postgres-credentials
+
+redis:
+  enabled: true
+
+env:
+  WCP_DATABASE_URL: "postgresql+psycopg://wcp:$(WCP_POSTGRES_PASSWORD)@wcp-postgres:5432/wcp"
+  WCP_REDIS_URL: "redis://wcp-redis:6379/0"
+
+healthcheck:
+  path: /wcp/health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+# See PRODUCTION_HARDENING.md before deploying to production.

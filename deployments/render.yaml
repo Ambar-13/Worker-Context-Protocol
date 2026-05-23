@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: wcp-coordinator
+    runtime: python
+    plan: starter
+    healthCheckPath: /wcp/health
+    buildCommand: pip install fastapi uvicorn 'sqlalchemy>=2.0' cryptography wcp-sdk 'psycopg[binary]'
+    startCommand: python -m uvicorn wcp_dev_runtime.coordinator_dev_app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: WCP_DATABASE_URL
+        fromDatabase:
+          name: wcp-postgres
+          property: connectionString
+      - key: WCP_REDIS_URL
+        fromService:
+          type: redis
+          name: wcp-redis
+          property: connectionString
+
+databases:
+  - name: wcp-postgres
+    plan: starter
+
+# See PRODUCTION_HARDENING.md before public traffic.

@@ -1,0 +1,9 @@
+name: {{NAME}}
+worker_class: {{CLASS}}
+domain: {{DOMAIN}}
+coordinator: {{COORDINATOR}}
+key_path: ./wcp_worker.key
+principal_id: did:wcp:example-principal
+venue_id: venue-a
+map_id: map-a
+timezone: UTC

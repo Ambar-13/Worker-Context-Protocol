@@ -1,0 +1,14 @@
+[build]
+builder = "NIXPACKS"
+nixpacksConfigPath = "deployments/nixpacks.toml"
+
+[deploy]
+startCommand = "python -m uvicorn wcp_dev_runtime.coordinator_dev_app:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/wcp/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# Provision a Postgres add-on in the Railway UI; set WCP_DATABASE_URL from
+# `${{ Postgres.DATABASE_URL }}`.
+# See PRODUCTION_HARDENING.md before public traffic.

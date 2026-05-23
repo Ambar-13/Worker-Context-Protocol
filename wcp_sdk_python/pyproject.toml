@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wcp-sdk"
-version = "1.0.0rc1"
+version = "1.0.0rc2"
 description = "Worker Context Protocol (WCP) v1.0-rc1 Python SDK"
 authors = [{name = "Worker Context Protocol contributors"}]
 license = {text = "Apache-2.0"}

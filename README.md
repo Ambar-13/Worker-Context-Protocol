@@ -1,136 +1,159 @@
 # Worker Context Protocol (WCP)
 
-**Current version:** v1.0-rc1 (release candidate; not v1.0 final until adoption validates)
+**Current version:** v1.0-rc2 (release candidate; not v1.0 final until adoption validates)
 **License:** Apache 2.0
 **Schema version:** `wcp/1.0-rc1`
 
-WCP is an open standard for AI agents to hire physical-world workers of any class (human contractor, autonomous robot, teleoperated robot, semi-autonomous system, hybrid) through one worker-agnostic RPC surface.
+WCP is an open standard that coordinates AI agents and physical-world workers across institutional and industrial domains. Human technicians, autonomous robots, teleoperated systems, and hybrid worker classes share **one RPC surface**. The matching engine and the attestation verifier discriminate by **structural properties** (capabilities, evidence kinds), not by worker class.
 
-Same algorithmic lever as the Model Context Protocol (MCP) for software tools (informational and algorithmic: in-band capability discovery plus a typed call contract), applied to physical workers. The primitives MCP does not need, because tools cannot fail in physically irreversible ways, are first-class: **typed attestation, supervision handoff with autonomy grading, two-phase settlement, and partial-completion abort**.
+Same algorithmic lever as the Model Context Protocol (MCP) (informational and algorithmic: in-band capability discovery plus a typed call contract), applied to physical workers rather than software tools. The primitives MCP does not need, because tools cannot fail in physically irreversible ways, are first-class: **typed attestation, supervision handoff, two-phase settlement, partial-completion abort**.
 
-## Front door for the outside reader
+---
 
-You are most likely here because you are evaluating WCP for integration. The shortest path:
-
-1. **Read [spec/1.0-rc1.md](./spec/1.0-rc1.md)** (~30 pages; ASCII state machine first; nine RPCs with full schemas).
-2. **Read [spec/d4-verification-1.0-rc1.md](./spec/d4-verification-1.0-rc1.md)** to see that the same nine RPCs handle three task descriptors across two worker classes plus federation cells without modification.
-3. **Skim [GOVERNANCE.md](./GOVERNANCE.md)** for donation, non-coercion, charter, RFC process, TSC bylaws, and trademark policy.
-4. **Clone, install, run the test suites:**
+## Five-minute hello world (industrial-maintenance domain)
 
 ```bash
-python3.13 -m venv .venv && source .venv/bin/activate
-pip install -e ".[test]"
-pip install -e ./wcp_sdk_python
-pip install -e ./conformance/runner-python
+# 1. Install the CLI and SDK
+pip install wcp wcp-sdk
 
-pytest wcp_coordinator/tests/           # 44 tests
-pytest wcp_sdk_python/tests/            # 15 tests
-pytest wcp_worker/test/                 # 8 host-independent tests
+# 2. Scaffold a worker (hybrid worker for cooling-tower thermal inspections)
+wcp init worker thermal-inspector --class hybrid --domain industrial
+cd thermal-inspector
 
-# Run the conformance suite Level 1 against the reference coordinator:
-# (Start the coordinator first under uvicorn; then:)
-# wcp-conformance --target wss://localhost:8000/wcp/ws --level 1
+# 3. Run it (CLI starts a local coordinator alongside)
+pip install -r requirements.txt
+wcp dev
 ```
+
+In a second terminal:
+
+```bash
+# 4. Post a task to the local coordinator from the canonical industrial example
+cd ../examples/agents/industrial-maintenance
+python agent.py
+```
+
+You will see the coordinator log show a `tasks/post` round-trip and the worker auto-claim and attest. Five minutes from `pip install` to a hash-linked audit chain entry on disk.
+
+To explore a different domain, swap the `--domain` flag. The 14 templates each ship handlers and attestation modes appropriate to their domain context.
+
+---
+
+## Six reference agents across institutionally distinct domains
+
+The same nine RPCs handle every domain below. The variance lives in `descriptor_payload` and the registered `(mode, kind)` pairs the verifier accepts; the RPC surface is unchanged. This is the v1.0-rc1 D4 forcing function proven in code.
+
+| Domain | Path | What the agent does |
+|---|---|---|
+| Research operations | `examples/agents/scientific-ops/` | Schedules instrument calibration; technician on-site + signed instrument log |
+| Heavy industry | `examples/agents/industrial-maintenance/` | Dispatches cooling-tower-bearing thermal inspections; hybrid human + robot workers |
+| Emergency services | `examples/agents/disaster-response/` | Routes mixed drone + ground + human teams to damage zones; 3-of-5 cross-attested imagery |
+| Warehouse / supply chain | `examples/agents/logistics/` | Pallet moves; AMR or human forklift operator, whichever claims first |
+| Scientific field operations | `examples/agents/field-research/` | Environmental sample collection routes; GPS + signed sensor + timestamp |
+| Regulated healthcare | `examples/agents/healthcare-logistics/` | Medical specimen transport; cold-chain temperature log + chain-of-custody signatures |
+
+Each agent runs end-to-end against a local coordinator via `./run.sh` or directly via `python agent.py`.
+
+Templates for eight additional domains (agriculture, infrastructure, manufacturing, smart-city, maritime, construction, generic, plus the six above) ship under `wcp_cli/wcp_cli/templates/`. WCP targets institutional and industrial coordination contexts.
+
+---
+
+## The protocol
+
+The full normative specification is in `spec/1.0-rc1.md` (~30 pages). Companion normative documents in `spec/`:
+
+- `threat-model.md` (STRIDE per RPC and per trust boundary)
+- `privacy-architecture.md` (PII tagging, hash-only audit chain, tombstone pattern, PDPA/GDPR/CCPA alignment)
+- `federation.md` (cross-coordinator capability discovery and audit chain interop)
+- `conformance.md` (3 levels; the suite at `conformance/` is the canonical determinant of "WCP-conformant at Level N")
+- `semver-policy.md`, `error-codes.md`, `security-baseline.md`, `time-synchronization.md`, `retry-idempotency.md`, `performance-conformance.md`
+- `did-method-wcp.md` (W3C DID Core registration for `did:wcp`)
+- `d4-verification-1.0-rc1.md` (six base D4 cells + four federation cells, all pass)
+
+## Languages
+
+| Language | Path | Package | Status |
+|---|---|---|---|
+| Python | `wcp_sdk_python/` | `wcp-sdk` (PyPI) | v1 + v2 decorator API; 23 tests passing |
+| TypeScript | `wcp_sdk_typescript/` | `@wcp/sdk` (npm) | Worker + Agent core; Node 20+, browser-ready |
+| Rust | `wcp_sdk_rust/` | `wcp-sdk` (crates.io) | Tokio async; builder pattern; for embedded workers |
+| Go | `wcp_sdk_go/` | `github.com/wcp-spec/wcp-go` | Idiomatic Go: interfaces, contexts |
+
+## LLM framework integrations
+
+`integrations/` ships adapters for Anthropic, OpenAI, Gemini, LangChain, AutoGen, LlamaIndex, CrewAI, and the Vercel AI SDK. Each exposes the same four tools (`wcp_discover_capabilities`, `wcp_post_task`, `wcp_subscribe_attestation`, `wcp_get_audit_chain`). See `docs/llm-integration.md` for worked examples across multiple domains.
+
+## CLI
+
+```bash
+wcp init worker <name> --class <C> --domain <D>   # 14 domain templates
+wcp init agent <name> --llm <L>                   # 4 LLM provider templates
+wcp init coordinator <name>                       # Docker Compose deployment
+wcp dev                                           # local coordinator + worker
+wcp test --conformance [--level N]                # run the conformance suite
+wcp inspect                                       # visual inspector at :8765
+wcp register --coordinator <wss-url>              # publish to a remote coordinator
+wcp doctor                                        # environment diagnostic
+```
+
+## Visual inspector
+
+```bash
+wcp inspect
+```
+
+Opens a single-page UI at `http://localhost:8765` that connects to your coordinator's WebSocket and shows health, active tasks, audit chain tail, and RPC traffic. Read-only by default.
+
+## Deployment
+
+| Target | Path |
+|---|---|
+| Docker Compose | `deployments/docker-compose.yml` |
+| Kubernetes (Helm) | `deployments/helm/wcp-coordinator/` |
+| Render | `deployments/render.yaml` |
+| Railway | `deployments/railway.toml` |
+| Fly.io | `deployments/fly.toml` |
+
+Before public traffic, work through `deployments/PRODUCTION_HARDENING.md`.
+
+## Governance
+
+- License: Apache 2.0
+- `DONATION_COMMITMENT.md`: written commitment to donate stewardship to a neutral foundation by v1.0 final
+- `NON_COERCION_COMMITMENT.md`: 5x integration-time ratio between WCP and non-WCP integrations
+- `TRADEMARK_POLICY.md`: pre-v1.0 non-enforcement commitment
+- `CHARTER.md`, `RFC_PROCESS.md`, `TSC_BYLAWS.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
 
 ## Layout
 
 ```
 spec/                       # the normative specification (v1.0-rc1)
-  1.0-rc1.md                # lead document
-  0.1.md                    # v0.1 preserved for reference
-  did-method-wcp.md
-  threat-model.md
-  privacy-architecture.md
-  federation.md
-  conformance.md
-  semver-policy.md
-  error-codes.md
-  security-baseline.md
-  time-synchronization.md
-  retry-idempotency.md
-  performance-conformance.md
-  d4-verification-1.0-rc1.md
-  d4-verification.md        # v0.1 preserved
-  schemas/                  # JSON Schemas
-
-GOVERNANCE.md, DONATION_COMMITMENT.md, NON_COERCION_COMMITMENT.md,
-CHARTER.md, RFC_PROCESS.md, TSC_BYLAWS.md, TRADEMARK_POLICY.md,
-CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, CHANGELOG.md
-
-rfcs/                       # 0000 template; 0001-0021 accepted/technical;
-                            # 0022-0030 v1.1 open questions
-
-wcp_coordinator/            # FastAPI reference backend (44 tests green)
-  attestation_verifier/     # SINGLE POINT of worker-class agnosticism
-
-wcp_worker/                 # ROS 2 Humble plugin (Jazzy CI matrix; 8 tests green)
-
-pwa/wcp/                    # PWA module for the contractor app (906 LOC, vitest)
-
-wcp_sdk_python/             # Python SDK (903 LOC, 15 tests green)
-
-conformance/                # Conformance suite (Level 1, 2, 3 bundles)
-  test-suite/               # Language-agnostic test definitions
-  runner-python/            # Python runner (wcp-conformance CLI)
-  fixtures/                 # Known-good and known-bad payloads
-
-operator-guide/             # 7 RECOMMENDED-practice documents
-                            # NOT normative; conformance does not require adoption
-
-paper/                      # CHI 2027 full draft; v0.1 outline preserved;
-                            # coalition outreach emails
-
-PLAN.md                     # the consolidated execution plan
+wcp_cli/                    # `wcp` CLI + 14 domain templates
+wcp_sdk_python/             # Python SDK (v1 + v2 decorator API)
+wcp_sdk_typescript/         # @wcp/sdk (TypeScript)
+wcp_sdk_rust/               # wcp-sdk (Rust crate)
+wcp_sdk_go/                 # wcp-go (Go module)
+wcp_coordinator/            # FastAPI reference backend (frozen v1.0-rc1)
+wcp_worker/                 # ROS 2 Humble reference plugin (frozen v1.0-rc1)
+pwa/wcp/                    # PWA module (frozen v1.0-rc1)
+wcp_dev_runtime/            # `wcp dev` ASGI app wrapper
+examples/agents/            # six reference agents across distinct domains
+integrations/               # 8 LLM-framework adapters
+inspector/                  # `wcp inspect` web UI
+deployments/                # Docker Compose, Helm, Render/Railway/Fly
+conformance/                # conformance suite (Python runner + Level 1-3 bundles)
+operator-guide/             # RECOMMENDED practice; not normative
+paper/                      # CHI 2027 + ICRA 2027 drafts
+rfcs/                       # 30+ RFCs (technical + open v1.1 questions)
+docs/                       # quickstarts, migration, LLM integration
 ```
-
-## The single sentence (preserved from PLAN.md Section 9)
-
-WCP v0.1 is one worker-agnostic RPC surface that does not know whether the worker is human or robot, shipped with one ROS 2 Humble reference plugin under 2000 LOC and one PWA module extending an existing contractor app under 2000 LOC, one FastAPI reference backend wired into a two-phase escrow, a public Apache 2.0 license with a written commitment to donate to a neutral steward at v1.0 final, a non-coercion commitment bounding non-WCP integration time within a 5x ratio, an SDK ergonomics gate of under 8 hours for outside robot engineers and under 2 hours for outside human-side engineers, an adversarial test pass across three descriptors and two worker classes before publication, a coalition of two of three (academic, worker provider, AI-agent platform) committed before broad announcement, and a launch gate of three signed conditional pre-purchase pilots before any robot vendor is asked to ship.
-
-v1.0-rc1 extends that artifact corpus to include the threat model, privacy architecture, federation, conformance suite, semver policy, error taxonomy, security baseline, time synchronization, retry semantics, performance conformance, Python SDK, operator implementation guide, full CHI 2027 paper draft, additional governance documents, and RFCs 0013-0030.
-
-## Vendor neutrality
-
-WCP is a protocol, not a product. The spec is written for ANY implementer. Specific operators, escrow providers, currencies, and jurisdictions appear only in clearly-labeled examples. WCP-conformance is determined by `conformance/`, not by similarity to any reference implementation.
-
-The reference implementations under `wcp_coordinator/`, `wcp_worker/`, and `pwa/wcp/` describe one operator's choices. Other implementations are equally valid and welcome.
-
-## Status
-
-| Artifact | v0.1 | v1.0-rc1 |
-|---|---|---|
-| Spec | spec/0.1.md (4951 words) | spec/1.0-rc1.md + 10 companion normative docs |
-| Governance | 5 files | + CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, TRADEMARK_POLICY, TSC_BYLAWS |
-| Coordinator | 44 tests green | (carried forward; v1.0-rc1 final adds rate limiting, OpenTelemetry, federation; pending) |
-| ROS 2 plugin | 830 LOC, 8 tests | (carried forward; v1.0-rc1 final adds Isaac scene; pending) |
-| PWA | 906 LOC, vitest tests | (carried forward; v1.0-rc1 final adds WCAG 2.2 AA audit; pending) |
-| Python SDK | (new) | 903 LOC, 15 tests green |
-| TypeScript SDK | (new) | pending v1.0-rc1 final (RFC 0026) |
-| Rust SDK | (new) | pending v1.1 (RFC 0027) |
-| Go SDK | (new) | pending v1.1 (RFC 0028) |
-| Conformance suite | (new) | scaffold with Python runner; Level 1/2/3 bundle definitions |
-| Documentation site | (new) | pending (PLAN.md handoff) |
-| CHI 2027 paper | outline | full draft |
-| ICRA 2027 paper | outline | pending |
-| RFCs | 0000-0012 | + 0013-0030 |
-| Examples | (new) | pending |
 
 ## Pre-v1.0 final disclaimer
 
-This is a release candidate. v1.0 final requires:
-
-- At least 3 independent implementations passing the conformance suite at Level 2 (one at Level 3).
-- At least one external paper accepted at a major venue (CHI, ICRA, IROS, CoRL, RSS, T-RO, CSCW, or T-RO).
-- A neutral steward acceptance.
-
-The RC label is the author's commitment to a candidate surface; surface stability is not guaranteed until v1.0 final.
+This is a release candidate. v1.0 final requires multiple independent implementations passing the conformance suite at Level 2 (one at Level 3), at least one external paper accepted at a major venue, and a neutral steward acceptance.
 
 ## Contact
 
 Issues: https://github.com/Ambar-13/Worker-Context-Protocol/issues
-Security: security@rentably.ai (PGP key TBD; see SECURITY.md)
-Code of Conduct violations: conduct@wcp-spec.org (or security@rentably.ai pre-v1.0 final)
-
-## License
-
-[Apache 2.0](./LICENSE)
+Security: see `SECURITY.md`
+Code of Conduct violations: per `CODE_OF_CONDUCT.md`

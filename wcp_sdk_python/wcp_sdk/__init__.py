@@ -44,8 +44,12 @@ from .types import (
     WorkerClass,
 )
 
-__version__ = "1.0.0rc1"
+__version__ = "1.0.0rc2"
 __schema_version__ = "wcp/1.0-rc1"
+
+# v2 additive imports (decorator-style three-role API). Available as
+# `from wcp_sdk.v2 import Worker, Agent, Coordinator`. v1 imports unchanged.
+from . import v2  # noqa: E402,F401
 
 __all__ = [
     "WorkerIdentity",

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wcp-coordinator
+  labels:
+    app.kubernetes.io/name: wcp-coordinator
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wcp-coordinator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wcp-coordinator
+    spec:
+      containers:
+        - name: coordinator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - bash
+            - -lc
+            - |
+              pip install --quiet --upgrade pip && \
+              pip install --quiet fastapi uvicorn 'sqlalchemy>=2.0' cryptography wcp-sdk 'psycopg[binary]' && \
+              python -m uvicorn wcp_dev_runtime.coordinator_dev_app:app --host 0.0.0.0 --port 8000
+          env:
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: "{{ $v }}"
+            {{- end }}
+            - name: WCP_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.auth.existingSecret }}
+                  key: password
+          ports:
+            - name: http
+              containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wcp-coordinator
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: wcp-coordinator
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: 8000
