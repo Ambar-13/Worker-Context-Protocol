@@ -2,9 +2,9 @@
  * React component: lists eligible WCP tasks via capabilities/subscribe
  * stream and exposes the claim flow to the contractor.
  *
- * INTEGRATION-GAP: in the existing Rentably contractor app this component
- * mounts into the existing job list page; styling and shell come from the
- * parent app.
+ * INTEGRATION-GAP: in a worker-provider's existing contractor application this
+ * component mounts into the existing job list page; styling and shell come
+ * from the parent app.
  */
 
 import React, { useEffect, useState } from "react";

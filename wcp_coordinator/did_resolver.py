@@ -19,7 +19,9 @@ from typing import Optional
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-# Base58 alphabet (Bitcoin-style). No I, O, l, 0.
+# Base58 alphabet (base58btc per Multibase RFC; standard encoding for W3C
+# DID methods that carry raw cryptographic identifier bytes). Excludes 0,
+# O, I, l for visual disambiguation. See spec/did-method-wcp.md and RFC 0031.
 _B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 _B58_MAP = {c: i for i, c in enumerate(_B58)}
 

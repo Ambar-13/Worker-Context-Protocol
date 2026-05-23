@@ -1,7 +1,7 @@
 /**
  * WCP PWA module entry point.
  *
- * Designed to merge into the existing Rentably contractor app at
+ * Designed to merge into a worker-provider's existing contractor application at
  * `app/(contractor)/wcp/`. Hard cap: under 2000 LOC total delta.
  *
  * Composition example:

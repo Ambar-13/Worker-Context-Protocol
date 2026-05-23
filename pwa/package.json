@@ -1,7 +1,7 @@
 {
-  "name": "@rentably/wcp-pwa",
+  "name": "@wcp/pwa-module",
   "version": "0.1.0",
-  "description": "WCP human-worker PWA module. Designed to merge into the existing Rentably contractor app at app/(contractor)/wcp/.",
+  "description": "WCP human-worker PWA module. Designed to merge into a worker-provider's existing contractor application at app/(contractor)/wcp/.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "wcp/index.ts",

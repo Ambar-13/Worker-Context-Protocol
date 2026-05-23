@@ -9,7 +9,10 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-// base58 alphabet (Bitcoin-style). Used for did:wcp identifiers.
+// base58Alphabet is base58btc per the Multibase RFC; the standard encoding
+// for W3C DID methods that carry raw cryptographic identifier bytes.
+// Excludes 0, O, I, l for visual disambiguation. Used for did:wcp identifiers.
+// See spec/did-method-wcp.md and RFC 0031.
 const b58Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 func base58Encode(b []byte) string {

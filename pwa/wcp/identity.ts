@@ -5,7 +5,7 @@
  * private key with `extractable: false` so it cannot leave the device. The
  * public key drives the `did:wcp` identifier per spec/did-method-wcp.md.
  *
- * INTEGRATION-GAP: when merged into the existing Rentably contractor app,
+ * INTEGRATION-GAP: when merged into a worker-provider's existing contractor application,
  * the keypair lifecycle is bound to login/logout: generate on first login,
  * persist via IndexedDB-backed CryptoKey storage, rotate on principal change.
  */
