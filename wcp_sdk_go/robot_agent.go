@@ -58,7 +58,7 @@ func NewRobotAgent(ctx context.Context, coordinatorURL string, agentClass AgentC
 
 // BuildContinuationArgs collects the application-layer blocks the caller
 // must supply when building a continuation descriptor. v0.955: settlement
-// is no longer a protocol concern; MaxAttestationAttempts and MarketplaceRef
+// is no longer a protocol concern; MaxAttestationAttempts and AccountingRef
 // replace it.
 type BuildContinuationArgs struct {
 	PriorClaimID             string
@@ -68,13 +68,13 @@ type BuildContinuationArgs struct {
 	Constraints              map[string]interface{}
 	AttestationRequirement   map[string]interface{}
 	MaxAttestationAttempts   int
-	MarketplaceRef           string
+	AccountingRef           string
 }
 
 // BuildContinuation constructs a task descriptor that names a prior task via
 // continuation_of. The caller MUST supply the two required application-layer
 // blocks (constraints, attestation_requirement) per the v0.955 descriptor
-// schema. MaxAttestationAttempts defaults to 1 if zero. MarketplaceRef is
+// schema. MaxAttestationAttempts defaults to 1 if zero. AccountingRef is
 // optional and opaque to WCP.
 func (ra *RobotAgent) BuildContinuation(args BuildContinuationArgs) map[string]interface{} {
 	kinds := args.RequiredEvidenceKinds
@@ -99,8 +99,8 @@ func (ra *RobotAgent) BuildContinuation(args BuildContinuationArgs) map[string]i
 		"attestation_requirement":  args.AttestationRequirement,
 		"max_attestation_attempts": attempts,
 	}
-	if args.MarketplaceRef != "" {
-		descriptor["marketplace_ref"] = args.MarketplaceRef
+	if args.AccountingRef != "" {
+		descriptor["accounting_ref"] = args.AccountingRef
 	}
 	return descriptor
 }

@@ -2,7 +2,7 @@
 
 v0.955: Settlement and SettlementSplitEntry types removed. The override_*
 fields on AttestationRequirement removed. New optional fields on
-TaskDescriptor: max_attestation_attempts and marketplace_ref.
+TaskDescriptor: max_attestation_attempts and accounting_ref.
 """
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def test_task_descriptor_round_trip_via_helper():
         N=2,
         worker_class_filter=[WorkerClass.HUMAN],
         max_attestation_attempts=3,
-        marketplace_ref="external-ref-001",
+        accounting_ref="external-ref-001",
     )
     out = td.to_dict()
     assert out["schema_version"] == "wcp/0.2"
@@ -59,7 +59,7 @@ def test_task_descriptor_round_trip_via_helper():
     assert out["attestation_requirement"]["M"] == 2
     assert out["attestation_requirement"]["N"] == 2
     assert out["max_attestation_attempts"] == 3
-    assert out["marketplace_ref"] == "external-ref-001"
+    assert out["accounting_ref"] == "external-ref-001"
     assert "settlement" not in out
     assert out["x-subcontract-allowed"] is False
 
@@ -94,7 +94,7 @@ def test_attestation_evidence_carries_signature_fields():
     assert out["schema_version"] == "wcp/0.2"
 
 
-def test_task_descriptor_omits_marketplace_ref_when_unset():
+def test_task_descriptor_omits_accounting_ref_when_unset():
     td = make_task_descriptor(
         posted_by="did:wcp:agent",
         descriptor_type="transport",
@@ -105,7 +105,7 @@ def test_task_descriptor_omits_marketplace_ref_when_unset():
         N=1,
     )
     out = td.to_dict()
-    assert "marketplace_ref" not in out
+    assert "accounting_ref" not in out
     assert out["max_attestation_attempts"] == 1
 
 

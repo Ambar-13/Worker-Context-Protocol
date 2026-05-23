@@ -28,14 +28,14 @@ WCP started as the coordination layer underneath Rentably, the marketplace that 
 ### Added
 
 - `max_attestation_attempts` (positive integer, optional, default 1) on the task descriptor.
-- `marketplace_ref` (opaque string, optional) on the task descriptor for external settlement-layer correlation.
+- `accounting_ref` (opaque string, optional) on the task descriptor for external settlement-layer correlation.
 - New terminal states `completed` and `voided`; intermediate state `rechecking`.
 - New audit entry kinds: `task_completed`, `task_voided`, `attestation_attempt`, `recheck_requested`.
 - New error codes: `-47001 RECHECK_MAX_ATTEMPTS_REACHED`, `-47002 RECHECK_NOT_AVAILABLE_FOR_TASK`, `-42010 INVALID_DESCRIPTOR` (migration guard for legacy settlement / override fields).
 
 ### Migration path (v0.95 -> v0.955)
 
-- Agents: stop sending `settlement` block, `proposed_settlement` on abort, `bond_ref` on post. Stop calling `tasks/settle`. Subscribe to `task_completed` and `task_voided` audit entries instead. Set `marketplace_ref` to the correlation token your settlement layer uses.
+- Agents: stop sending `settlement` block, `proposed_settlement` on abort, `bond_ref` on post. Stop calling `tasks/settle`. Subscribe to `task_completed` and `task_voided` audit entries instead. Set `accounting_ref` to the correlation token your settlement layer uses.
 - Workers: implement the recheck loop on `tasks/attest` failures with `attempts_remaining > 0`.
 - Coordinators: remove the `tasks/settle` handler and settlement state machine; implement the attempt counter and the recheck transitions; drop legacy settlement columns. A reference migration is in `wcp_coordinator/migrations/v0.955.py`.
 - Marketplace and other settlement integrators: build settlement logic above WCP that subscribes to the audit chain.

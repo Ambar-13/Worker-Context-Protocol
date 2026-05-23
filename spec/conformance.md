@@ -15,7 +15,7 @@ A Level 1 conformant implementation MUST:
 1. Implement all eight RPCs with the request and response shapes in spec/0.955.md Section 1 and spec/0.2.md Section 3 (with the deltas noted in spec/0.955.md).
 2. Reject malformed payloads with `INVALID_PARAMS` (-32602) and well-formed but semantically invalid payloads with the appropriate -41xxx, -42xxx, -45xxx, -46xxx, or -47xxx code per `error-codes.md`.
 3. Reject `tasks/post` payloads that contain a legacy `settlement` block, or legacy `override_authority` / `override_audit_required` / `override_allowed` fields, with `INVALID_DESCRIPTOR` (-42010).
-4. Accept `tasks/post` payloads that include the optional `max_attestation_attempts` and `marketplace_ref` fields.
+4. Accept `tasks/post` payloads that include the optional `max_attestation_attempts` and `accounting_ref` fields.
 5. Verify the `acceptance_attestation` signature on every `tasks/claim` before mutating state.
 6. Verify the per-event signature on every `tasks/execute` stream message before recording.
 7. Emit a hash-linked signed audit chain entry on every state transition (see audit chain integrity test).

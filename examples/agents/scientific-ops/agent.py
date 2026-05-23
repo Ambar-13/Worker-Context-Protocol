@@ -41,7 +41,7 @@ def build_calibration_task(instrument_id: str, duration_minutes: int) -> dict:
         },
                 "supervision": {"default": "autonomous"},
         "max_attestation_attempts": 1,
-        "marketplace_ref": "external-allocation",
+        "accounting_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 

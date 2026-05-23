@@ -35,7 +35,7 @@ def build_thermal_inspection(asset_id: str) -> dict:
             ],
         },
         "max_attestation_attempts": 2,
-        "marketplace_ref": f"plant-ops-job-{asset_id}",
+        "accounting_ref": f"plant-ops-job-{asset_id}",
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }

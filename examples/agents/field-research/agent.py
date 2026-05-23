@@ -34,7 +34,7 @@ def build_sample_route(sites: list[dict]) -> dict:
         },
                 "supervision": {"default": "autonomous"},
         "max_attestation_attempts": 1,
-        "marketplace_ref": "external-allocation",
+        "accounting_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 

@@ -208,16 +208,16 @@
       }
     },
     {
-      "id": "L2.10.task_completed_carries_marketplace_ref",
+      "id": "L2.10.task_completed_carries_accounting_ref",
       "level": 2,
-      "description": "On verifier pass the task_completed audit entry carries the marketplace_ref verbatim from tasks/post.",
+      "description": "On verifier pass the task_completed audit entry carries the accounting_ref verbatim from tasks/post.",
       "method": "audit/observe",
       "params_template": {
-        "claim_id": "{{completed_claim_with_marketplace_ref}}",
-        "expected_marketplace_ref": "external-ref-abc-123"
+        "claim_id": "{{completed_claim_with_accounting_ref}}",
+        "expected_accounting_ref": "external-ref-abc-123"
       },
       "expected": {
-        "task_completed_marketplace_ref_matches": true
+        "task_completed_accounting_ref_matches": true
       }
     },
     {

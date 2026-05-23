@@ -162,14 +162,14 @@ class TasksService:
         # v0.955: no settlement.hold. Settlement layers (Stripe, ERP, grant
         # systems, etc.) subscribe to the audit chain (task_completed,
         # task_voided, task_aborted) and run their own value-flow logic.
-        marketplace_ref = task.get("marketplace_ref")
+        accounting_ref = task.get("accounting_ref")
 
         self._audit.append(
             event_type="task_posted",
             actor_did=posted_by,
             payload={
                 "task_id": task_id,
-                "marketplace_ref": marketplace_ref,
+                "accounting_ref": accounting_ref,
             },
             task_id=task_id,
         )
@@ -556,7 +556,7 @@ class TasksService:
         )
 
         # Route based on verifier decision and attempt counter.
-        marketplace_ref = task.task_json.get("marketplace_ref")
+        accounting_ref = task.task_json.get("accounting_ref")
         if aggregate.decision == "pass":
             task.state = TaskState.COMPLETED
             self._audit.append(
@@ -565,7 +565,7 @@ class TasksService:
                 payload={
                     "claim_id": claim_id,
                     "task_id": task.task_id,
-                    "marketplace_ref": marketplace_ref,
+                    "accounting_ref": accounting_ref,
                 },
                 claim_id=claim_id,
                 task_id=task.task_id,
@@ -595,7 +595,7 @@ class TasksService:
                         "task_id": task.task_id,
                         "attempts_used": attempt_number,
                         "verifier_reasons": list(aggregate.reasons),
-                        "marketplace_ref": marketplace_ref,
+                        "accounting_ref": accounting_ref,
                     },
                     claim_id=claim_id,
                     task_id=task.task_id,
@@ -683,7 +683,7 @@ class TasksService:
             )
 
         task.state = TaskState.ABORTED
-        marketplace_ref = task.task_json.get("marketplace_ref")
+        accounting_ref = task.task_json.get("accounting_ref")
         self._db.flush()
         self._audit.append(
             event_type="task_aborted",
@@ -693,7 +693,7 @@ class TasksService:
                 "task_id": task.task_id,
                 "reason": reason,
                 "state_snapshot": state_snapshot or {},
-                "marketplace_ref": marketplace_ref,
+                "accounting_ref": accounting_ref,
             },
             claim_id=claim_id,
             task_id=task.task_id,

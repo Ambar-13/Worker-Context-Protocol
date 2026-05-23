@@ -8,7 +8,7 @@ construct shapes that pass the schemas by default.
 
 v0.955: the Settlement and SettlementSplitEntry types are removed; settlement
 is no longer a protocol concern (see spec/0.955.md). TaskDescriptor gains
-the optional ``max_attestation_attempts`` and ``marketplace_ref`` fields.
+the optional ``max_attestation_attempts`` and ``accounting_ref`` fields.
 The AttestationRequirement override_* fields are removed.
 """
 from __future__ import annotations
@@ -105,7 +105,7 @@ class TaskDescriptor:
     constraints: dict[str, Any]
     attestation_requirement: AttestationRequirement
     max_attestation_attempts: int = 1
-    marketplace_ref: Optional[str] = None
+    accounting_ref: Optional[str] = None
     supervision: dict[str, Any] = field(default_factory=lambda: {"default": "autonomous"})
     x_subcontract_allowed: bool = False
     schema_version: str = SCHEMA_VERSION
@@ -123,8 +123,8 @@ class TaskDescriptor:
             "supervision": self.supervision,
             "x-subcontract-allowed": self.x_subcontract_allowed,
         }
-        if self.marketplace_ref is not None:
-            out["marketplace_ref"] = self.marketplace_ref
+        if self.accounting_ref is not None:
+            out["accounting_ref"] = self.accounting_ref
         return out
 
 

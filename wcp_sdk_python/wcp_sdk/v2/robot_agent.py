@@ -10,7 +10,7 @@ common case one line.
 
 Spec: ``spec/0.95.md`` Sections 2 and 3 (continuation pattern), updated by
 ``spec/0.955.md`` (settlement removed from descriptor; ``max_attestation_attempts``
-and ``marketplace_ref`` added).
+and ``accounting_ref`` added).
 Pattern doc: ``docs/patterns/robot-as-agent.md``.
 Reference deployment: ``examples/agents/delivery-robot-dispatcher/``.
 
@@ -98,7 +98,7 @@ class RobotAgent(Agent):
         constraints: Optional[dict[str, Any]] = None,
         attestation_requirement: Optional[dict[str, Any]] = None,
         max_attestation_attempts: int = 1,
-        marketplace_ref: Optional[str] = None,
+        accounting_ref: Optional[str] = None,
     ) -> dict[str, Any]:
         """Construct a task descriptor that names a prior task via
         ``continuation_of`` and otherwise leaves the application layer to
@@ -108,7 +108,7 @@ class RobotAgent(Agent):
         (the two required blocks per the v0.955 descriptor schema). The helper
         adds ``schema_version``, ``task_id``, ``posted_by``, the descriptor
         type and payload, the ``continuation_of`` reference, and the optional
-        v0.955 fields ``max_attestation_attempts`` and ``marketplace_ref``.
+        v0.955 fields ``max_attestation_attempts`` and ``accounting_ref``.
 
         Settlement is no longer a protocol concern at v0.955; the
         ``settlement`` block was removed from the descriptor.
@@ -132,8 +132,8 @@ class RobotAgent(Agent):
             "attestation_requirement": attestation_requirement,
             "max_attestation_attempts": max_attestation_attempts,
         }
-        if marketplace_ref is not None:
-            descriptor["marketplace_ref"] = marketplace_ref
+        if accounting_ref is not None:
+            descriptor["accounting_ref"] = accounting_ref
         return descriptor
 
     async def post_continuation(

@@ -78,7 +78,7 @@ The TaskDescriptor shape at v0.955 is defined in `spec/0.955.md` Section 4. The 
 Optional v0.955 fields:
 
 - `max_attestation_attempts` (default 1): bounds the recheck loop on verifier failure.
-- `marketplace_ref` (opaque string): correlation key for any settlement layer above WCP (a Stripe PaymentIntent, an SAP work-order, a grant code).
+- `accounting_ref` (opaque string): correlation key for any settlement layer above WCP (a Stripe PaymentIntent, an SAP work-order, a grant code).
 
 Settlement, escrow, dispute, and refund were removed from the protocol at v0.955. If your deployment needs them, build that layer above WCP and subscribe to the audit chain. `wcp_sdk.session.make_task_descriptor` is an ergonomic helper.
 

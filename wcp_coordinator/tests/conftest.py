@@ -162,7 +162,7 @@ def make_task(
     N: int = 2,
     worker_class_filter: list[str] | None = None,
     max_attestation_attempts: int = 1,
-    marketplace_ref: str | None = None,
+    accounting_ref: str | None = None,
 ) -> dict[str, Any]:
     modes = attestation_modes or ["cryptographic-presence", "owner-sign-off"]
     kinds_map = attestation_kinds or {
@@ -194,8 +194,8 @@ def make_task(
         "max_attestation_attempts": max_attestation_attempts,
         "x-subcontract-allowed": False,
     }
-    if marketplace_ref is not None:
-        task["marketplace_ref"] = marketplace_ref
+    if accounting_ref is not None:
+        task["accounting_ref"] = accounting_ref
     return task
 
 

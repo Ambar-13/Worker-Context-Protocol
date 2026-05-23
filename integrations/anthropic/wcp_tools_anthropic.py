@@ -60,7 +60,7 @@ WCP_TOOLS: list[dict[str, Any]] = [
     {
         "name": "wcp_post_task",
         "description": (
-            "Post a WCP TaskDescriptor. v0.955: settlement is not a protocol concern; pass marketplace_ref to correlate with an external settlement layer if needed."
+            "Post a WCP TaskDescriptor. v0.955: settlement is not a protocol concern; pass accounting_ref to correlate with an external settlement layer if needed."
         ),
         "input_schema": {
             "type": "object",
@@ -162,7 +162,7 @@ async def _post_via_tool(agent: Agent, tool_input: dict[str, Any]) -> dict[str, 
             ],
         },
         "max_attestation_attempts": 1,
-        "marketplace_ref": tool_input.get("marketplace_ref"),
+        "accounting_ref": tool_input.get("accounting_ref"),
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }

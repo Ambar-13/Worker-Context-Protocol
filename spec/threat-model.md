@@ -13,7 +13,7 @@ This document applies STRIDE analysis (Spoofing, Tampering, Repudiation, Informa
 | Worker DID and keypair | Identity rooted in the worker's hardware or software keypair | Worker |
 | Principal DID | Employer, owner, or operator-of-record account credential | Principal |
 | Agent DID | AI-platform issued credential | Agent |
-| TaskDescriptor | Posted task; carries an optional opaque `marketplace_ref` for external settlement-layer correlation | Agent |
+| TaskDescriptor | Posted task; carries an optional opaque `accounting_ref` for external settlement-layer correlation | Agent |
 | acceptance_attestation | Worker's signed claim acceptance | Worker |
 | AttestationEvidence | Per-mode, per-kind signed proof of work | Worker |
 | AuditChainEntry | Hash-linked signed event in the coordinator's log | Coordinator |

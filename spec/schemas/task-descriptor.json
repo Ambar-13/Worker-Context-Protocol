@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wcp-spec.rentably.ai/schemas/task-descriptor.json",
   "title": "TaskDescriptor",
-  "description": "v0.955 shape: settlement block, override_authority, override_audit_required, and override_allowed removed. max_attestation_attempts and marketplace_ref added. Wire schema identifier remains wcp/0.2.",
+  "description": "v0.955 shape: settlement block, override_authority, override_audit_required, and override_allowed removed. max_attestation_attempts and accounting_ref added. Wire schema identifier remains wcp/0.2.",
   "type": "object",
   "required": ["schema_version", "task_id", "posted_by", "descriptor_type",
                "descriptor_payload", "constraints", "attestation_requirement"],
@@ -95,7 +95,7 @@
       "minimum": 1,
       "description": "Optional, default 1. The worker may submit at most this many tasks/attest calls per claim before the task voids on continued verifier failure. See spec/0.955.md Section 3."
     },
-    "marketplace_ref": {
+    "accounting_ref": {
       "type": "string",
       "description": "Optional. Opaque to WCP. Used by external settlement layers (marketplaces, ERPs, grant systems) to correlate WCP tasks with their own state. Examples: a Stripe PaymentIntent ID, an SAP cost-centre work-order number, a research-grant disbursement reference."
     },
@@ -132,7 +132,7 @@
         ]
       },
       "max_attestation_attempts": 2,
-      "marketplace_ref": "rentably-job-78421",
+      "accounting_ref": "rentably-job-78421",
       "x-subcontract-allowed": false
     }
   ]

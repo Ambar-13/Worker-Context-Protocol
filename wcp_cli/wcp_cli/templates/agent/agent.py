@@ -50,7 +50,7 @@ def build_demo_task() -> dict:
             ],
         },
         "max_attestation_attempts": 1,
-        "marketplace_ref": "external-allocation",
+        "accounting_ref": "external-allocation",
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }

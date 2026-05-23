@@ -4,7 +4,7 @@
 //!
 //! Spec: `spec/0.95.md` Sections 2 and 3 (continuation pattern), amended
 //! by `spec/0.955.md` (settlement removed from descriptor;
-//! `max_attestation_attempts` and `marketplace_ref` added).
+//! `max_attestation_attempts` and `accounting_ref` added).
 //! Pattern doc: `docs/patterns/robot-as-agent.md`.
 //!
 //! Example:
@@ -33,7 +33,7 @@
 //!               { "mode": "sensor-witness", "kinds": ["weight_delta"] }
 //!             ]}),
 //!     1,                                       // max_attestation_attempts
-//!     None,                                    // marketplace_ref
+//!     None,                                    // accounting_ref
 //! );
 //! robot.post_continuation("claim-abc-123", &descriptor, "2026-12-31T00:00:00Z").await?;
 //! # Ok(()) }
@@ -101,7 +101,7 @@ impl RobotAgent {
     /// Build a task descriptor that names a prior task via `continuation_of`.
     /// The caller supplies the two required application-layer blocks
     /// (constraints, attestation_requirement). v0.955 settlement is no longer
-    /// a protocol concern; pass `marketplace_ref` to correlate with an
+    /// a protocol concern; pass `accounting_ref` to correlate with an
     /// external settlement-layer record.
     #[allow(clippy::too_many_arguments)]
     pub fn build_continuation(
@@ -113,7 +113,7 @@ impl RobotAgent {
         constraints: Value,
         attestation_requirement: Value,
         max_attestation_attempts: u32,
-        marketplace_ref: Option<&str>,
+        accounting_ref: Option<&str>,
     ) -> Value {
         let mut descriptor = json!({
             "schema_version": "wcp/0.2",
@@ -129,8 +129,8 @@ impl RobotAgent {
             "attestation_requirement": attestation_requirement,
             "max_attestation_attempts": max_attestation_attempts,
         });
-        if let Some(mref) = marketplace_ref {
-            descriptor["marketplace_ref"] = json!(mref);
+        if let Some(mref) = accounting_ref {
+            descriptor["accounting_ref"] = json!(mref);
         }
         descriptor
     }

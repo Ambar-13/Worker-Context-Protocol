@@ -167,7 +167,7 @@ async def _post_place_on_shelf_continuation(
                     },
                 ],
             },
-            marketplace_ref="cost-center-line-7-manipulator-ops",
+            accounting_ref="cost-center-line-7-manipulator-ops",
         )
         result = await robot.post_continuation(
             prior_claim_id=prior_claim_id,

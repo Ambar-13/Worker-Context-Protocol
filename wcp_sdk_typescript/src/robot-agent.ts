@@ -3,7 +3,7 @@
  *
  * Spec: spec/0.95.md Sections 2 and 3 (continuation pattern), amended by
  * spec/0.955.md (settlement block removed from descriptor;
- * max_attestation_attempts and marketplace_ref added).
+ * max_attestation_attempts and accounting_ref added).
  * Pattern doc: docs/patterns/robot-as-agent.md.
  * Reference deployment: examples/agents/delivery-robot-dispatcher/.
  *
@@ -34,7 +34,7 @@ export interface BuildContinuationArgs {
   constraints: Record<string, unknown>;
   attestationRequirement: Record<string, unknown>;
   maxAttestationAttempts?: number;
-  marketplaceRef?: string;
+  accountingRef?: string;
 }
 
 export class RobotAgent extends Agent {
@@ -52,7 +52,7 @@ export class RobotAgent extends Agent {
    * attestationRequirement). The helper adds schema_version, task_id,
    * posted_by, descriptor type and payload, the continuation_of reference,
    * and the optional v0.955 fields max_attestation_attempts and
-   * marketplace_ref. Settlement is no longer a protocol concern at v0.955.
+   * accounting_ref. Settlement is no longer a protocol concern at v0.955.
    */
   buildContinuation(args: BuildContinuationArgs): Record<string, unknown> {
     const descriptor: Record<string, unknown> = {
@@ -69,8 +69,8 @@ export class RobotAgent extends Agent {
       attestation_requirement: args.attestationRequirement,
       max_attestation_attempts: args.maxAttestationAttempts ?? 1,
     };
-    if (args.marketplaceRef !== undefined) {
-      descriptor.marketplace_ref = args.marketplaceRef;
+    if (args.accountingRef !== undefined) {
+      descriptor.accounting_ref = args.accountingRef;
     }
     return descriptor;
   }

@@ -35,7 +35,7 @@ def build_specimen_transport(specimen_id: str, pickup: str, dropoff: str) -> dic
         },
                 "supervision": {"default": "autonomous"},
         "max_attestation_attempts": 1,
-        "marketplace_ref": "external-allocation",
+        "accounting_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 

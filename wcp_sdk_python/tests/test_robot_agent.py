@@ -103,16 +103,16 @@ def test_required_evidence_kinds_defaults_to_empty_list():
     assert descriptor["continuation_of"]["required_evidence_kinds"] == []
 
 
-def test_build_continuation_carries_marketplace_ref_when_set():
+def test_build_continuation_carries_accounting_ref_when_set():
     robot = RobotAgent(name="amr", coordinator=COORD)
     descriptor = robot.build_continuation(
         prior_claim_id="claim-1",
         descriptor_type="place_on_shelf",
         descriptor_payload={},
-        marketplace_ref="external-ref-77",
+        accounting_ref="external-ref-77",
         **_required_blocks(),
     )
-    assert descriptor["marketplace_ref"] == "external-ref-77"
+    assert descriptor["accounting_ref"] == "external-ref-77"
 
 
 def test_agent_class_declaration_shape():

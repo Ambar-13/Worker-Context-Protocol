@@ -282,12 +282,12 @@ def make_task_descriptor(
     task_id: Optional[str] = None,
     time_window: Optional[dict[str, str]] = None,
     max_attestation_attempts: int = 1,
-    marketplace_ref: Optional[str] = None,
+    accounting_ref: Optional[str] = None,
 ) -> TaskDescriptor:
     """Ergonomic helper to construct a TaskDescriptor with sensible defaults.
 
     Settlement parameters are removed at v0.955; settlement is no longer a
-    protocol concern. Pass ``marketplace_ref`` to correlate this task with
+    protocol concern. Pass ``accounting_ref`` to correlate this task with
     an external settlement-layer record (a Stripe PaymentIntent ID, an SAP
     work-order number, a grant disbursement reference, etc.).
     """
@@ -313,5 +313,5 @@ def make_task_descriptor(
             ],
         ),
         max_attestation_attempts=max_attestation_attempts,
-        marketplace_ref=marketplace_ref,
+        accounting_ref=accounting_ref,
     )

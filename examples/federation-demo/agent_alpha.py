@@ -65,7 +65,7 @@ def build_federated_transport_task(agent_did: str) -> dict:
             ],
         },
         "max_attestation_attempts": 1,
-        "marketplace_ref": "federation-demo-alpha",
+        "accounting_ref": "federation-demo-alpha",
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }

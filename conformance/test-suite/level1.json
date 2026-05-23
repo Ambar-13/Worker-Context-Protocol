@@ -1,7 +1,7 @@
 {
   "schema_version": "wcp/0.2",
   "level": 1,
-  "description": "WCP Level 1 (Protocol surface) test bundle. Updated at v0.955: tasks/settle removed; legacy settlement / override fields rejected; max_attestation_attempts and marketplace_ref accepted. Cases L1.5 through L1.7 carry forward the robot-as-agent and continuation_of coverage introduced at v0.95.",
+  "description": "WCP Level 1 (Protocol surface) test bundle. Updated at v0.955: tasks/settle removed; legacy settlement / override fields rejected; max_attestation_attempts and accounting_ref accepted. Cases L1.5 through L1.7 carry forward the robot-as-agent and continuation_of coverage introduced at v0.95.",
   "cases": [
     {
       "id": "L1.1.unknown_did_resolves_error",
@@ -51,7 +51,7 @@
             ]
           },
           "max_attestation_attempts": 1,
-          "marketplace_ref": "test-ref-001",
+          "accounting_ref": "test-ref-001",
           "supervision": {
             "default": "autonomous"
           },
@@ -123,7 +123,7 @@
     {
       "id": "L1.4.v0955_descriptor_accepted",
       "level": 1,
-      "description": "tasks/post with the v0.955 descriptor shape (no settlement block, max_attestation_attempts and marketplace_ref present) is accepted.",
+      "description": "tasks/post with the v0.955 descriptor shape (no settlement block, max_attestation_attempts and accounting_ref present) is accepted.",
       "method": "tasks/post",
       "params_template": {
         "task": {
@@ -156,7 +156,7 @@
             ]
           },
           "max_attestation_attempts": 3,
-          "marketplace_ref": "external-ref-9871",
+          "accounting_ref": "external-ref-9871",
           "supervision": {
             "default": "autonomous"
           },

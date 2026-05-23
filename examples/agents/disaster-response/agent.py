@@ -35,7 +35,7 @@ def build_zone_survey(zone_id: str, polygon: list[list[float]]) -> dict:
         },
                 "supervision": {"default": "co_pilot"},
         "max_attestation_attempts": 1,
-        "marketplace_ref": "external-allocation",
+        "accounting_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 

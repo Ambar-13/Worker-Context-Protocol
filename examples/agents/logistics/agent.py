@@ -34,7 +34,7 @@ def build_pallet_move(payload_desc: str, pickup: str, dropoff: str) -> dict:
         },
                 "supervision": {"default": "autonomous"},
         "max_attestation_attempts": 1,
-        "marketplace_ref": "external-allocation",
+        "accounting_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 

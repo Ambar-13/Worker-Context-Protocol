@@ -26,7 +26,7 @@ func NewAgent(ctx context.Context, coordinatorURL string) (*Agent, error) {
 
 // PostTask posts a TaskDescriptor. v0.955: bond_ref is no longer part of the
 // envelope (settlement is not a protocol concern). External settlement
-// correlation lives in task["marketplace_ref"] if needed.
+// correlation lives in task["accounting_ref"] if needed.
 func (a *Agent) PostTask(
 	ctx context.Context,
 	task map[string]interface{},
