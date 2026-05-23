@@ -1,6 +1,6 @@
 # wcp-conformance (Go runner)
 
-Placeholder for the Go-language conformance runner. The Python runner (`../runner-python/`) is the v1.0-rc1 reference; the Go runner is targeted for v1.0-rc1 final.
+Placeholder for the Go-language conformance runner. The Python runner (`../runner-python/`) is the v0.2 reference; the Go runner is targeted for v0.2 final.
 
 ## Sketch
 

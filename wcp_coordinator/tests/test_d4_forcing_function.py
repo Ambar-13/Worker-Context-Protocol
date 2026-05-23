@@ -136,7 +136,7 @@ def test_d4_cell_round_trips(
         M=len(modes), N=len(modes),  # all-of-N
         worker_class_filter=[worker_class],
     )
-    tasks.post(task=t, bond_ref=f"pi_{cell_name}", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     cr = tasks.claim(
         task_id=t["task_id"], worker_id=w.did, eta=eta,
@@ -149,14 +149,7 @@ def test_d4_cell_round_trips(
     ]
     res = tasks.attest(claim_id=cr["claim_id"], attestations=evidence)
     assert res["verifier_decision"] in ("pass", "review"), (cell_name, res)
-    if res["verifier_decision"] == "pass":
-        settle = tasks.settle(
-            claim_id=cr["claim_id"], decision="release", amount="100.00",
-            party_breakdown=[
-                {"party": "did:wcp:worker-principal", "amount": "80.00"},
-                {"party": "did:wcp:platform", "amount": "15.00"},
-                {"party": "did:wcp:insurance-pool", "amount": "5.00"},
-            ],
-        )
-        assert settle["state"] == "captured", cell_name
+    # v0.955: pass triggers an internal transition to COMPLETED and emits the
+    # task_completed audit entry; no tasks/settle round-trip at the protocol
+    # layer. The audit chain still verifies hash-link integrity.
     assert audit.verify_chain(cr["claim_id"])

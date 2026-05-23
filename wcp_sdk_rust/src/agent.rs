@@ -32,7 +32,6 @@ impl Agent {
     pub async fn post_task(
         &self,
         task: Value,
-        bond_ref: &str,
         expiry: &str,
     ) -> Result<Value, RpcError> {
         let rpc = self.rpc.as_ref().ok_or_else(|| {
@@ -42,7 +41,6 @@ impl Agent {
             "tasks/post",
             json!({
                 "task": task,
-                "bond_ref": bond_ref,
                 "expiry": expiry,
             }),
         )

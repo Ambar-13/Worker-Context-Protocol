@@ -1,7 +1,7 @@
 # RFC 0014: Threat Model Process
 
 - Author(s): Rentably (principal)
-- Status: accepted (part of v1.0-rc1)
+- Status: accepted (part of v0.2)
 - Type: standards-track
 - Created: 2026-05-23
 

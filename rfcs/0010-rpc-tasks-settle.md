@@ -1,9 +1,10 @@
 # RFC 0010: RPC tasks/settle
 
 - Author(s): Rentably
-- Status: accepted (part of v0.1)
-- Type: standards-track
+- Status: **WITHDRAWN at v0.955.** Settlement is no longer a protocol concern; the `tasks/settle` RPC is removed from the surface. See `spec/0.955.md` for the architectural decision and migration guide. This RFC is preserved as history of the design exploration.
+- Type: standards-track (historical)
 - Created: 2026-05-23
+- Withdrawn: 2026-05-23 (v0.955)
 
 ## Summary
 

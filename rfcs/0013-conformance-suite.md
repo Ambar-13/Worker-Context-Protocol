@@ -1,14 +1,14 @@
 # RFC 0013: Conformance Suite
 
 - Author(s): Rentably (principal)
-- Status: accepted (part of v1.0-rc1)
+- Status: accepted (part of v0.2)
 - Type: standards-track
 - Created: 2026-05-23
-- Targets: v1.0-rc1, v1.0 final
+- Targets: v0.2, v1.0 final
 
 ## Summary
 
-Defines the conformance suite as the canonical determinant of "WCP-conformant at Level N". The suite lives at `conformance/`. The Python runner is the v1.0-rc1 reference; a Go runner is targeted for v1.0-rc1 final.
+Defines the conformance suite as the canonical determinant of "WCP-conformant at Level N". The suite lives at `conformance/`. The Python runner is the v0.2 reference; a Go runner is targeted for v0.2 final.
 
 ## Motivation
 

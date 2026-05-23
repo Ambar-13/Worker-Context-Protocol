@@ -1,6 +1,6 @@
 # WCP Privacy Architecture
 
-**Companion to:** spec/1.0-rc1.md
+**Companion to:** spec/0.2.md
 **Status:** normative
 **Compiled:** 2026-05-23
 
@@ -78,7 +78,7 @@ WCP is jurisdiction-neutral. Operators in cross-border deployments MUST:
 
 ## 6. Minor and special-category data
 
-Tasks involving minors as subjects are out-of-scope at v1.0-rc1 per spec Section 10. Special-category data (health, biometric, financial, political opinion) is similarly out-of-scope for v1.0-rc1 reference coordinator deployments; operators MAY relax with explicit RFC clearance and signed operator policy. The PII tagging (Section 1) supports special-category labels (`biometric`, `health`) so future RFCs can add normative handling.
+Tasks involving minors as subjects are out-of-scope at v0.2 per spec Section 10. Special-category data (health, biometric, financial, political opinion) is similarly out-of-scope for v0.2 reference coordinator deployments; operators MAY relax with explicit RFC clearance and signed operator policy. The PII tagging (Section 1) supports special-category labels (`biometric`, `health`) so future RFCs can add normative handling.
 
 ## 7. Consent and audit
 

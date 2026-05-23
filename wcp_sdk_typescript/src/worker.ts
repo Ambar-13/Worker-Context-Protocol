@@ -83,7 +83,7 @@ export class Worker {
   private buildDescriptor(): Record<string, unknown> {
     const o = this.options;
     return {
-      schema_version: "wcp/1.0-rc1",
+      schema_version: "wcp/0.2",
       worker_id: this.did,
       principal_id: o.principalId ?? "did:wcp:example-principal",
       class: o.workerClass,
@@ -163,7 +163,7 @@ export class Worker {
       };
       const evSig = await this.identity!.sign(evCanonical);
       attestations.push({
-        schema_version: "wcp/1.0-rc1",
+        schema_version: "wcp/0.2",
         mode,
         kind: built.kind,
         payload: built.payload,

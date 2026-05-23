@@ -2,9 +2,11 @@
 Worker Context Protocol (WCP) Python SDK.
 
 This SDK is for implementers building WCP workers or agents in Python. It is
-vendor-neutral: it does not depend on any specific operator, escrow provider,
-or currency. The reference coordinator (wcp_coordinator/) is ONE possible
-endpoint the SDK can talk to; the SDK is not bound to that implementation.
+vendor-neutral: it does not depend on any specific operator. Settlement is
+not a protocol concern at v0.955; pair this SDK with a settlement layer of
+your choice that subscribes to the audit chain. The reference coordinator
+(wcp_coordinator/) is ONE possible endpoint the SDK can talk to; the SDK is
+not bound to that implementation.
 
 Key entry points:
 
@@ -45,7 +47,7 @@ from .types import (
 )
 
 __version__ = "0.95.0"
-__schema_version__ = "wcp/1.0-rc1"
+__schema_version__ = "wcp/0.2"
 
 # v2 additive imports (decorator-style three-role API). Available as
 # `from wcp_sdk.v2 import Worker, Agent, Coordinator`. v1 imports unchanged.

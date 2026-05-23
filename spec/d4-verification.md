@@ -1,6 +1,6 @@
 # D4 Forcing Function Verification
 
-**Status:** verified pass for v0.1 publication
+**Status:** verified pass for v0.1 publication. Historical: the original v0.1 verification walks the nine RPCs including `tasks/settle`; at v0.955 the RPC surface contracts to eight and the `tasks/settle` step in each scenario is replaced by an audit-chain `task_completed` event consumed by an external settlement layer. The D4 conclusion (one RPC surface for every cell) is unchanged.
 **Date:** 2026-05-23
 
 The D4 forcing function is the design-quality gate before WCP v0.1 publication: three application-layer task descriptors x two worker classes = six cells. Each cell MUST be expressible using the nine RPCs in `spec/0.1.md` without modification. If any cell would force a tenth RPC or a new top-level RPC parameter, the surface is wrong and the spec iterates before publication.

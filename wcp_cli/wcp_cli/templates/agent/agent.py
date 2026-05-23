@@ -23,7 +23,7 @@ def build_demo_task() -> dict:
     """Build a TaskDescriptor for a demo dispatch. Customize for your domain."""
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": "scheduled_presence",
@@ -48,19 +48,9 @@ def build_demo_task() -> dict:
                     "kinds": ["geofence_check_in_out"],
                 }
             ],
-            "override_authority": "did:wcp:example-operator-ops",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD",
-            "amount": "100.00",
-            "escrow_provider": "example-escrow",
-            "split": [
-                {"party": "did:wcp:worker-principal", "pct": 80},
-                {"party": "did:wcp:platform", "pct": 15},
-                {"party": "did:wcp:insurance-pool", "pct": 5},
-            ],
-        },
+        "max_attestation_attempts": 1,
+        "marketplace_ref": "external-allocation",
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }
@@ -71,7 +61,6 @@ async def main() -> None:
         task = build_demo_task()
         result = await agent.post_task(
             task,
-            bond_ref=f"example-bond-{task['task_id']}",
             expiry=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
         )
         print(f"posted task {result['task_id']}; "

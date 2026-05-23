@@ -4,7 +4,7 @@
 
 | Version | Supported |
 |---|---|
-| v1.0-rc1 | yes (RC; surface may change) |
+| v0.2 | yes (RC; surface may change) |
 | v0.1 | yes (legacy; security fixes only) |
 | pre-v0.1 | no |
 
@@ -40,7 +40,7 @@ After a fix is available, we coordinate disclosure with the reporter. Default di
 -----END PGP PUBLIC KEY BLOCK-----
 ```
 
-INTEGRATION-GAP: the PGP key has not yet been generated and published. v1.0-rc1 readers should fall back to GitHub Security Advisories.
+INTEGRATION-GAP: the PGP key has not yet been generated and published. v0.2 readers should fall back to GitHub Security Advisories.
 
 ## Threat model
 

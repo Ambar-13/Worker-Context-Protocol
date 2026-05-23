@@ -1,14 +1,16 @@
 /**
  * RobotAgent: convenience subclass of Agent for the robot-as-agent pattern.
  *
- * Spec: spec/1.0-rc5.md Sections 2 and 3.
+ * Spec: spec/0.95.md Sections 2 and 3 (continuation pattern), amended by
+ * spec/0.955.md (settlement block removed from descriptor;
+ * max_attestation_attempts and marketplace_ref added).
  * Pattern doc: docs/patterns/robot-as-agent.md.
  * Reference deployment: examples/agents/delivery-robot-dispatcher/.
  *
- * The wire protocol is unchanged from v1.0-rc1. This class wraps the common
- * "robot posts a follow-up task from inside its execute loop" case with a
- * single method, `postContinuation`. agent_class is informational and is
- * preserved through the agent's DID document service array.
+ * The wire protocol identifier is unchanged from v0.2. This class wraps
+ * the common "robot posts a follow-up task from inside its execute loop" case
+ * with a single method, `postContinuation`. agent_class is informational and
+ * is preserved through the agent's DID document service array.
  */
 
 import { Agent, AgentOptions } from "./agent";
@@ -31,7 +33,8 @@ export interface BuildContinuationArgs {
   requiredEvidenceKinds?: string[];
   constraints: Record<string, unknown>;
   attestationRequirement: Record<string, unknown>;
-  settlement: Record<string, unknown>;
+  maxAttestationAttempts?: number;
+  marketplaceRef?: string;
 }
 
 export class RobotAgent extends Agent {
@@ -45,14 +48,15 @@ export class RobotAgent extends Agent {
   /**
    * Build a task descriptor that continues from a prior claim.
    *
-   * The caller supplies the three required blocks (constraints,
-   * attestationRequirement, settlement). The helper adds schema_version,
-   * task_id, posted_by, descriptor type and payload, and the
-   * continuation_of reference.
+   * The caller supplies the two required blocks (constraints,
+   * attestationRequirement). The helper adds schema_version, task_id,
+   * posted_by, descriptor type and payload, the continuation_of reference,
+   * and the optional v0.955 fields max_attestation_attempts and
+   * marketplace_ref. Settlement is no longer a protocol concern at v0.955.
    */
   buildContinuation(args: BuildContinuationArgs): Record<string, unknown> {
-    return {
-      schema_version: "wcp/1.0-rc1",
+    const descriptor: Record<string, unknown> = {
+      schema_version: "wcp/0.2",
       task_id: uuidv4(),
       posted_by: this.did,
       descriptor_type: args.descriptorType,
@@ -63,8 +67,12 @@ export class RobotAgent extends Agent {
       },
       constraints: args.constraints,
       attestation_requirement: args.attestationRequirement,
-      settlement: args.settlement,
+      max_attestation_attempts: args.maxAttestationAttempts ?? 1,
     };
+    if (args.marketplaceRef !== undefined) {
+      descriptor.marketplace_ref = args.marketplaceRef;
+    }
+    return descriptor;
   }
 
   /**
@@ -74,7 +82,6 @@ export class RobotAgent extends Agent {
   async postContinuation(args: {
     priorClaimId: string;
     descriptor: Record<string, unknown>;
-    bondRef: string;
     expiry: string;
     supervision?: Record<string, unknown>;
   }): Promise<Record<string, unknown>> {
@@ -88,7 +95,6 @@ export class RobotAgent extends Agent {
       );
     }
     return this.postTask(args.descriptor, {
-      bondRef: args.bondRef,
       expiry: args.expiry,
       supervision: args.supervision,
     });

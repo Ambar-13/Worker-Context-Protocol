@@ -1,6 +1,6 @@
 # WCP Semantic Versioning Policy
 
-**Companion to:** spec/1.0-rc1.md
+**Companion to:** spec/0.2.md
 **Status:** normative
 **Compiled:** 2026-05-23
 
@@ -19,9 +19,9 @@ Current version at this writing: `1.0-rc1` (release candidate 1 of v1.0).
 
 ## `schema_version` on typed objects
 
-Every typed object carries `schema_version`. The value is `wcp/MAJOR.MINOR` (PATCH is silent for payloads; the value does not change between PATCH releases). For prereleases, the value includes the prerelease tag: `wcp/1.0-rc1`.
+Every typed object carries `schema_version`. The value is `wcp/MAJOR.MINOR` (PATCH is silent for payloads; the value does not change between PATCH releases). For prereleases, the value includes the prerelease tag: `wcp/0.2`.
 
-A v1.0 implementation MUST accept payloads with `schema_version: wcp/1.0-rc1` for the duration of the deprecation overlap window (Section 5).
+A v1.0 implementation MUST accept payloads with `schema_version: wcp/0.2` for the duration of the deprecation overlap window (Section 5).
 
 ## What is breaking
 

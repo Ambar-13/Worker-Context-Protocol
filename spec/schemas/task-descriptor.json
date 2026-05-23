@@ -2,18 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wcp-spec.rentably.ai/schemas/task-descriptor.json",
   "title": "TaskDescriptor",
+  "description": "v0.955 shape: settlement block, override_authority, override_audit_required, and override_allowed removed. max_attestation_attempts and marketplace_ref added. Wire schema identifier remains wcp/0.2.",
   "type": "object",
   "required": ["schema_version", "task_id", "posted_by", "descriptor_type",
-               "descriptor_payload", "constraints", "attestation_requirement",
-               "settlement"],
+               "descriptor_payload", "constraints", "attestation_requirement"],
   "properties": {
-    "schema_version": { "const": "wcp/0.1" },
+    "schema_version": { "const": "wcp/0.2" },
     "task_id":   { "type": "string", "format": "uuid" },
     "posted_by": { "type": "string", "pattern": "^did:wcp:" },
     "descriptor_type": { "type": "string" },
     "descriptor_payload": { "type": "object" },
     "continuation_of": {
-      "description": "v1.0-rc5 (informational). Names a prior task whose attestation a follow-up posts against. The verifier MAY read this for audit-chain readability but MUST NOT enforce continuation as a precondition for accepting tasks/post.",
+      "description": "Informational (added in v0.95). Names a prior task whose attestation a follow-up posts against. The verifier MAY read this for audit-chain readability but MUST NOT enforce continuation as a precondition for accepting tasks/post.",
       "type": "object",
       "required": ["claim_id"],
       "properties": {
@@ -81,10 +81,7 @@
               }
             }
           }
-        },
-        "override_allowed":        { "type": "boolean" },
-        "override_authority":      { "type": "string", "pattern": "^did:wcp:" },
-        "override_audit_required": { "type": "boolean" }
+        }
       },
       "allOf": [
         {
@@ -93,36 +90,14 @@
         }
       ]
     },
-    "settlement": {
-      "type": "object",
-      "required": ["currency", "amount", "escrow_provider", "split"],
-      "properties": {
-        "currency":        { "type": "string", "minLength": 3, "maxLength": 3 },
-        "amount":          { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
-        "escrow_provider": { "type": "string" },
-        "split": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["party", "pct"],
-            "properties": {
-              "party": { "type": "string", "pattern": "^did:wcp:" },
-              "pct":   { "type": "number", "minimum": 0, "maximum": 100 }
-            }
-          }
-        },
-        "partial_completion_schedule": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["milestone", "release_pct"],
-            "properties": {
-              "milestone":   { "type": "string" },
-              "release_pct": { "type": "number", "minimum": 0, "maximum": 100 }
-            }
-          }
-        }
-      }
+    "max_attestation_attempts": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional, default 1. The worker may submit at most this many tasks/attest calls per claim before the task voids on continued verifier failure. See spec/0.955.md Section 3."
+    },
+    "marketplace_ref": {
+      "type": "string",
+      "description": "Optional. Opaque to WCP. Used by external settlement layers (marketplaces, ERPs, grant systems) to correlate WCP tasks with their own state. Examples: a Stripe PaymentIntent ID, an SAP cost-centre work-order number, a research-grant disbursement reference."
     },
     "supervision": {
       "type": "object",
@@ -135,7 +110,7 @@
   },
   "examples": [
     {
-      "schema_version": "wcp/0.1",
+      "schema_version": "wcp/0.2",
       "task_id": "550e8400-e29b-41d4-a716-446655440000",
       "posted_by": "did:wcp:agent-rentably-ops",
       "descriptor_type": "scheduled_presence",
@@ -154,20 +129,10 @@
         "evidence_schema": [
           { "mode": "cryptographic-presence", "kinds": ["geofence_check_in_out"] },
           { "mode": "owner-sign-off", "kinds": ["whatsapp_business_signed_link"] }
-        ],
-        "override_allowed": true,
-        "override_authority": "did:wcp:rentably-ops",
-        "override_audit_required": true
-      },
-      "settlement": {
-        "currency": "SGD", "amount": "120.00",
-        "escrow_provider": "stripe-rentably",
-        "split": [
-          { "party": "did:wcp:worker-principal-1", "pct": 80 },
-          { "party": "did:wcp:platform-rentably",  "pct": 15 },
-          { "party": "did:wcp:insurance-pool-sg",  "pct": 5  }
         ]
       },
+      "max_attestation_attempts": 2,
+      "marketplace_ref": "rentably-job-78421",
       "x-subcontract-allowed": false
     }
   ]

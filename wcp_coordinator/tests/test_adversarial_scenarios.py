@@ -44,7 +44,7 @@ def test_scenario1_fabricated_gps_witness_alone_insufficient(
         },
         M=2, N=2,
     )
-    tasks.post(task=t, bond_ref="pi_s1", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     cr = tasks.claim(
         task_id=t["task_id"], worker_id=worker_identity.did, eta=eta,
@@ -74,7 +74,7 @@ def test_scenario2_fabricated_photo_alone_insufficient(
         },
         M=2, N=2,
     )
-    tasks.post(task=t, bond_ref="pi_s2", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     cr = tasks.claim(
         task_id=t["task_id"], worker_id=worker_identity.did, eta=eta,
@@ -102,7 +102,7 @@ def test_scenario3_self_dealing_blocked_without_third_party(
         attestation_kinds={"sensor-witness": ["gps_track"]},
         M=1, N=1,
     )
-    tasks.post(task=t, bond_ref="pi_s3", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     with pytest.raises(ValueError) as exc:
         tasks.claim(
@@ -125,7 +125,7 @@ def test_scenario5_heartbeat_timeout_promotes_supervising(
     _, tasks, _ = services
     _pub(services, worker_identity, principal_identity, "human")
     t = make_task(agent_did=agent_identity.did, worker_class_filter=["human"])
-    tasks.post(task=t, bond_ref="pi_s5", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     cr = tasks.claim(
         task_id=t["task_id"], worker_id=worker_identity.did, eta=eta,
@@ -149,7 +149,7 @@ def test_scenario8_invalid_attestation_requirement_M_gt_N(
     _, tasks, _ = services
     t = make_task(agent_did=agent_identity.did, M=5, N=2)
     with pytest.raises(ValueError) as exc:
-        tasks.post(task=t, bond_ref="pi_s8", expiry="2026-12-31T23:59:00Z")
+        tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     assert "INVALID_ATTESTATION_REQUIREMENT" in str(exc.value)
 
 
@@ -163,7 +163,7 @@ def test_scenario8_unknown_kind_rejected(services, agent_identity):
         },
     )
     with pytest.raises(ValueError) as exc:
-        tasks.post(task=t, bond_ref="pi_s8b", expiry="2026-12-31T23:59:00Z")
+        tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     assert "INVALID_ATTESTATION_REQUIREMENT" in str(exc.value)
 
 
@@ -174,7 +174,7 @@ def test_scenario9_audit_trail_complete(
     _, tasks, audit = services
     _pub(services, worker_identity, principal_identity, "human")
     t = make_task(agent_did=agent_identity.did, worker_class_filter=["human"])
-    tasks.post(task=t, bond_ref="pi_s9", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     cr = tasks.claim(
         task_id=t["task_id"], worker_id=worker_identity.did, eta=eta,
@@ -188,7 +188,7 @@ def test_scenario11_out_of_scope_task_class_refused(services, agent_identity):
     _, tasks, _ = services
     t = make_task(agent_did=agent_identity.did, descriptor_type="medical")
     with pytest.raises(ValueError) as exc:
-        tasks.post(task=t, bond_ref="pi_s11", expiry="2026-12-31T23:59:00Z")
+        tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     assert "OUT_OF_SCOPE_TASK_CLASS" in str(exc.value)
 
 
@@ -201,7 +201,7 @@ def test_scenario12_supervision_handoff_preserves_attestation_requirement(
     t = make_task(
         agent_did=agent_identity.did, worker_class_filter=["teleoperated_robot"]
     )
-    tasks.post(task=t, bond_ref="pi_s12", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     cr = tasks.claim(
         task_id=t["task_id"], worker_id=worker_identity.did, eta=eta,
@@ -229,5 +229,5 @@ def test_scenario13_subcontract_forbidden_at_v01(services, agent_identity):
     t = make_task(agent_did=agent_identity.did)
     t["x-subcontract-allowed"] = True
     with pytest.raises(ValueError) as exc:
-        tasks.post(task=t, bond_ref="pi_s13", expiry="2026-12-31T23:59:00Z")
+        tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     assert "SUBCONTRACT_FORBIDDEN" in str(exc.value)

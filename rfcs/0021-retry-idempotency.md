@@ -1,7 +1,7 @@
 # RFC 0021: Retry and Idempotency Semantics
 
 - Author(s): Rentably (principal)
-- Status: accepted (part of v1.0-rc1)
+- Status: accepted (part of v0.2); amended at v0.955 (the `tasks/settle` idempotency case is removed; recheck on `tasks/attest` is naturally idempotent because the attempt counter is coordinator-managed).
 - Type: standards-track
 
 ## Summary

@@ -19,7 +19,7 @@ type ToolHelper = (def: unknown) => unknown;
 export interface WcpAgentBinding {
   did: string;
   discoverCapabilities(filter: Record<string, unknown>): Promise<unknown>;
-  postTask(task: Record<string, unknown>, args: { bondRef: string; expiry: string }): Promise<unknown>;
+  postTask(task: Record<string, unknown>, args: { }): Promise<unknown>;
 }
 
 export function makeWcpTools(agent: WcpAgentBinding, tool: ToolHelper): Record<string, unknown> {
@@ -51,7 +51,7 @@ export function makeWcpTools(agent: WcpAgentBinding, tool: ToolHelper): Record<s
       execute: async (args: z.infer<typeof PostInput>) => {
         const now = new Date();
         const task = {
-          schema_version: "wcp/1.0-rc1",
+          schema_version: "wcp/0.2",
           task_id: crypto.randomUUID(),
           posted_by: agent.did,
           descriptor_type: args.descriptor_type,
@@ -82,7 +82,7 @@ export function makeWcpTools(agent: WcpAgentBinding, tool: ToolHelper): Record<s
           "x-subcontract-allowed": false,
         };
         return agent.postTask(task, {
-          bondRef: `example-bond-${task.task_id}`,
+          }`,
           expiry: new Date(now.getTime() + 24 * 3600 * 1000).toISOString(),
         });
       },

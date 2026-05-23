@@ -1,6 +1,6 @@
 # WCP Performance Conformance
 
-**Companion to:** spec/1.0-rc1.md and spec/conformance.md
+**Companion to:** spec/0.2.md and spec/conformance.md
 **Status:** normative
 **Compiled:** 2026-05-23
 

@@ -2,6 +2,8 @@
 
 Detailed test bundle definitions for the three conformance levels in `spec/conformance.md`.
 
+**v0.955 note:** this document was written against the v0.95 / v0.2 surface (nine RPCs, settlement primitives, dispute / refund states). The canonical machine-runnable suites at `conformance/test-suite/level{1,2,3}.json` track the v0.955 surface (eight RPCs, recheck flow, no settlement). Where this prose and the JSON bundles disagree, the JSON bundles bind. The narrative content below is preserved for historical context; future RFCs may rewrite it.
+
 ## Level 1: Protocol surface (60 tests)
 
 Test count is approximate; suite versioning per `spec/semver-policy.md`.
@@ -87,7 +89,7 @@ For each of the 4 attestation modes, submit a well-formed evidence and verify pa
 
 ### 2.2 Per-kind acceptance (12 tests)
 
-For each registered kind in RFC 0003 (12 kinds at v1.0-rc1), submit a well-formed payload and verify pass.
+For each registered kind in RFC 0003 (12 kinds at v0.2), submit a well-formed payload and verify pass.
 
 ### 2.3 Threshold evaluation (8 tests)
 
@@ -170,19 +172,19 @@ Builds on Level 2.
 
 ---
 
-## v1.0-rc1 conformance posture (v1.0-rc3 addendum)
+## v0.2 conformance posture (v0.7 addendum)
 
-For v1.0-rc1 conformance:
+For v0.2 conformance:
 
 - **Level 1 is mandatory.** A coordinator that does not pass Level 1 cannot claim WCP conformance at any level.
-- **Level 2 is optional but recommended.** Operators in regulated, safety-critical, or high-value contexts SHOULD pass Level 2. The post-v1.0-rc1 RFCs (0033 attestation key trust classes, 0034 external trust-root signed evidence) are tracked in Level 2 case extensions in `conformance/test-suite/level2.json`.
+- **Level 2 is optional but recommended.** Operators in regulated, safety-critical, or high-value contexts SHOULD pass Level 2. The post-v0.2 RFCs (0033 attestation key trust classes, 0034 external trust-root signed evidence) are tracked in Level 2 case extensions in `conformance/test-suite/level2.json`.
 - **Level 3 is optional and gated on federation.** A coordinator without federation peers cannot meaningfully pass Level 3. v1.0 final requires at least one independent implementation passing Level 3 to demonstrate federation interoperability.
 
 Test bundles:
 
-- `conformance/test-suite/level1.json`: Level 1 cases (current; v1.0-rc1)
-- `conformance/test-suite/level2.json`: Level 2 cases (added in v1.0-rc3)
-- `conformance/test-suite/level3.json`: Level 3 cases (added in v1.0-rc3; many gated on federation infrastructure)
+- `conformance/test-suite/level1.json`: Level 1 cases (current; v0.2)
+- `conformance/test-suite/level2.json`: Level 2 cases (added in v0.7)
+- `conformance/test-suite/level3.json`: Level 3 cases (added in v0.7; many gated on federation infrastructure)
 
 Some Level 3 cases will not pass against a single-coordinator deployment. The two-coordinator federation demo at `examples/federation-demo/` provides the v1.1 reference for closing those gaps; until the demo's federation pattern is integrated into the conformance harness, Level 3 cases that require two peering coordinators are documented as known v1.1 implementation gaps in their bundle.
 

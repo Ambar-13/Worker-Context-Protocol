@@ -11,7 +11,7 @@ Six reference agents demonstrate WCP's D4 forcing function across institutionall
 | `field-research/` | scientific field operations | human researcher | sensor-witness (GPS + timestamp + signed sensor) |
 | `healthcare-logistics/` | regulated healthcare operations | hybrid courier | sensor-witness (cold-chain temperature) + owner-sign-off (chain-of-custody) |
 
-These are six visibly different institutional domains. The same nine RPCs handle every one. This is the proof in code of `spec/d4-verification-1.0-rc1.md`.
+These are six visibly different institutional domains. The same nine RPCs handle every one. This is the proof in code of `spec/d4-verification-0.2.md`.
 
 ## Run any agent
 
@@ -32,4 +32,4 @@ Each agent's `run.sh` automates step 2.
 
 The six domains span: regulated research, heavy industry, emergency response, supply-chain operations, scientific field operations, and regulated healthcare. None of them is a consumer service. WCP's coordination primitives are the same across all six; the domain shows up only in the application-layer `descriptor_payload` and the registered `(mode, kind)` pairs the verifier accepts.
 
-For a broader view of which domains WCP serves, see `wcp_cli/wcp_cli/templates/` (14 starter templates) and `spec/d4-verification-1.0-rc1.md` (the forcing-function proof).
+For a broader view of which domains WCP serves, see `wcp_cli/wcp_cli/templates/` (14 starter templates) and `spec/d4-verification-0.2.md` (the forcing-function proof).

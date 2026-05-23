@@ -182,7 +182,7 @@ class TaskBuilder:
     """Lightweight builder for tasks with attestation requirements.
 
     Used to attach minimum_trust_class to a task descriptor under construction.
-    Does not replace the canonical v1.0-rc1 TaskDescriptor schema; this is a
+    Does not replace the canonical v0.2 TaskDescriptor schema; this is a
     preview helper for the v1.1 candidate field.
     """
 

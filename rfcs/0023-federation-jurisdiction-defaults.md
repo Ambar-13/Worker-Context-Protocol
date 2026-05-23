@@ -20,4 +20,4 @@ Operators currently set federation jurisdiction policy manually. A community-mai
 - How to handle policy changes mid-federation (a previously adequate jurisdiction loses adequacy)?
 - Whether to encode jurisdiction policy in the trust anchor or in a separate signed object.
 
-Unresolved at v1.0-rc1.
+Unresolved at v0.2.

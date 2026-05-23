@@ -1,6 +1,6 @@
 # WCP Conformance Suite
 
-The conformance suite verifies that a WCP implementation conforms to `spec/1.0-rc1.md` at the level it claims (Level 1, 2, or 3 per `spec/conformance.md`).
+The conformance suite verifies that a WCP implementation conforms to `spec/0.2.md` at the level it claims (Level 1, 2, or 3 per `spec/conformance.md`).
 
 ## Layout
 
@@ -19,7 +19,7 @@ conformance/
   runner-python/        # Python runner implementation
     wcp_conformance/    # the runner package
     pyproject.toml
-  runner-go/            # placeholder for Go runner (v1.0-rc1 final target)
+  runner-go/            # placeholder for Go runner (v0.2 final target)
     README.md
 ```
 

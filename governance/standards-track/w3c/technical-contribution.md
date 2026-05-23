@@ -98,7 +98,7 @@ Informative:
 - VDA 5050 Open Source Reference Implementation [REASONED]
 - IETF SCITT WG (https://datatracker.ietf.org/wg/scitt/) [VERIFIED]
 - WCP repository (https://github.com/Ambar-13/Worker-Context-Protocol)
-- WCP v1.0-rc1 spec (`spec/1.0-rc1.md`)
+- WCP v0.2 spec (`spec/0.2.md`)
 - WCP `did:wcp` method spec (`spec/did-method-wcp.md`)
 - WCP RFCs 0001-0034 (`rfcs/`)
 

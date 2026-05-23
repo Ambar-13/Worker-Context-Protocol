@@ -39,7 +39,7 @@ A party MAY claim "WCP-compatible" without a conformance report; this is a weake
 
 ## Logo use
 
-If logos are published under `branding/` (none exist at v1.0-rc1):
+If logos are published under `branding/` (none exist at v0.2):
 
 - The unmodified logo MAY be used to refer to WCP in documentation, talks, and marketing material referring to the protocol.
 - Derivative logos (e.g., "WCP-Compatible Robot Vendor" badges) MAY be created provided they are visually distinct from the canonical mark and do not imply unilateral endorsement by Rentably or the steward.
@@ -47,7 +47,7 @@ If logos are published under `branding/` (none exist at v1.0-rc1):
 
 ## Domain names
 
-`wcp-spec.org` (target; not yet registered at v1.0-rc1) is reserved for the project. Other domain names containing "WCP" are not restricted; choose names that do not imply endorsement.
+`wcp-spec.org` (target; not yet registered at v0.2) is reserved for the project. Other domain names containing "WCP" are not restricted; choose names that do not imply endorsement.
 
 ## Reporting misuse
 

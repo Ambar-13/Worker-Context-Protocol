@@ -115,7 +115,7 @@ External-trust-root evidence interacts with the worker's declared `trust_class`.
 
 ### Migration
 
-v1.0-rc1 has no concept of external trust roots. v1.1 adds the family; v1.0-rc1 verifiers reject `external-trust-root.*` evidence kinds with `UNKNOWN_EVIDENCE_KIND`. v1.1 verifiers handle the family natively.
+v0.2 has no concept of external trust roots. v1.1 adds the family; v0.2 verifiers reject `external-trust-root.*` evidence kinds with `UNKNOWN_EVIDENCE_KIND`. v1.1 verifiers handle the family natively.
 
 Operators upgrading from a bridge-based workflow:
 

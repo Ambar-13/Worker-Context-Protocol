@@ -1,5 +1,5 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "task_id": "00000000-0000-0000-0000-000000000001",
   "posted_by": "did:wcp:agent",
   "descriptor_type": "transport",

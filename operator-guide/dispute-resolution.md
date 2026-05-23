@@ -2,7 +2,7 @@
 
 **Status:** RECOMMENDED practice; not normative.
 
-WCP defines a `disputed` state in the settlement state machine (`spec/1.0-rc1.md` Section 1). The protocol does not define WHO resolves disputes or HOW. Those are operator policies. This document describes patterns.
+WCP defines a `disputed` state in the settlement state machine (`spec/0.2.md` Section 1). The protocol does not define WHO resolves disputes or HOW. Those are operator policies. This document describes patterns.
 
 ## What enters dispute state
 

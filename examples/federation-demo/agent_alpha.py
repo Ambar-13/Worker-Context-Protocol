@@ -7,7 +7,7 @@ anchor (provisioned by setup.sh), discovers worker_beta on coord-beta,
 posts a logistics task, watches the lifecycle complete, and verifies the
 cross-coordinator audit chain.
 
-This script targets the v1.0-rc1 reference coordinator API. The federation
+This script targets the v0.2 reference coordinator API. The federation
 endpoints expected by the demo (capability sync across peers, cross-coordinator
 task forwarding) are v1.1 RFC 0016 implementation; until they land in the
 reference coordinator, this script demonstrates the agent-side behavior and
@@ -36,7 +36,7 @@ log = logging.getLogger("federation-demo.agent_alpha")
 def build_federated_transport_task(agent_did: str) -> dict:
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": "t_" + uuid.uuid4().hex[:12],
         "posted_by": agent_did,
         "descriptor_type": "transport",
@@ -63,19 +63,9 @@ def build_federated_transport_task(agent_did: str) -> dict:
             "evidence_schema": [
                 {"mode": "sensor-witness", "kinds": ["gps_track"]}
             ],
-            "override_authority": "did:wcp:operator-london-1-ops",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD",
-            "amount": "85.00",
-            "escrow_provider": "example-escrow",
-            "split": [
-                {"party": "did:wcp:logistics-worker-1", "pct": 85},
-                {"party": "did:wcp:operator-london-1", "pct": 10},
-                {"party": "did:wcp:insurance-pool-eu", "pct": 5},
-            ],
-        },
+        "max_attestation_attempts": 1,
+        "marketplace_ref": "federation-demo-alpha",
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }
@@ -96,7 +86,7 @@ async def main() -> None:
         except Exception as exc:
             log.warning("federation subscription returned: %s", exc)
             log.warning(
-                "v1.0-rc1 reference coordinator may not yet support filter.federation; "
+                "v0.2 reference coordinator may not yet support filter.federation; "
                 "the demo's cross-coordinator discovery is a v1.1 implementation "
                 "deliverable per RFC 0016 federation primitives"
             )
@@ -109,14 +99,14 @@ async def main() -> None:
         try:
             result = await agent.post_task(
                 task,
-                bond_ref=f"demo-bond-{task['task_id']}",
                 expiry=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
             )
             log.info("task posted: %s", result)
             log.info(
-                "in a fully-federated v1.1 deployment, this task would be forwarded "
-                "to coord-beta where worker_beta would claim it; settlement would "
-                "clear cross-coordinator per RFC 0032 model (ii)"
+                "in a fully-federated deployment, this task would be forwarded "
+                "to coord-beta where worker_beta would claim it; the audit "
+                "chain entry task_completed becomes the trusted signal for any "
+                "settlement layer above WCP"
             )
         except Exception as exc:
             log.warning("task post returned: %s", exc)

@@ -1,143 +1,213 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "level": 1,
-  "description": "WCP v1.0-rc1 Level 1 (Protocol surface) test bundle.",
+  "description": "WCP Level 1 (Protocol surface) test bundle. Updated at v0.955: tasks/settle removed; legacy settlement / override fields rejected; max_attestation_attempts and marketplace_ref accepted. Cases L1.5 through L1.7 carry forward the robot-as-agent and continuation_of coverage introduced at v0.95.",
   "cases": [
     {
-      "id": "L1.1.health",
+      "id": "L1.1.unknown_did_resolves_error",
       "level": 1,
-      "description": "Coordinator responds to a health probe (sanity).",
+      "description": "Coordinator returns DID_NOT_RESOLVED for capabilities/list on an unknown worker DID.",
       "method": "capabilities/list",
-      "params_template": {"worker_id": "{{worker_did}}"},
-      "expected": {"error_code": -40003}
+      "params_template": {
+        "worker_id": "{{worker_did}}"
+      },
+      "expected": {
+        "error_code": -40003
+      }
     },
     {
-      "id": "L1.9.subcontract_forbidden",
+      "id": "L1.2.subcontract_forbidden",
       "level": 1,
       "description": "tasks/post with x-subcontract-allowed: true is rejected.",
       "method": "tasks/post",
       "params_template": {
         "task": {
-          "schema_version": "wcp/1.0-rc1",
+          "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
           "posted_by": "{{agent_did}}",
           "descriptor_type": "transport",
           "descriptor_payload": {},
-          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "constraints": {
+            "worker_class_filter": {
+              "allowed": [
+                "human"
+              ]
+            }
+          },
           "attestation_requirement": {
-            "modes": ["sensor-witness"],
+            "modes": [
+              "sensor-witness"
+            ],
             "threshold": "M-of-N",
             "M": 1,
             "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
+            "evidence_schema": [
+              {
+                "mode": "sensor-witness",
+                "kinds": [
+                  "gps_track"
+                ]
+              }
+            ]
           },
-          "settlement": {
-            "currency": "USD",
-            "amount": "10.00",
-            "escrow_provider": "example-escrow",
-            "split": [{"party": "did:wcp:worker", "pct": 100}]
+          "max_attestation_attempts": 1,
+          "marketplace_ref": "test-ref-001",
+          "supervision": {
+            "default": "autonomous"
           },
-          "supervision": {"default": "autonomous"},
           "x-subcontract-allowed": true
         },
-        "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"error_code": -45001}
+      "expected": {
+        "error_code": -45001
+      }
     },
     {
-      "id": "L1.9.M_greater_than_N",
+      "id": "L1.3.legacy_settlement_block_rejected",
       "level": 1,
-      "description": "tasks/post with M > N is rejected.",
+      "description": "tasks/post that includes a legacy settlement block is rejected with INVALID_DESCRIPTOR. Settlement is no longer a protocol concern at v0.955.",
       "method": "tasks/post",
       "params_template": {
         "task": {
-          "schema_version": "wcp/1.0-rc1",
+          "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
           "posted_by": "{{agent_did}}",
-          "descriptor_type": "scheduled_presence",
+          "descriptor_type": "transport",
           "descriptor_payload": {},
-          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "constraints": {
+            "worker_class_filter": {
+              "allowed": [
+                "human"
+              ]
+            }
+          },
           "attestation_requirement": {
-            "modes": ["sensor-witness"],
+            "modes": [
+              "sensor-witness"
+            ],
             "threshold": "M-of-N",
-            "M": 5,
-            "N": 2,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
-          },
-          "settlement": {
-            "currency": "USD",
-            "amount": "10.00",
-            "escrow_provider": "example-escrow",
-            "split": [{"party": "did:wcp:worker", "pct": 100}]
-          },
-          "supervision": {"default": "autonomous"},
-          "x-subcontract-allowed": false
-        },
-        "bond_ref": "test-bond-{{uuid}}",
-        "expiry": "2099-12-31T23:59:00Z"
-      },
-      "expected": {"error_code": -41001}
-    },
-    {
-      "id": "L1.9.out_of_scope_medical",
-      "level": 1,
-      "description": "tasks/post for a medical class is rejected.",
-      "method": "tasks/post",
-      "params_template": {
-        "task": {
-          "schema_version": "wcp/1.0-rc1",
-          "task_id": "{{uuid}}",
-          "posted_by": "{{agent_did}}",
-          "descriptor_type": "medical",
-          "descriptor_payload": {},
-          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
-          "attestation_requirement": {
-            "modes": ["sensor-witness"],
-            "threshold": "any",
             "M": 1,
             "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
+            "evidence_schema": [
+              {
+                "mode": "sensor-witness",
+                "kinds": [
+                  "gps_track"
+                ]
+              }
+            ]
           },
           "settlement": {
             "currency": "USD",
             "amount": "10.00",
             "escrow_provider": "example-escrow",
-            "split": [{"party": "did:wcp:worker", "pct": 100}]
+            "split": [
+              {
+                "party": "did:wcp:worker",
+                "pct": 100
+              }
+            ]
           },
-          "supervision": {"default": "autonomous"},
+          "supervision": {
+            "default": "autonomous"
+          },
           "x-subcontract-allowed": false
         },
-        "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"error_code": -45002}
+      "expected": {
+        "error_code": -42010
+      }
     },
     {
-      "id": "L1.rc5.robot_as_agent_post_accepted",
+      "id": "L1.4.v0955_descriptor_accepted",
+      "level": 1,
+      "description": "tasks/post with the v0.955 descriptor shape (no settlement block, max_attestation_attempts and marketplace_ref present) is accepted.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/0.2",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {
+            "worker_class_filter": {
+              "allowed": [
+                "human"
+              ]
+            }
+          },
+          "attestation_requirement": {
+            "modes": [
+              "sensor-witness"
+            ],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [
+              {
+                "mode": "sensor-witness",
+                "kinds": [
+                  "gps_track"
+                ]
+              }
+            ]
+          },
+          "max_attestation_attempts": 3,
+          "marketplace_ref": "external-ref-9871",
+          "supervision": {
+            "default": "autonomous"
+          },
+          "x-subcontract-allowed": false
+        },
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {
+        "result_keys": [
+          "task_id",
+          "eligible_workers_count",
+          "posted_at"
+        ]
+      }
+    },
+    {
+      "id": "L1.5.robot_as_agent_post_accepted",
       "level": 1,
       "description": "tasks/post by an agent declaring agent_class=embodied_agent is accepted (informational field; no semantic branching).",
       "method": "tasks/post",
       "params_template": {
         "task": {
-          "schema_version": "wcp/1.0-rc1",
+          "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
           "posted_by": "{{agent_did}}",
           "descriptor_type": "place_on_shelf",
-          "descriptor_payload": {"shelf_id": "WS-7-A"},
-          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+          "descriptor_payload": {
+            "shelf_id": "WS-7-A"
+          },
+          "constraints": {
+            "worker_class_filter": {
+              "allowed": [
+                "semi_autonomous"
+              ]
+            }
+          },
           "attestation_requirement": {
-            "modes": ["sensor-witness"],
+            "modes": [
+              "sensor-witness"
+            ],
             "threshold": "M-of-N",
             "M": 1,
             "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}],
+            "evidence_schema": [
+              {
+                "mode": "sensor-witness",
+                "kinds": [
+                  "manipulator_pose_track"
+                ]
+              }
+            ],
             "override_authority": "did:wcp:operator-ops",
             "override_audit_required": true
           },
@@ -145,40 +215,69 @@
             "currency": "USD",
             "amount": "0.00",
             "escrow_provider": "internal-cost-allocation",
-            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+            "split": [
+              {
+                "party": "did:wcp:cost-center-ops",
+                "pct": 100
+              }
+            ]
           },
-          "supervision": {"default": "autonomous"},
+          "supervision": {
+            "default": "autonomous"
+          },
           "x-subcontract-allowed": false
         },
         "agent_class": "embodied_agent",
         "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"accepts_post": true}
+      "expected": {
+        "accepts_post": true
+      }
     },
     {
-      "id": "L1.rc5.continuation_of_field_preserved",
+      "id": "L1.6.continuation_of_field_preserved",
       "level": 1,
       "description": "tasks/post with continuation_of metadata is accepted; the field is preserved on the resulting audit chain entry (verifier does not enforce continuation).",
       "method": "tasks/post",
       "params_template": {
         "task": {
-          "schema_version": "wcp/1.0-rc1",
+          "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
           "posted_by": "{{agent_did}}",
           "descriptor_type": "place_on_shelf",
-          "descriptor_payload": {"shelf_id": "WS-7-A"},
+          "descriptor_payload": {
+            "shelf_id": "WS-7-A"
+          },
           "continuation_of": {
             "claim_id": "prior-claim-abc-123",
-            "required_evidence_kinds": ["indoor_pose_track", "weight_delta"]
+            "required_evidence_kinds": [
+              "indoor_pose_track",
+              "weight_delta"
+            ]
           },
-          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+          "constraints": {
+            "worker_class_filter": {
+              "allowed": [
+                "semi_autonomous"
+              ]
+            }
+          },
           "attestation_requirement": {
-            "modes": ["sensor-witness"],
+            "modes": [
+              "sensor-witness"
+            ],
             "threshold": "M-of-N",
             "M": 1,
             "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}],
+            "evidence_schema": [
+              {
+                "mode": "sensor-witness",
+                "kinds": [
+                  "manipulator_pose_track"
+                ]
+              }
+            ],
             "override_authority": "did:wcp:operator-ops",
             "override_audit_required": true
           },
@@ -186,35 +285,59 @@
             "currency": "USD",
             "amount": "0.00",
             "escrow_provider": "internal-cost-allocation",
-            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+            "split": [
+              {
+                "party": "did:wcp:cost-center-ops",
+                "pct": 100
+              }
+            ]
           },
-          "supervision": {"default": "autonomous"},
+          "supervision": {
+            "default": "autonomous"
+          },
           "x-subcontract-allowed": false
         },
         "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"audit_chain_entry_carries_continuation_of": true}
+      "expected": {
+        "audit_chain_entry_carries_continuation_of": true
+      }
     },
     {
-      "id": "L1.rc5.no_per_class_branch_on_agent_class",
+      "id": "L1.7.no_per_class_branch_on_agent_class",
       "level": 1,
       "description": "Two tasks/post calls, one with agent_class=llm_agent and one with agent_class=embodied_agent, yield identical matching engine behaviour. The matching engine MUST NOT branch on agent_class.",
       "method": "tasks/post",
       "params_template": {
         "task": {
-          "schema_version": "wcp/1.0-rc1",
+          "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
           "posted_by": "{{agent_did}}",
           "descriptor_type": "transport",
           "descriptor_payload": {},
-          "constraints": {"worker_class_filter": {"allowed": ["autonomous_robot"]}},
+          "constraints": {
+            "worker_class_filter": {
+              "allowed": [
+                "autonomous_robot"
+              ]
+            }
+          },
           "attestation_requirement": {
-            "modes": ["sensor-witness"],
+            "modes": [
+              "sensor-witness"
+            ],
             "threshold": "M-of-N",
             "M": 1,
             "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["indoor_pose_track"]}],
+            "evidence_schema": [
+              {
+                "mode": "sensor-witness",
+                "kinds": [
+                  "indoor_pose_track"
+                ]
+              }
+            ],
             "override_authority": "did:wcp:operator-ops",
             "override_audit_required": true
           },
@@ -222,15 +345,31 @@
             "currency": "USD",
             "amount": "0.00",
             "escrow_provider": "internal-cost-allocation",
-            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+            "split": [
+              {
+                "party": "did:wcp:cost-center-ops",
+                "pct": 100
+              }
+            ]
           },
-          "supervision": {"default": "autonomous"},
+          "supervision": {
+            "default": "autonomous"
+          },
           "x-subcontract-allowed": false
         },
         "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"matching_invariant": "agent_class_does_not_affect_eligibility"}
+      "expected": {
+        "matching_invariant": "agent_class_does_not_affect_eligibility"
+      }
     }
+  ],
+  "notes": [
+    "L1.1 confirms the unknown-DID error path on capabilities/list.",
+    "L1.2 confirms the v0.1 subcontract-forbidden rule survives at v0.955.",
+    "L1.3 is the migration guard: legacy settlement blocks MUST be refused.",
+    "L1.4 confirms the new descriptor shape is accepted.",
+    "L1.5 to L1.7 confirm the v0.95 features (agent_class on agent credentials and continuation_of on task descriptors) remain unchanged at v0.955."
   ]
 }

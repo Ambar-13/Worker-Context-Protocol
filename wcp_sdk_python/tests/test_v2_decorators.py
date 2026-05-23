@@ -86,8 +86,9 @@ def test_agent_on_capability_decorator():
 def test_coordinator_registry_records_extensions():
     c = Coordinator()
     c.register_attestation_verifier("custom-mode", lambda *args: {})
-    c.register_settlement_adapter("custom-escrow", object())
     c.add_federation_trust_anchor({"peer_coordinator_did": "did:wcp:peer"})
     assert "custom-mode" in c.attestation_verifiers
-    assert "custom-escrow" in c.settlement_adapters
     assert len(c.federation_trust_anchors) == 1
+    # v0.955: settlement_adapters registry removed; settlement is not a
+    # protocol concern.
+    assert not hasattr(c, "settlement_adapters")

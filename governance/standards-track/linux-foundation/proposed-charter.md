@@ -75,7 +75,7 @@ Contributor Covenant 2.1, per `CODE_OF_CONDUCT.md`.
 
 ### 5.1 License
 
-Apache 2.0 for all project source code, RFCs, governance documents, examples, and conformance suites. Existing v1.0-rc1, v1.0-rc2, v1.0-rc2.1, and v1.0-rc3 artifacts retain their existing Apache 2.0 license under LF stewardship.
+Apache 2.0 for all project source code, RFCs, governance documents, examples, and conformance suites. Existing v0.2, v0.5, v0.55, and v0.7 artifacts retain their existing Apache 2.0 license under LF stewardship.
 
 ### 5.2 Patent grant
 
@@ -83,7 +83,7 @@ Apache 2.0 includes a patent grant covering implementations under the license. T
 
 ### 5.3 Independent implementations
 
-Independent implementations of the WCP spec (those not derived from the reference implementations) are governed by the spec text in `spec/1.0-rc1.md` and successor versions, not by the reference implementation license. Spec text is similarly Apache 2.0.
+Independent implementations of the WCP spec (those not derived from the reference implementations) are governed by the spec text in `spec/0.2.md` and successor versions, not by the reference implementation license. Spec text is similarly Apache 2.0.
 
 ## 6. Financial
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "worker_id": "did:wcp:worker-la-1",
   "principal_id": "did:wcp:operator-la-1",
   "class": "human",

@@ -1,5 +1,5 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "coordinator_did": "did:wcp:contoso-coord-1",
   "implementation": {
     "name": "contoso-fleet-coordinator",
@@ -8,7 +8,7 @@
     "vendor": "Contoso Logistics Co.",
     "repository_url": "https://example.com/contoso-fleet-coordinator"
   },
-  "test_suite_version": "v1.0-rc3",
+  "test_suite_version": "v0.7",
   "levels": [
     {
       "level": 1,

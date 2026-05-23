@@ -10,7 +10,7 @@ agent = Agent(name="specimen-dispatch-agent", coordinator="ws://localhost:8000/w
 def build_specimen_transport(specimen_id: str, pickup: str, dropoff: str) -> dict:
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": "transport",
@@ -32,18 +32,10 @@ def build_specimen_transport(specimen_id: str, pickup: str, dropoff: str) -> dic
                 {"mode": "sensor-witness", "kinds": ["signed_sensor_recording"]},
                 {"mode": "owner-sign-off", "kinds": ["whatsapp_business_signed_link"]},
             ],
-            "override_authority": "did:wcp:example-lab-director",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD", "amount": "55.00", "escrow_provider": "example-health-escrow",
-            "split": [
-                {"party": "did:wcp:courier-operator", "pct": 80},
-                {"party": "did:wcp:health-network", "pct": 15},
-                {"party": "did:wcp:specimen-loss-insurance", "pct": 5},
-            ],
-        },
-        "supervision": {"default": "autonomous"},
+                "supervision": {"default": "autonomous"},
+        "max_attestation_attempts": 1,
+        "marketplace_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 
@@ -54,7 +46,6 @@ async def main() -> None:
                                         "draw-site-N3", "reference-lab-central")
         res = await agent.post_task(
             task,
-            bond_ref=f"example-bond-{task['task_id']}",
             expiry=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
         )
         print(f"[agent] posted specimen-transport task_id={res['task_id']} "

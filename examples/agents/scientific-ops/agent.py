@@ -13,7 +13,7 @@ agent = Agent(name="lab-ops-agent", coordinator="ws://localhost:8000/wcp/ws")
 def build_calibration_task(instrument_id: str, duration_minutes: int) -> dict:
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": "scheduled_presence",
@@ -38,20 +38,10 @@ def build_calibration_task(instrument_id: str, duration_minutes: int) -> dict:
                 {"mode": "cryptographic-presence", "kinds": ["geofence_check_in_out"]},
                 {"mode": "sensor-witness", "kinds": ["signed_sensor_recording"]},
             ],
-            "override_authority": "did:wcp:example-lab-ops",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD",
-            "amount": "140.00",
-            "escrow_provider": "example-escrow",
-            "split": [
-                {"party": "did:wcp:technician-pool", "pct": 75},
-                {"party": "did:wcp:lab-platform", "pct": 20},
-                {"party": "did:wcp:instrument-warranty-pool", "pct": 5},
-            ],
-        },
-        "supervision": {"default": "autonomous"},
+                "supervision": {"default": "autonomous"},
+        "max_attestation_attempts": 1,
+        "marketplace_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 
@@ -61,7 +51,6 @@ async def main() -> None:
         task = build_calibration_task("spectrometer-12", 30)
         result = await agent.post_task(
             task,
-            bond_ref=f"example-bond-{task['task_id']}",
             expiry=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
         )
         print(

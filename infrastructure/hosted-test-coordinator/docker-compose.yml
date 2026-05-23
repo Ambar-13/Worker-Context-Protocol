@@ -65,7 +65,7 @@ services:
       - wcp
 
   coordinator:
-    image: ghcr.io/wcp-project/coordinator:v1.0-rc4
+    image: ghcr.io/wcp-project/coordinator:v0.85
     container_name: wcp-coordinator
     restart: unless-stopped
     depends_on:

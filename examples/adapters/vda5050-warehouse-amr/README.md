@@ -72,7 +72,7 @@ The translation functions (`wcp_transport_to_vda5050_order`, `vda5050_state_to_a
 | `iot_beacon_proximity` | optional; if the warehouse has UWB/BLE beacons | not produced by VDA 5050 directly; would require a side input |
 | `vda5050_order_log` | the raw sequence of order + state messages for the order | operator-defined evidence kind for full forensic record |
 
-The last kind (`vda5050_order_log`) is operator-defined and not in the v1.0-rc1 default registry. Operators wishing to use it MUST register it in their coordinator per RFC 0003.
+The last kind (`vda5050_order_log`) is operator-defined and not in the v0.2 default registry. Operators wishing to use it MUST register it in their coordinator per RFC 0003.
 
 ## What VDA 5050 semantics this adapter does NOT preserve
 

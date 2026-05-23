@@ -1,4 +1,9 @@
-"""Typed-object construction and serialization tests."""
+"""Typed-object construction and serialization tests.
+
+v0.955: Settlement and SettlementSplitEntry types removed. The override_*
+fields on AttestationRequirement removed. New optional fields on
+TaskDescriptor: max_attestation_attempts and marketplace_ref.
+"""
 from __future__ import annotations
 
 from wcp_sdk.session import make_task_descriptor
@@ -7,8 +12,6 @@ from wcp_sdk.types import (
     AttestationMode,
     AttestationRequirement,
     CapabilityDescriptor,
-    Settlement,
-    SettlementSplitEntry,
     TaskDescriptor,
     WorkerClass,
 )
@@ -25,7 +28,7 @@ def test_capability_descriptor_serializes_required_block():
         class_extension={"skills": ["aircon"]},
     )
     out = cap.to_dict()
-    assert out["schema_version"] == "wcp/1.0-rc1"
+    assert out["schema_version"] == "wcp/0.2"
     assert out["class"] == "human"
     assert "as_of" in out["required"]
     assert out["class_extension"]["skills"] == ["aircon"]
@@ -46,32 +49,33 @@ def test_task_descriptor_round_trip_via_helper():
         },
         M=2,
         N=2,
-        currency="USD",
-        amount="100.00",
-        escrow_provider="example-escrow",
-        split=[("did:wcp:worker", 80), ("did:wcp:platform", 20)],
         worker_class_filter=[WorkerClass.HUMAN],
+        max_attestation_attempts=3,
+        marketplace_ref="external-ref-001",
     )
     out = td.to_dict()
-    assert out["schema_version"] == "wcp/1.0-rc1"
+    assert out["schema_version"] == "wcp/0.2"
     assert out["descriptor_type"] == "scheduled_presence"
     assert out["attestation_requirement"]["M"] == 2
     assert out["attestation_requirement"]["N"] == 2
-    assert len(out["settlement"]["split"]) == 2
+    assert out["max_attestation_attempts"] == 3
+    assert out["marketplace_ref"] == "external-ref-001"
+    assert "settlement" not in out
     assert out["x-subcontract-allowed"] is False
 
 
-def test_attestation_requirement_includes_override_authority_did():
+def test_attestation_requirement_serializes_thresholds():
     ar = AttestationRequirement(
         modes=[AttestationMode.SENSOR_WITNESS],
         threshold="any",
         M=1,
         N=1,
         evidence_schema=[{"mode": "sensor-witness", "kinds": ["gps_track"]}],
-        override_authority="did:wcp:operator-ops",
     )
     out = ar.to_dict()
-    assert out["override_authority"].startswith("did:wcp:")
+    assert out["threshold"] == "any"
+    assert "override_authority" not in out
+    assert "override_allowed" not in out
 
 
 def test_attestation_evidence_carries_signature_fields():
@@ -87,13 +91,22 @@ def test_attestation_evidence_carries_signature_fields():
     )
     out = ev.to_dict()
     assert out["sig"].startswith("ed25519:")
-    assert out["schema_version"] == "wcp/1.0-rc1"
+    assert out["schema_version"] == "wcp/0.2"
 
 
-def test_settlement_split_entry_dict_shape():
-    e = SettlementSplitEntry(party="did:wcp:worker", pct=80.0)
-    out = e.to_dict()
-    assert set(out) == {"party", "pct"}
+def test_task_descriptor_omits_marketplace_ref_when_unset():
+    td = make_task_descriptor(
+        posted_by="did:wcp:agent",
+        descriptor_type="transport",
+        descriptor_payload={},
+        attestation_modes=[AttestationMode.SENSOR_WITNESS],
+        attestation_kinds={"sensor-witness": ["gps_track"]},
+        M=1,
+        N=1,
+    )
+    out = td.to_dict()
+    assert "marketplace_ref" not in out
+    assert out["max_attestation_attempts"] == 1
 
 
 def test_x_subcontract_allowed_defaults_false():
@@ -105,9 +118,5 @@ def test_x_subcontract_allowed_defaults_false():
         attestation_kinds={"sensor-witness": ["gps_track"]},
         M=1,
         N=1,
-        currency="USD",
-        amount="10.00",
-        escrow_provider="example-escrow",
-        split=[("did:wcp:worker", 100)],
     )
     assert td.to_dict()["x-subcontract-allowed"] is False

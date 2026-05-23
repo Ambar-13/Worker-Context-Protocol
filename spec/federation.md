@@ -1,12 +1,14 @@
 # WCP Federation Primitives
 
-**Companion to:** spec/1.0-rc1.md
-**Status:** normative
+**Companion to:** spec/0.2.md and spec/0.955.md
+**Status:** normative. Updated at v0.955 to remove cross-coordinator settlement (the protocol no longer carries settlement primitives; see spec/0.955.md).
 **Compiled:** 2026-05-23
 
-A single WCP coordinator is a marketplace operator. Federation lets multiple coordinators interoperate so that a worker registered on Coordinator A can take a task posted to Coordinator B, and reputation accrued on either coordinator informs matching on both.
+A single WCP coordinator is a coordination root. Federation lets multiple coordinators interoperate so that a worker registered on Coordinator A can take a task posted to Coordinator B, and reputation accrued on either coordinator informs matching on both.
 
-Federation is **opt-in per coordinator pair**, **trust-anchor-policy-gated**, and **rides on the same nine RPCs** as single-coordinator operation. No new RPCs are introduced.
+Federation is **opt-in per coordinator pair**, **trust-anchor-policy-gated**, and **rides on the same eight RPCs** as single-coordinator operation. No new RPCs are introduced.
+
+Cross-coordinator settlement is out of scope for WCP. Marketplaces, ERPs, grant systems, or any other settlement layer that needs cross-coordinator value transfer build that layer on top using the WCP audit chain events (`task_completed`, `task_voided`, `task_aborted`) as the trusted signal of work completion across coordinators. The federation surface below provides the coordination and audit-interop substrate on which those layers are built.
 
 ## 1. Trust anchors
 
@@ -14,7 +16,7 @@ A federation peer relationship is established by exchanging signed trust anchors
 
 ```json
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "peer_coordinator_did": "did:wcp:<peer-coord>",
   "peer_endpoint": "wss://peer.example.org/wcp/federation",
   "trust_classes_accepted": ["capability_discovery", "reputation_query", "audit_chain_export"],
@@ -28,10 +30,11 @@ A federation peer relationship is established by exchanging signed trust anchors
 
 - `capability_discovery`: peer's workers visible in this coordinator's `capabilities/subscribe` results
 - `reputation_query`: this coordinator queries peer's reputation pointer for workers seen on the peer
-- `audit_chain_export`: peer accepts this coordinator's audit chain entries as evidence in a dispute
-- `cross_coordinator_settlement`: split entries in `tasks/settle` MAY reference DIDs governed by the peer
+- `audit_chain_export`: peer accepts this coordinator's audit chain entries as evidence of work completion (e.g. for a settlement layer that watches cross-coordinator `task_completed` events, or for a recheck-related audit trail)
 
 A coordinator MAY reject any subset; mutual `trust_classes_accepted` is the effective surface.
+
+Removed at v0.955: the `cross_coordinator_settlement` trust class. Settlement is no longer a protocol concern; cross-coordinator value transfer happens at a layer above WCP that consumes the federated audit chain.
 
 ## 2. Federation discovery
 
@@ -45,7 +48,7 @@ When a worker publishes a CapabilityDescriptor, the DID document `service` array
 }
 ```
 
-A querying coordinator that trusts the pointed-to coordinator MAY fetch the reputation summary. Reputation summaries are signed by the issuing coordinator with `schema_version: wcp/1.0-rc1`.
+A querying coordinator that trusts the pointed-to coordinator MAY fetch the reputation summary. Reputation summaries are signed by the issuing coordinator with `schema_version: wcp/0.2`.
 
 ## 3. Cross-coordinator capability discovery
 
@@ -71,18 +74,17 @@ The agent posts to Coordinator A with `task.constraints.federation: true`. Coord
 ```json
 {
   "task": { ... },
-  "bond_ref": "<opaque escrow ref on Coordinator A>",
   "expiry": "...",
   "federation_origin": "did:wcp:<coord-a>",
   "federation_routing_sig": "ed25519:..."
 }
 ```
 
-The peer coordinator authenticates the federation origin and proceeds with the standard `tasks/post` flow. Settlement is bridged: the bond is held by Coordinator A's escrow_provider; the peer coordinator's claim resolution drives a settlement message back to Coordinator A, which then captures.
+The peer coordinator authenticates the federation origin and proceeds with the standard `tasks/post` flow. Settlement, where applicable, is the concern of the layer above WCP: the marketplace, ERP, or other settlement system that originated the task watches the audit chain on both coordinators (via `audit_chain_export` trust) and runs its own value-transfer logic. The protocol no longer bridges escrow across federation peers.
 
 ## 5. Audit chain interop
 
-Federation peers expose `/wcp/audit/<task_id>` (HTTPS GET, signed JSON response) returning the audit chain entries for a federated task. The querying coordinator verifies signatures against the peer's coordinator DID and may use the entries as evidence in a dispute.
+Federation peers expose `/wcp/audit/<task_id>` (HTTPS GET, signed JSON response) returning the audit chain entries for a federated task. The querying coordinator verifies signatures against the peer's coordinator DID. The audit chain entries (especially the terminal `task_completed`, `task_voided`, or `task_aborted`) are the canonical record of what happened on the peer; any settlement layer that needs the cross-coordinator completion signal pulls it from here.
 
 ## 6. Reputation portability across coordinators
 
@@ -93,13 +95,13 @@ A worker's reputation is **single-DID** by spec/1.0-rc1 Section 7.1. Two coordin
 
 ```json
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "worker_did": "did:wcp:...",
   "issued_by_coordinator": "did:wcp:<coord>",
   "issued_at": "ISO-8601",
   "summary": {
     "completed_tasks": 142,
-    "disputed_tasks": 2,
+    "voided_tasks": 2,
     "attestation_pass_rate": 0.96,
     "avg_time_to_complete_minutes": 38,
     "task_classes_covered": ["scheduled_presence", "observe_and_report"],
@@ -127,7 +129,7 @@ See `error-codes.md` for the -5xxxx range:
 ## 8. What federation does NOT do
 
 - It does not centralize: there is no global directory. Federation is a bilateral relationship.
-- It does not require currency conversion: cross-coordinator settlements are constrained to TaskDescriptor's declared currency; the peer either supports it or rejects the federated post.
+- It does not move value across coordinators. Cross-coordinator settlement is out of scope at the protocol layer; build the cross-coordinator value-transfer layer above WCP using `audit_chain_export` trust on both peers.
 - It does not bypass local conformance: a federated worker MUST still satisfy the local coordinator's `attestation_requirement`. Federation does not relax verification.
 - It does not enforce uniform reputation policy: each coordinator interprets cross-coordinator reputation per its own rules.
 

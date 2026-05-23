@@ -4,7 +4,7 @@
 - Status: open (v1.1 deliverable)
 - Type: informational
 - Created: 2026-05-23
-- Targets: v1.0-rc1 final or v1.1
+- Targets: v0.2 final or v1.1
 
 ## Summary
 
@@ -12,7 +12,7 @@ A TypeScript SDK (`wcp_sdk_typescript/`) mirroring the Python SDK's surface. Des
 
 ## Motivation
 
-Many agents and PWAs are TypeScript-first. The Python SDK ships at v1.0-rc1; the TypeScript SDK is the next priority.
+Many agents and PWAs are TypeScript-first. The Python SDK ships at v0.2; the TypeScript SDK is the next priority.
 
 ## Open design questions
 
@@ -22,4 +22,4 @@ Many agents and PWAs are TypeScript-first. The Python SDK ships at v1.0-rc1; the
 
 ## Implementation track
 
-v1.0-rc1 final; the PWA module at `pwa/wcp/` is a related but not identical surface (the PWA module is application-shaped React; the SDK is library-shaped).
+v0.2 final; the PWA module at `pwa/wcp/` is a related but not identical surface (the PWA module is application-shaped React; the SDK is library-shaped).

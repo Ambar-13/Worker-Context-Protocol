@@ -1,14 +1,14 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "coordinator_did": "did:wcp:reference-impl-1",
   "implementation": {
     "name": "wcp-reference-coordinator",
-    "version": "v1.0-rc4",
+    "version": "v0.85",
     "language": "Python",
     "vendor": "WCP Project",
     "repository_url": "https://github.com/example/wcp-spec"
   },
-  "test_suite_version": "v1.0-rc4",
+  "test_suite_version": "v0.85",
   "levels": [
     {
       "level": 1,

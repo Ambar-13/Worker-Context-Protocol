@@ -53,10 +53,13 @@ class TaskState(str, enum.Enum):
     EXECUTING = "executing"
     SUPERVISING = "supervising"
     ATTESTING = "attesting"
-    SETTLED = "settled"
-    DISPUTED = "disputed"
-    REFUNDED = "refunded"
+    RECHECKING = "rechecking"
+    COMPLETED = "completed"
+    VOIDED = "voided"
     ABORTED = "aborted"
+    # SETTLED, DISPUTED, REFUNDED removed at v0.955 (settlement no longer a
+    # protocol concern). External settlement layers subscribe to the audit
+    # chain (task_completed, task_voided, task_aborted) instead.
 
 
 class AttestationMode(str, enum.Enum):
@@ -102,12 +105,16 @@ class WcpTask(Base):
     posted_by: Mapped[str] = mapped_column(String, nullable=False)
     descriptor_type: Mapped[str] = mapped_column(String, nullable=False)
     task_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-    bond_ref: Mapped[str] = mapped_column(String, nullable=False)
     expiry: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     state: Mapped[TaskState] = mapped_column(
         Enum(TaskState, name="wcp_task_state"),
         nullable=False,
         default=TaskState.POSTED,
+    )
+    # v0.955: attempt counter for the recheck mechanism. Increments on every
+    # tasks/attest call against this task's claim.
+    attestation_attempts_used: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
     )
     posted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow

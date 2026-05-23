@@ -1,10 +1,10 @@
-# D4 Forcing Function Verification (v1.0-rc1)
+# D4 Forcing Function Verification (v0.2)
 
-**Companion to:** spec/1.0-rc1.md, spec/federation.md
-**Status:** verified pass for v1.0-rc1
+**Companion to:** spec/0.2.md, spec/federation.md, spec/0.955.md
+**Status:** verified pass for v0.2; the cross-coordinator settlement scenario in this document is **withdrawn at v0.955** (settlement is no longer a protocol concern). The base-D4 and cross-coordinator audit-interop scenarios remain valid; the RPC surface is now eight rather than nine.
 **Compiled:** 2026-05-23
 
-This document extends the v0.1 D4 verification (`spec/d4-verification.md`) with federation extension cells and confirms that the v1.0-rc1 RPC surface (unchanged from v0.1) handles every cell without modification.
+This document extends the v0.1 D4 verification (`spec/d4-verification.md`) with federation extension cells and confirms that the WCP RPC surface handles every cell without modification.
 
 ## Base D4 (carried forward from v0.1)
 
@@ -16,7 +16,7 @@ Three application-layer descriptors x two worker classes = six cells. Result: al
 | scheduled_presence | B1 pass | B2 pass |
 | observe_and_report | C1 pass | C2 pass |
 
-## Federation extension cells (new at v1.0-rc1)
+## Federation extension cells (new at v0.2)
 
 Federation primitives in `federation.md` ride on the same nine RPCs. We verify that the federation surface holds without new RPCs across four representative cells.
 
@@ -58,7 +58,7 @@ Federation primitives in `federation.md` ride on the same nine RPCs. We verify t
 3. Coordinator A applies its trust policy (e.g., 0.7x weight for newer federation peers) to the summary.
 4. Matching proceeds with combined own-data + cross-coordinator reputation.
 
-**Surface check.** No RPC at all (HTTPS GET on a well-known endpoint, separate from JSON-RPC). The reputation summary is a typed object with `schema_version: wcp/1.0-rc1`. **Pass.**
+**Surface check.** No RPC at all (HTTPS GET on a well-known endpoint, separate from JSON-RPC). The reputation summary is a typed object with `schema_version: wcp/0.2`. **Pass.**
 
 ### F4: Cross-coordinator audit chain export
 
@@ -81,11 +81,11 @@ For completeness, every base D4 cell is exercised under federation. Representati
 
 ## Conclusion
 
-All base D4 cells (6) pass. All federation cells (4) pass. The v1.0-rc1 surface (unchanged from v0.1) handles federation without RPC modification. Variance is contained to:
+All base D4 cells (6) pass. All federation cells (4) pass. The v0.2 surface (unchanged from v0.1) handles federation without RPC modification. Variance is contained to:
 
 - The opaque `descriptor_payload` (application-layer)
 - The `attestation_requirement.evidence_schema` (extensible per RFC 0003)
 - Optional top-level fields on stream messages and federation envelopes (additive minor changes per `semver-policy.md`)
 - The `class_extension` on CapabilityDescriptor (opaque to RPC layer)
 
-**v1.0-rc1 surface is locked.** Any future RFC that would require a tenth or eleventh RPC fails the D4 test and must redesign within the existing surface (typically by extending `evidence_schema`, `descriptor_payload`, or `class_extension`) or accept a MAJOR version bump.
+**v0.2 surface is locked.** Any future RFC that would require a tenth or eleventh RPC fails the D4 test and must redesign within the existing surface (typically by extending `evidence_schema`, `descriptor_payload`, or `class_extension`) or accept a MAJOR version bump.

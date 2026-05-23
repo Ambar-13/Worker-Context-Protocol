@@ -1,5 +1,5 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "worker_id": "did:wcp:amr-london-fleet7-unit42",
   "principal_id": "did:wcp:operator-london-1",
   "class": "autonomous_robot",

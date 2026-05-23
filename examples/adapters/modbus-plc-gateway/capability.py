@@ -79,7 +79,7 @@ def build_capability_descriptor(
 ) -> dict[str, Any]:
     """Construct a CapabilityDescriptor for a Modbus-bridged PLC."""
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "did": worker_did,
         "worker_class": "autonomous_robot",
         "coordinator_did": coordinator_did,

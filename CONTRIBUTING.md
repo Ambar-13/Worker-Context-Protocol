@@ -59,4 +59,4 @@ All contributors and users are bound by `CODE_OF_CONDUCT.md` (Contributor Covena
 
 ## Pre-v1.0 final disclaimers
 
-The protocol is at v1.0-rc1. The surface is the candidate for v1.0 final, but adoption validation has not yet occurred. Contributors targeting v1.0 final should expect potentially-breaking changes in subsequent RC releases.
+The protocol is at v0.2. The surface is the candidate for v1.0 final, but adoption validation has not yet occurred. Contributors targeting v1.0 final should expect potentially-breaking changes in subsequent RC releases.

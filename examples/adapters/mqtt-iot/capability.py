@@ -64,7 +64,7 @@ def build_capability_descriptor(
 ) -> dict[str, Any]:
     """Construct a CapabilityDescriptor for an MQTT-bridged sensor fleet."""
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "did": worker_did,
         "worker_class": "autonomous_robot",
         "coordinator_did": coordinator_did,

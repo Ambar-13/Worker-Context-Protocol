@@ -62,7 +62,7 @@ None of this touches WCP.
 An agent posts a WCP `observe_and_report` task: "walk to GPS coordinates (37.421, -122.083), capture thermal imagery of the substation, return". The robot's WCP plugin receives the task via `tasks/post`, claims it via `tasks/claim`, begins execution. The robot's onboard mission planner (NOT WCP) decomposes the high-level task into a sequence of waypoints and feeds them to the inner loop's navigation stack.
 
 While the robot is walking, the WCP outer loop is mostly quiet:
-- Heartbeat every N seconds (per RFC 0029 or v1.0-rc1 default)
+- Heartbeat every N seconds (per RFC 0029 or v0.2 default)
 - State updates every M seconds (per operator policy)
 - Attestation evidence submission once the work is done
 
@@ -117,4 +117,4 @@ Ask: does the feature need to coordinate across worker classes (humans + robots)
 - `docs/limits/wcp-is-not.md` for the canonical list of non-uses
 - `docs/limits/safety-system-boundary.md` for the safety-rated systems boundary
 - `docs/patterns/composite-tasks.md` for the chained-task pattern
-- `spec/1.0-rc1.md` Section 7 for the heartbeat and supervision specifics
+- `spec/0.2.md` Section 7 for the heartbeat and supervision specifics

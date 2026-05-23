@@ -98,10 +98,12 @@ class Dispatcher:
             "tasks/execute": self._tasks_execute_open,
             "tasks/execute.event": self._tasks_execute_event,
             "tasks/attest": self._tasks_attest,
-            "tasks/settle": self._tasks_settle,
             "tasks/supervise": self._tasks_supervise,
             "tasks/abort": self._tasks_abort,
         }
+        # tasks/settle removed at v0.955 (settlement is no longer a protocol
+        # concern). Calls to it return -32601 METHOD_NOT_FOUND via the standard
+        # dispatch path.
 
     def dispatch(self, method: str, params: dict | None) -> Any:
         params = params or {}
@@ -144,13 +146,11 @@ class Dispatcher:
         self,
         *,
         task: dict,
-        bond_ref: str,
         expiry: str,
         supervision: dict | None = None,
     ) -> dict[str, Any]:
         return self._tasks.post(
             task=task,
-            bond_ref=bond_ref,
             expiry=expiry,
             supervision=supervision,
         )
@@ -205,21 +205,6 @@ class Dispatcher:
             compensating_action=compensating_action,
         )
 
-    def _tasks_settle(
-        self,
-        *,
-        claim_id: str,
-        decision: str,
-        amount: str,
-        party_breakdown: list[dict],
-    ) -> dict[str, Any]:
-        return self._tasks.settle(
-            claim_id=claim_id,
-            decision=decision,
-            amount=amount,
-            party_breakdown=party_breakdown,
-        )
-
     def _tasks_supervise(
         self,
         *,
@@ -240,12 +225,10 @@ class Dispatcher:
         *,
         claim_id: str,
         reason: str,
-        state_snapshot: dict,
-        proposed_settlement: str,
+        state_snapshot: dict | None = None,
     ) -> dict[str, Any]:
         return self._tasks.abort(
             claim_id=claim_id,
             reason=reason,
             state_snapshot=state_snapshot,
-            proposed_settlement=proposed_settlement,
         )

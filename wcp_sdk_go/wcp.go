@@ -11,12 +11,12 @@ package wcp
 
 const (
 	// SchemaVersion is the WCP wire-protocol schema version this SDK targets.
-	SchemaVersion = "wcp/1.0-rc1"
+	SchemaVersion = "wcp/0.2"
 	// SdkVersion is this SDK's own version.
 	SdkVersion = "0.95.0"
 )
 
-// WorkerClass enumerates the locked v1.0-rc1 worker class set.
+// WorkerClass enumerates the locked v0.2 worker class set.
 type WorkerClass string
 
 const (
@@ -27,7 +27,7 @@ const (
 	WorkerClassHybrid            WorkerClass = "hybrid"
 )
 
-// AttestationMode enumerates the locked v1.0-rc1 attestation mode set.
+// AttestationMode enumerates the locked v0.2 attestation mode set.
 type AttestationMode string
 
 const (

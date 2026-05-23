@@ -1,20 +1,25 @@
 """
 Tasks service: handles tasks/post, tasks/claim, tasks/execute event ingest,
-tasks/attest, tasks/settle, tasks/supervise, tasks/abort.
+tasks/attest, tasks/supervise, tasks/abort.
+
+v0.955: tasks/settle is removed. Settlement is no longer a protocol concern.
+tasks/attest implements the recheck loop: when the verifier rejects evidence
+and the task's max_attestation_attempts has not been exhausted, the task
+transitions to `rechecking` and the worker MAY resubmit attestations; once
+exhausted, the task transitions to `voided`.
 
 All worker-to-coordinator messages signature-verified via DidResolver before
 any state mutation. State transitions emit signed audit chain entries.
 
 Concurrency: tasks/claim implements a 100ms tie-break grace per spec Section
-3.4 (Scenario 4). Implementation uses a row-level lock on the task plus a
-short-window candidate buffer.
+3.4. Implementation uses a row-level lock on the task plus a short-window
+candidate buffer.
 """
 from __future__ import annotations
 
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from typing import Any, Optional
 
 from sqlalchemy import select
@@ -36,7 +41,6 @@ from .models import (
     WcpTask,
     WcpWorker,
 )
-from .settlement_adapter import SettlementAdapter
 
 from .attestation_verifier import (
     DEFAULT_REGISTRY,
@@ -48,7 +52,6 @@ from .attestation_verifier import (
 HEARTBEAT_SECONDS = 15
 MISSED_HEARTBEATS = 3
 CLAIM_TIE_BREAK_MS = 100
-DISPUTE_WINDOW_HOURS = 72
 
 
 def _canonical_json(payload: dict[str, Any]) -> bytes:
@@ -77,13 +80,11 @@ class TasksService:
         db: Session,
         resolver: DidResolver,
         audit: AuditChain,
-        settlement: SettlementAdapter,
         registry: Optional[dict[str, set[str]]] = None,
     ) -> None:
         self._db = db
         self._resolver = resolver
         self._audit = audit
-        self._settlement = settlement
         self._registry = registry or DEFAULT_REGISTRY
 
     # --- tasks/post ----------------------------------------------------------
@@ -92,12 +93,25 @@ class TasksService:
         self,
         *,
         task: dict[str, Any],
-        bond_ref: str,
         expiry: str,
         supervision: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        # Validate attestation requirement against the schema registry.
+        # v0.955: reject legacy settlement / override fields up-front.
+        if "settlement" in task:
+            raise ValueError(
+                "INVALID_DESCRIPTOR: task.settlement removed at v0.955 "
+                "(settlement is no longer a protocol concern)"
+            )
         req = task.get("attestation_requirement", {})
+        for legacy in ("override_authority", "override_audit_required",
+                       "override_allowed"):
+            if legacy in req:
+                raise ValueError(
+                    f"INVALID_DESCRIPTOR: attestation_requirement.{legacy} "
+                    f"removed at v0.955"
+                )
+
+        # Validate attestation requirement against the schema registry.
         self._validate_attestation_requirement(req)
 
         # Out-of-scope class refusal (Scenario 11). The reference coordinator
@@ -138,26 +152,25 @@ class TasksService:
             posted_by=posted_by,
             descriptor_type=descriptor_type or "unknown",
             task_json=task,
-            bond_ref=bond_ref,
             expiry=expiry_dt,
             state=TaskState.POSTED,
+            attestation_attempts_used=0,
         )
         self._db.add(row)
         self._db.flush()
 
-        # Place the two-phase escrow hold. Production wraps the existing
-        # Rentably Stripe flow; in tests, FakeStripeAdapter just records.
-        settlement_block = task.get("settlement", {}) or {}
-        self._settlement.hold(
-            amount=str(settlement_block.get("amount", "0")),
-            currency=str(settlement_block.get("currency", "SGD")),
-            bond_ref=bond_ref,
-        )
+        # v0.955: no settlement.hold. Settlement layers (Stripe, ERP, grant
+        # systems, etc.) subscribe to the audit chain (task_completed,
+        # task_voided, task_aborted) and run their own value-flow logic.
+        marketplace_ref = task.get("marketplace_ref")
 
         self._audit.append(
             event_type="task_posted",
             actor_did=posted_by,
-            payload={"task_id": task_id, "bond_ref": bond_ref},
+            payload={
+                "task_id": task_id,
+                "marketplace_ref": marketplace_ref,
+            },
             task_id=task_id,
         )
 
@@ -443,13 +456,27 @@ class TasksService:
         compensating_action: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         claim, task = self._claim_and_task(claim_id)
-        if task.state not in (TaskState.EXECUTING, TaskState.SUPERVISING):
+        # v0.955: recheck flow allows attestation from EXECUTING, SUPERVISING,
+        # or RECHECKING. Terminal states (COMPLETED, VOIDED, ABORTED) reject.
+        if task.state == TaskState.VOIDED:
+            raise ValueError(
+                "RECHECK_MAX_ATTEMPTS_REACHED: claim is voided; "
+                "post a new task with continuation_of if work should continue"
+            )
+        if task.state not in (
+            TaskState.EXECUTING,
+            TaskState.SUPERVISING,
+            TaskState.RECHECKING,
+        ):
             raise TaskStateInvalid(
                 f"cannot attest in state {task.state.value}"
             )
 
         req = task.task_json.get("attestation_requirement", {})
         task_payload = task.task_json.get("descriptor_payload", {})
+        max_attempts = int(
+            task.task_json.get("max_attestation_attempts", 1) or 1
+        )
 
         outcomes: list[tuple[str, VerificationOutcome]] = []
         resolved = self._resolver.resolve(claim.worker_id)
@@ -509,74 +536,88 @@ class TasksService:
             )
 
         aggregate = evaluate_threshold(requirement=req, outcomes=outcomes)
+
+        # v0.955: increment attempt counter and emit attestation_attempt entry.
+        task.attestation_attempts_used = (task.attestation_attempts_used or 0) + 1
+        attempt_number = task.attestation_attempts_used
+        attempts_remaining = max(0, max_attempts - attempt_number)
         task.state = TaskState.ATTESTING
-        self._db.flush()
+
         self._audit.append(
-            event_type="attestation_evaluated",
-            actor_did="did:wcp:coordinator",
+            event_type="attestation_attempt",
+            actor_did=claim.worker_id,
             payload={
                 "claim_id": claim_id,
+                "attempt_number": attempt_number,
                 "decision": aggregate.decision,
-                "reasons": list(aggregate.reasons),
             },
             claim_id=claim_id,
             task_id=task.task_id,
         )
+
+        # Route based on verifier decision and attempt counter.
+        marketplace_ref = task.task_json.get("marketplace_ref")
+        if aggregate.decision == "pass":
+            task.state = TaskState.COMPLETED
+            self._audit.append(
+                event_type="task_completed",
+                actor_did="did:wcp:coordinator",
+                payload={
+                    "claim_id": claim_id,
+                    "task_id": task.task_id,
+                    "marketplace_ref": marketplace_ref,
+                },
+                claim_id=claim_id,
+                task_id=task.task_id,
+            )
+        elif aggregate.decision == "fail":
+            if attempts_remaining > 0:
+                task.state = TaskState.RECHECKING
+                self._audit.append(
+                    event_type="recheck_requested",
+                    actor_did="did:wcp:coordinator",
+                    payload={
+                        "claim_id": claim_id,
+                        "attempt_number_just_failed": attempt_number,
+                        "attempts_remaining": attempts_remaining,
+                        "verifier_reasons": list(aggregate.reasons),
+                    },
+                    claim_id=claim_id,
+                    task_id=task.task_id,
+                )
+            else:
+                task.state = TaskState.VOIDED
+                self._audit.append(
+                    event_type="task_voided",
+                    actor_did="did:wcp:coordinator",
+                    payload={
+                        "claim_id": claim_id,
+                        "task_id": task.task_id,
+                        "attempts_used": attempt_number,
+                        "verifier_reasons": list(aggregate.reasons),
+                        "marketplace_ref": marketplace_ref,
+                    },
+                    claim_id=claim_id,
+                    task_id=task.task_id,
+                )
+        # "review" decision keeps the task in ATTESTING for operator review;
+        # no terminal transition until a follow-up call resolves.
+
+        self._db.flush()
         return {
             "verifier_decision": aggregate.decision,
             "residual": dict(aggregate.residual),
             "reasons": list(aggregate.reasons),
+            "attempt_number": attempt_number,
+            "attempts_remaining": attempts_remaining,
         }
 
-    # --- tasks/settle --------------------------------------------------------
-
-    def settle(
-        self, *, claim_id: str, decision: str, amount: str, party_breakdown: list[dict]
-    ) -> dict[str, Any]:
-        claim, task = self._claim_and_task(claim_id)
-        if task.state != TaskState.ATTESTING:
-            raise TaskStateInvalid(
-                f"cannot settle in state {task.state.value}"
-            )
-
-        if decision == "release":
-            outcome = self._settlement.capture(
-                bond_ref=task.bond_ref,
-                amount=amount,
-                party_breakdown=party_breakdown,
-            )
-            task.state = TaskState.SETTLED
-        elif decision == "refund":
-            outcome = self._settlement.refund(bond_ref=task.bond_ref)
-            task.state = TaskState.REFUNDED
-        elif decision == "partial":
-            outcome = self._settlement.capture(
-                bond_ref=task.bond_ref,
-                amount=amount,
-                party_breakdown=party_breakdown,
-            )
-            task.state = TaskState.SETTLED
-        else:
-            raise ValueError(f"INVALID_PARAMS: unknown decision {decision!r}")
-
-        self._db.flush()
-        self._audit.append(
-            event_type="settled",
-            actor_did="did:wcp:coordinator",
-            payload={
-                "claim_id": claim_id,
-                "decision": decision,
-                "settlement_id": outcome.settlement_id,
-                "state": outcome.state,
-            },
-            claim_id=claim_id,
-            task_id=task.task_id,
-        )
-        return {
-            "settlement_id": outcome.settlement_id,
-            "state": outcome.state,
-            "receipt_url": outcome.receipt_url,
-        }
+    # --- tasks/settle removed at v0.955 -------------------------------------
+    # Settlement is no longer a protocol concern. The verifier_decision = pass
+    # path in attest() emits a `task_completed` audit entry; external
+    # settlement layers subscribe to that and run their own value-transfer
+    # logic. The verifier_decision = fail path after attempt exhaustion emits
+    # `task_voided`. No tasks/settle RPC exists; calls return METHOD_NOT_FOUND.
 
     # --- tasks/supervise -----------------------------------------------------
 
@@ -626,55 +667,38 @@ class TasksService:
         *,
         claim_id: str,
         reason: str,
-        state_snapshot: dict[str, Any],
-        proposed_settlement: str,
+        state_snapshot: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         claim, task = self._claim_and_task(claim_id)
-        if task.state in (TaskState.SETTLED, TaskState.REFUNDED, TaskState.ABORTED):
+        # v0.955: terminal states are COMPLETED, VOIDED, ABORTED. proposed_
+        # settlement is removed; abort just transitions to ABORTED and the
+        # settlement layer above WCP applies its own logic to state_snapshot.
+        if task.state in (
+            TaskState.COMPLETED,
+            TaskState.VOIDED,
+            TaskState.ABORTED,
+        ):
             raise TaskStateInvalid(
                 f"cannot abort from terminal state {task.state.value}"
             )
 
-        if proposed_settlement == "refund":
-            self._settlement.refund(bond_ref=task.bond_ref)
-            task.state = TaskState.REFUNDED
-            disposition = "applied"
-        elif proposed_settlement == "split":
-            # apply partial_completion_schedule if present
-            release_pct = 50
-            split = task.task_json.get("settlement", {}).get("split", [])
-            amount_str = task.task_json.get("settlement", {}).get("amount", "0")
-            partial = (
-                Decimal(amount_str) * Decimal(release_pct) / Decimal(100)
-            )
-            self._settlement.capture(
-                bond_ref=task.bond_ref,
-                amount=str(partial),
-                party_breakdown=split,
-            )
-            task.state = TaskState.ABORTED
-            disposition = "applied"
-        elif proposed_settlement == "dispute":
-            task.state = TaskState.DISPUTED
-            disposition = "disputed"
-        else:
-            raise ValueError(
-                f"INVALID_PARAMS: unknown proposed_settlement {proposed_settlement!r}"
-            )
-
+        task.state = TaskState.ABORTED
+        marketplace_ref = task.task_json.get("marketplace_ref")
         self._db.flush()
         self._audit.append(
             event_type="task_aborted",
             actor_did=claim.worker_id,
             payload={
                 "claim_id": claim_id,
+                "task_id": task.task_id,
                 "reason": reason,
-                "proposed_settlement": proposed_settlement,
+                "state_snapshot": state_snapshot or {},
+                "marketplace_ref": marketplace_ref,
             },
             claim_id=claim_id,
             task_id=task.task_id,
         )
-        return {"abort_id": str(uuid.uuid4()), "settlement_disposition": disposition}
+        return {"abort_id": str(uuid.uuid4())}
 
     # --- helpers -------------------------------------------------------------
 

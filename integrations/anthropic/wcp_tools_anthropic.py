@@ -60,7 +60,7 @@ WCP_TOOLS: list[dict[str, Any]] = [
     {
         "name": "wcp_post_task",
         "description": (
-            "Post a WCP TaskDescriptor. Bond is held in escrow until attestation passes."
+            "Post a WCP TaskDescriptor. v0.955: settlement is not a protocol concern; pass marketplace_ref to correlate with an external settlement layer if needed."
         ),
         "input_schema": {
             "type": "object",
@@ -139,7 +139,7 @@ async def _post_via_tool(agent: Agent, tool_input: dict[str, Any]) -> dict[str, 
     M = int(tool_input.get("M", 1))
     N = int(tool_input.get("N", max(1, len(modes))))
     task = {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": tool_input["descriptor_type"],
@@ -160,21 +160,14 @@ async def _post_via_tool(agent: Agent, tool_input: dict[str, Any]) -> dict[str, 
             "evidence_schema": [
                 {"mode": m, "kinds": _default_kinds(m)} for m in modes
             ],
-            "override_authority": "did:wcp:example-operator-ops",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": tool_input["currency"],
-            "amount": tool_input["amount"],
-            "escrow_provider": "example-escrow",
-            "split": [{"party": "did:wcp:worker-pool", "pct": 100}],
-        },
+        "max_attestation_attempts": 1,
+        "marketplace_ref": tool_input.get("marketplace_ref"),
         "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }
     return await agent.post_task(
         task,
-        bond_ref=f"example-bond-{task['task_id']}",
         expiry=(now + timedelta(hours=24)).isoformat(),
     )
 

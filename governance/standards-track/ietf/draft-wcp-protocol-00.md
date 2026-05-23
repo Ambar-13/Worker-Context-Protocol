@@ -72,7 +72,7 @@ WCP is structured around four design principles:
 4. The protocol audit trail is hash-linked and signed; tampering
    is forensically detectable.
 
-The current version is v1.0-rc3 (release candidate). v1.0 final
+The current version is v0.7 (release candidate). v1.0 final
 requires multiple independent implementations passing the conformance
 suite at Level 2, at least one passing at Level 3, at least one
 external paper accepted at a major venue, and a neutral steward
@@ -126,7 +126,7 @@ repository. Briefly:
 - Three roles: worker, operator, coordinator (federation peer)
 - Resolution: bilateral between coordinators; no central registry
 
-The v1.0-rc1 grammar uses raw base58 without a multibase prefix;
+The v0.2 grammar uses raw base58 without a multibase prefix;
 v1.1 adds the multibase prefix per WCP RFC 0031 with a three-version
 compatibility window. v2.0 deprecates raw base58 acceptance.
 
@@ -146,9 +146,9 @@ modes, threshold (any | all | M-of-N), evidence_schema (list of
 required evidence kinds per mode), and an optional override_authority
 DID.
 
-WCP RFC 0033 (post-v1.0-rc1) extends the model with attestation key
+WCP RFC 0033 (post-v0.2) extends the model with attestation key
 trust classes (software-keypair, hardware-attested-tpm2,
-hardware-attested-webauthn, etc.). WCP RFC 0034 (post-v1.0-rc1)
+hardware-attested-webauthn, etc.). WCP RFC 0034 (post-v0.2)
 extends with external-trust-root signed evidence (X.509 chains,
 JWKS endpoints, non-did:wcp DIDs).
 
@@ -159,7 +159,7 @@ TaskDescriptor declares escrow_provider, currency, amount, and
 split[] (list of recipient DIDs with percentages).
 
 For tasks crossing federation boundaries (agent on Coordinator A,
-worker on Coordinator B), WCP RFC 0032 (post-v1.0-rc1) extends with
+worker on Coordinator B), WCP RFC 0032 (post-v0.2) extends with
 cross-coordinator settlement clearing. Three models are analyzed
 (A-side capture B-side payout reconciliation; A-side capture on-chain
 transfer to B-side; shared escrow provider); the recommended v1.1
@@ -254,6 +254,6 @@ Projects LLC for ongoing dialogue on the donation trajectory.
 - Selective disclosure (potential bridge from W3C Verifiable
   Credentials selective disclosure)
 - Standardized federation discovery (no current spec; bilateral
-  peering is the v1.0-rc1 norm)
+  peering is the v0.2 norm)
 - Coordinator failover and high availability semantics (not
-  specified in v1.0-rc1; left to operator implementation)
+  specified in v0.2; left to operator implementation)

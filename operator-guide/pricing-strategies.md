@@ -18,7 +18,7 @@ The task is priced as `base_fee + (hours * hourly_rate) + materials`. The worker
 
 ### Model C: Bid-based
 
-The agent posts the task with a maximum bond; eligible workers submit bids via `tasks/claim` with the `bid` field; lowest reasonable bid wins per the operator's matching rule. The 100 ms tie-break grace permits a small competition window (`spec/1.0-rc1.md` Section 3.4).
+The agent posts the task with a maximum bond; eligible workers submit bids via `tasks/claim` with the `bid` field; lowest reasonable bid wins per the operator's matching rule. The 100 ms tie-break grace permits a small competition window (`spec/0.2.md` Section 3.4).
 
 ### Model D: Dynamic pricing
 

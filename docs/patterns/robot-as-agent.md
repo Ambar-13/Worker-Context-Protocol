@@ -1,6 +1,6 @@
 # Pattern: Robot as Agent
 
-How to model the case where an autonomous robot's onboard controller acts as a WCP agent and dispatches follow-up work to other workers (other robots, humans, or hybrid workers). v1.0-rc5 surfaces this pattern through two informational fields (`agent_class` on the agent credential, `continuation_of` on the task descriptor) and a `RobotAgent` helper in each reference SDK.
+How to model the case where an autonomous robot's onboard controller acts as a WCP agent and dispatches follow-up work to other workers (other robots, humans, or hybrid workers). v0.95 surfaces this pattern through two informational fields (`agent_class` on the agent credential, `continuation_of` on the task descriptor) and a `RobotAgent` helper in each reference SDK.
 
 ## What this pattern is
 
@@ -8,7 +8,7 @@ A robot completes a task, attests, and from inside its own execute loop posts a 
 
 The canonical example is a humanoid robot completing a pick-and-carry and dispatching the place-on-shelf step to a stationary manipulator. Other cases: an autonomous mobile robot finishing a transport leg and posting a load-handoff task to a forklift; an inspection drone completing a sweep and posting an anomaly-investigation task to a ground worker; a humanoid robot escalating a stuck task to a human supervisor.
 
-The pattern works because the WCP agent role has always been "anything holding an agent credential". v1.0-rc1 already supported this mechanically; v1.0-rc5 names it.
+The pattern works because the WCP agent role has always been "anything holding an agent credential". v0.2 already supported this mechanically; v0.95 names it.
 
 ## What this pattern is NOT
 
@@ -52,13 +52,13 @@ See `examples/agents/delivery-robot-dispatcher/`. An AMR claims a `transport` ta
 - `continuation_of.required_evidence_kinds` lets the second worker's runbook read the prior task's attested evidence kinds before claiming. The verifier does not enforce this; it is an operator-side check.
 - The follow-up task carries its own attestation requirement, settlement block, and supervision configuration. It is not bound to the first task except through the `continuation_of` reference and any operator-side runbook policy.
 
-## What v1.0-rc5 does not add
+## What v0.95 does not add
 
 No new RPCs. No new protocol semantics. The verifier and matching engine do not change. The forcing-function matrix passes unchanged: the robot-as-agent case adds zero per-class branches.
 
 ## See also
 
-- `spec/1.0-rc5.md` for the normative additions.
+- `spec/0.95.md` for the normative additions.
 - `examples/agents/delivery-robot-dispatcher/` for the reference deployment.
 - `docs/limits/swarm-boundary.md` for the one-task-one-worker boundary.
 - `rfcs/0002-subcontracting-v0.2.md` for the rejected worker-layer subcontracting design that the agent-layer continuation pattern supersedes.

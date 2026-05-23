@@ -1,7 +1,7 @@
 # RFC 0019: Security Baseline
 
 - Author(s): Rentably (principal)
-- Status: accepted (part of v1.0-rc1)
+- Status: accepted (part of v0.2)
 - Type: standards-track
 
 ## Summary

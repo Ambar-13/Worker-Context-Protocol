@@ -1,7 +1,7 @@
 # RFC 0006: RPC tasks/post
 
 - Author(s): Rentably
-- Status: accepted (part of v0.1)
+- Status: accepted (part of v0.1); settlement-related portions amended at v0.955 (see `spec/0.955.md` — the descriptor's `settlement` block and the escrow-hold step are removed; new optional fields `max_attestation_attempts` and `marketplace_ref` apply).
 - Type: standards-track
 - Created: 2026-05-23
 

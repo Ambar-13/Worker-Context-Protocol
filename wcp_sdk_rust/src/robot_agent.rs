@@ -2,7 +2,9 @@
 //! pattern (an autonomous robot's onboard controller acting as a WCP agent
 //! and posting follow-up tasks from inside its execute loop).
 //!
-//! Spec: `spec/1.0-rc5.md` Sections 2 and 3.
+//! Spec: `spec/0.95.md` Sections 2 and 3 (continuation pattern), amended
+//! by `spec/0.955.md` (settlement removed from descriptor;
+//! `max_attestation_attempts` and `marketplace_ref` added).
 //! Pattern doc: `docs/patterns/robot-as-agent.md`.
 //!
 //! Example:
@@ -30,12 +32,10 @@
 //!             "evidence_schema": [
 //!               { "mode": "sensor-witness", "kinds": ["weight_delta"] }
 //!             ]}),
-//!     json!({ "currency": "USD",              // settlement
-//!             "amount": "0.00",
-//!             "escrow_provider": "internal-cost-allocation",
-//!             "split": [] }),
+//!     1,                                       // max_attestation_attempts
+//!     None,                                    // marketplace_ref
 //! );
-//! robot.post_continuation("claim-abc-123", &descriptor, "bond-1", "2026-12-31T00:00:00Z").await?;
+//! robot.post_continuation("claim-abc-123", &descriptor, "2026-12-31T00:00:00Z").await?;
 //! # Ok(()) }
 //! ```
 
@@ -99,8 +99,10 @@ impl RobotAgent {
     }
 
     /// Build a task descriptor that names a prior task via `continuation_of`.
-    /// The caller supplies the three required application-layer blocks
-    /// (constraints, attestation_requirement, settlement).
+    /// The caller supplies the two required application-layer blocks
+    /// (constraints, attestation_requirement). v0.955 settlement is no longer
+    /// a protocol concern; pass `marketplace_ref` to correlate with an
+    /// external settlement-layer record.
     #[allow(clippy::too_many_arguments)]
     pub fn build_continuation(
         &self,
@@ -110,10 +112,11 @@ impl RobotAgent {
         required_evidence_kinds: Vec<String>,
         constraints: Value,
         attestation_requirement: Value,
-        settlement: Value,
+        max_attestation_attempts: u32,
+        marketplace_ref: Option<&str>,
     ) -> Value {
-        json!({
-            "schema_version": "wcp/1.0-rc1",
+        let mut descriptor = json!({
+            "schema_version": "wcp/0.2",
             "task_id": Uuid::new_v4().to_string(),
             "posted_by": self.did(),
             "descriptor_type": descriptor_type,
@@ -124,8 +127,12 @@ impl RobotAgent {
             },
             "constraints": constraints,
             "attestation_requirement": attestation_requirement,
-            "settlement": settlement,
-        })
+            "max_attestation_attempts": max_attestation_attempts,
+        });
+        if let Some(mref) = marketplace_ref {
+            descriptor["marketplace_ref"] = json!(mref);
+        }
+        descriptor
     }
 
     /// Post a follow-up task that continues from `prior_claim_id`. Verifies
@@ -135,7 +142,6 @@ impl RobotAgent {
         &self,
         prior_claim_id: &str,
         descriptor: &Value,
-        bond_ref: &str,
         expiry: &str,
     ) -> Result<Value, RpcError> {
         let cont_claim = descriptor
@@ -149,7 +155,7 @@ impl RobotAgent {
             ));
         }
         self.inner
-            .post_task(descriptor.clone(), bond_ref, expiry)
+            .post_task(descriptor.clone(), expiry)
             .await
     }
 

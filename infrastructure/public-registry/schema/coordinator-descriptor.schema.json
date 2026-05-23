@@ -20,7 +20,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "wcp/1.0-rc1"
+      "const": "wcp/0.2"
     },
     "did": {
       "type": "string",

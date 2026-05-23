@@ -81,7 +81,7 @@ async def _register_async(coordinator: str, config: Path) -> None:
 
 def _minimal_descriptor(worker_did: str, pubkey_b64: str, cfg: dict[str, str]) -> dict:
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "worker_id": worker_did,
         "principal_id": cfg.get("principal_id", "did:wcp:example-principal"),
         "class": cfg.get("worker_class", "human"),

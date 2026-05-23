@@ -79,7 +79,7 @@ Worker classification rules vary by state (California's ABC test, Massachusetts'
 
 ### HIPAA
 
-Out of scope at v1.0-rc1 (medical task class is refused; `spec/1.0-rc1.md` Section 10).
+Out of scope at v0.2 (medical task class is refused; `spec/0.2.md` Section 10).
 
 ## 4. Other jurisdictions
 

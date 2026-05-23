@@ -22,8 +22,6 @@ from .types import (
     AttestationMode,
     AttestationRequirement,
     CapabilityDescriptor,
-    Settlement,
-    SettlementSplitEntry,
     TaskDescriptor,
     VerifierDecision,
     WorkerClass,
@@ -177,7 +175,6 @@ class WorkerSession(AbstractAsyncContextManager["WorkerSession"]):
         *,
         reason: str,
         state_snapshot: dict[str, Any],
-        proposed_settlement: str,
     ) -> dict[str, Any]:
         ht = self._heartbeat_tasks.pop(claim_id, None)
         if ht is not None:
@@ -188,7 +185,6 @@ class WorkerSession(AbstractAsyncContextManager["WorkerSession"]):
                 "claim_id": claim_id,
                 "reason": reason,
                 "state_snapshot": state_snapshot,
-                "proposed_settlement": proposed_settlement,
             },
         )
 
@@ -248,13 +244,11 @@ class AgentSession(AbstractAsyncContextManager["AgentSession"]):
         self,
         task: TaskDescriptor,
         *,
-        bond_ref: str,
         expiry: str,
         supervision: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         params: dict[str, Any] = {
             "task": task.to_dict(),
-            "bond_ref": bond_ref,
             "expiry": expiry,
         }
         if supervision is not None:
@@ -284,16 +278,19 @@ def make_task_descriptor(
     attestation_kinds: dict[str, list[str]],
     M: int,
     N: int,
-    currency: str,
-    amount: str,
-    escrow_provider: str,
-    split: list[tuple[str, float]],
     worker_class_filter: Optional[list[WorkerClass]] = None,
     task_id: Optional[str] = None,
     time_window: Optional[dict[str, str]] = None,
-    override_authority: Optional[str] = None,
+    max_attestation_attempts: int = 1,
+    marketplace_ref: Optional[str] = None,
 ) -> TaskDescriptor:
-    """Ergonomic helper to construct a TaskDescriptor with sensible defaults."""
+    """Ergonomic helper to construct a TaskDescriptor with sensible defaults.
+
+    Settlement parameters are removed at v0.955; settlement is no longer a
+    protocol concern. Pass ``marketplace_ref`` to correlate this task with
+    an external settlement-layer record (a Stripe PaymentIntent ID, an SAP
+    work-order number, a grant disbursement reference, etc.).
+    """
     return TaskDescriptor(
         task_id=task_id or str(uuid.uuid4()),
         posted_by=posted_by,
@@ -314,12 +311,7 @@ def make_task_descriptor(
                 {"mode": m.value, "kinds": attestation_kinds.get(m.value, [])}
                 for m in attestation_modes
             ],
-            override_authority=override_authority,
         ),
-        settlement=Settlement(
-            currency=currency,
-            amount=amount,
-            escrow_provider=escrow_provider,
-            split=[SettlementSplitEntry(party=did, pct=pct) for did, pct in split],
-        ),
+        max_attestation_attempts=max_attestation_attempts,
+        marketplace_ref=marketplace_ref,
     )

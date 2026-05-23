@@ -17,4 +17,4 @@ templates cover institutional and industrial coordination contexts.
 """
 
 __version__ = "0.95.0"
-__schema_version__ = "wcp/1.0-rc1"
+__schema_version__ = "wcp/0.2"

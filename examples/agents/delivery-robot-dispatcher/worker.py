@@ -9,7 +9,7 @@ The follow-up task carries a `continuation_of` block that names the
 transport task's claim_id and the evidence kinds the manipulator's
 verifier may read for context.
 
-Reference: spec/1.0-rc5.md and docs/patterns/robot-as-agent.md.
+Reference: spec/0.95.md and docs/patterns/robot-as-agent.md.
 
 Note: a second worker process for the stationary manipulator runs as
 `manipulator_worker.py` in this directory. The two workers connect to the
@@ -166,25 +166,12 @@ async def _post_place_on_shelf_continuation(
                         "kinds": ["workstation_supervisor_signoff"],
                     },
                 ],
-                "override_authority": "did:wcp:line-supervisor",
-                "override_audit_required": True,
             },
-            settlement={
-                "currency": "USD",
-                "amount": "0.00",
-                "escrow_provider": "internal-cost-allocation",
-                "split": [
-                    {
-                        "party": "did:wcp:cost-center-line-7-manipulator-ops",
-                        "pct": 100,
-                    }
-                ],
-            },
+            marketplace_ref="cost-center-line-7-manipulator-ops",
         )
         result = await robot.post_continuation(
             prior_claim_id=prior_claim_id,
             descriptor=descriptor,
-            bond_ref=f"onboard-bond-{uuid.uuid4()}",
             expiry=(
                 datetime.now(timezone.utc) + timedelta(hours=1)
             ).isoformat(),

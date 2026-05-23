@@ -2,11 +2,11 @@
 //
 // An autonomous robot's onboard controller may act as a WCP agent, posting
 // follow-up tasks to other workers (including other robots) from inside its
-// own execute loop. The wire protocol is unchanged from v1.0-rc1; this type
+// own execute loop. The wire protocol is unchanged from v0.2; this type
 // wraps the common "post a follow-up task that continues from a prior claim"
 // case with a single method, PostContinuation.
 //
-// Spec: spec/1.0-rc5.md Sections 2 and 3.
+// Spec: spec/0.95.md Sections 2 and 3.
 // Pattern doc: docs/patterns/robot-as-agent.md.
 // Reference deployment: examples/agents/delivery-robot-dispatcher/.
 package wcp
@@ -57,28 +57,36 @@ func NewRobotAgent(ctx context.Context, coordinatorURL string, agentClass AgentC
 }
 
 // BuildContinuationArgs collects the application-layer blocks the caller
-// must supply when building a continuation descriptor.
+// must supply when building a continuation descriptor. v0.955: settlement
+// is no longer a protocol concern; MaxAttestationAttempts and MarketplaceRef
+// replace it.
 type BuildContinuationArgs struct {
-	PriorClaimID           string
-	DescriptorType         string
-	DescriptorPayload      map[string]interface{}
-	RequiredEvidenceKinds  []string
-	Constraints            map[string]interface{}
-	AttestationRequirement map[string]interface{}
-	Settlement             map[string]interface{}
+	PriorClaimID             string
+	DescriptorType           string
+	DescriptorPayload        map[string]interface{}
+	RequiredEvidenceKinds    []string
+	Constraints              map[string]interface{}
+	AttestationRequirement   map[string]interface{}
+	MaxAttestationAttempts   int
+	MarketplaceRef           string
 }
 
 // BuildContinuation constructs a task descriptor that names a prior task via
-// continuation_of. The caller MUST supply the three required application-layer
-// blocks (constraints, attestation_requirement, settlement) per the
-// descriptor schema.
+// continuation_of. The caller MUST supply the two required application-layer
+// blocks (constraints, attestation_requirement) per the v0.955 descriptor
+// schema. MaxAttestationAttempts defaults to 1 if zero. MarketplaceRef is
+// optional and opaque to WCP.
 func (ra *RobotAgent) BuildContinuation(args BuildContinuationArgs) map[string]interface{} {
 	kinds := args.RequiredEvidenceKinds
 	if kinds == nil {
 		kinds = []string{}
 	}
-	return map[string]interface{}{
-		"schema_version":     "wcp/1.0-rc1",
+	attempts := args.MaxAttestationAttempts
+	if attempts == 0 {
+		attempts = 1
+	}
+	descriptor := map[string]interface{}{
+		"schema_version":     "wcp/0.2",
 		"task_id":            newTaskID(),
 		"posted_by":          ra.Identity.DID,
 		"descriptor_type":    args.DescriptorType,
@@ -87,10 +95,14 @@ func (ra *RobotAgent) BuildContinuation(args BuildContinuationArgs) map[string]i
 			"claim_id":                args.PriorClaimID,
 			"required_evidence_kinds": kinds,
 		},
-		"constraints":             args.Constraints,
-		"attestation_requirement": args.AttestationRequirement,
-		"settlement":              args.Settlement,
+		"constraints":              args.Constraints,
+		"attestation_requirement":  args.AttestationRequirement,
+		"max_attestation_attempts": attempts,
 	}
+	if args.MarketplaceRef != "" {
+		descriptor["marketplace_ref"] = args.MarketplaceRef
+	}
+	return descriptor
 }
 
 // PostContinuation posts a follow-up task that continues from priorClaimID.
@@ -100,7 +112,6 @@ func (ra *RobotAgent) PostContinuation(
 	ctx context.Context,
 	priorClaimID string,
 	descriptor map[string]interface{},
-	bondRef string,
 	expiry string,
 ) (json.RawMessage, error) {
 	cont, _ := descriptor["continuation_of"].(map[string]interface{})
@@ -108,7 +119,7 @@ func (ra *RobotAgent) PostContinuation(
 	if claimID != priorClaimID {
 		return nil, fmt.Errorf("descriptor.continuation_of.claim_id (%q) does not match priorClaimID (%q)", claimID, priorClaimID)
 	}
-	return ra.PostTask(ctx, descriptor, bondRef, expiry)
+	return ra.PostTask(ctx, descriptor, expiry)
 }
 
 // AgentClassDeclaration returns the metadata block this agent advertises

@@ -3,7 +3,7 @@ Canonical JSON and SHA-256 primitives shared across the SDK.
 
 Implements a JSON serialization compatible with RFC 8785 (JCS) at the level
 WCP needs: sorted keys, no whitespace, JSON's standard escape rules. Full
-JCS conformance is a v1.1 RFC; v1.0-rc1 uses Python's `json.dumps(sort_keys=True, separators=(",", ":"))`,
+JCS conformance is a v1.1 RFC; v0.2 uses Python's `json.dumps(sort_keys=True, separators=(",", ":"))`,
 which matches the harness used by the coordinator reference.
 """
 from __future__ import annotations

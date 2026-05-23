@@ -1,6 +1,6 @@
 # WCP Retry and Idempotency Semantics
 
-**Companion to:** spec/1.0-rc1.md
+**Companion to:** spec/0.2.md
 **Status:** normative
 **Compiled:** 2026-05-23
 
@@ -27,8 +27,7 @@ A coordinator MAY refuse `idempotency_key` reuse beyond the configured window; c
 | tasks/claim | (worker_id, task_id) | A second claim for the same (worker_id, task_id) returns the existing claim_id if accepted, or `TASK_PREEMPTED` if the worker lost the race |
 | tasks/execute (open) | (claim_id) | Re-opening returns the existing session_id |
 | tasks/execute event | (claim_id, event_id) where event_id is set by the worker | A duplicate event_id is silently de-duplicated |
-| tasks/attest | (claim_id, idempotency_key) if provided, else (claim_id, hash(attestations_canonical)) | A second attest with identical attestations returns the cached verifier_decision |
-| tasks/settle | (claim_id) | Settlement is once per claim; second call returns the original settlement_id |
+| tasks/attest | (claim_id, idempotency_key) if provided, else (claim_id, hash(attestations_canonical)) | A second attest with identical attestations returns the cached verifier_decision. Distinct attestations on the same claim consume successive recheck attempts per `spec/0.955.md` Section 3. |
 | tasks/supervise | (claim_id, idempotency_key) | A second supervise request with identical params returns the existing supervisor session |
 | tasks/abort | (claim_id) | Abort is once per claim; second call returns the original abort_id |
 
@@ -53,10 +52,9 @@ A `claim_id` is unique within the coordinator's scope and bound to one (task_id,
 
 - tasks/execute (open) -> returns same session_id
 - tasks/attest (with same attestations) -> returns same verifier_decision
-- tasks/settle (after attesting) -> returns same settlement_id
 - tasks/abort (after lifecycle entered abort path) -> returns same abort_id
 
-Operations on a claim_id in a terminal state (settled, refunded, aborted) return `-42004 TASK_STATE_INVALID`.
+Operations on a claim_id in a terminal state (`completed`, `voided`, `aborted`) return `-42004 TASK_STATE_INVALID`. `tasks/attest` against a `voided` claim returns `-47001 RECHECK_MAX_ATTEMPTS_REACHED`.
 
 ## 5. Network-partition behavior
 
@@ -66,7 +64,7 @@ A worker that loses connectivity mid-execution and reconnects MUST:
 2. Catch up by emitting a `state_snapshot` event with `event_type="reconnect_state"`, signed.
 3. Resume heartbeats. If the coordinator transitioned to `supervising` due to missed heartbeats, the worker MUST call `tasks/supervise` to negotiate return (or `tasks/abort` if the worker cannot continue).
 
-The coordinator MUST NOT discard a claim_id during a partition. The claim is reserved until the dispute window closes (default 72 hours from the most recent state change) or until explicit abort.
+The coordinator MUST NOT discard a claim_id during a partition. The claim is reserved until the configured claim-expiry passes (operator-defined; default 72 hours from the most recent state change) or until explicit abort.
 
 ## 6. Idempotency under federation
 
@@ -82,7 +80,7 @@ Audit chain entries are NOT created for idempotent no-op returns. An idempotency
 
 The conformance suite Level 1 includes:
 
-- Idempotency replay for tasks/post, tasks/claim, tasks/attest, tasks/settle.
+- Idempotency replay for tasks/post, tasks/claim, tasks/attest.
 - Idempotency key collision returns -32602 with the documented symbol.
 - claim_id reuse across all retry-safe operations.
 

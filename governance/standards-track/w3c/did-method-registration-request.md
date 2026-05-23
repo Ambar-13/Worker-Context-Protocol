@@ -16,7 +16,7 @@
 
 ## 2. Method-specific identifier syntax
 
-Current (v1.0-rc1):
+Current (v0.2):
 
 ```
 did:wcp:<base58btc-encoded-ed25519-public-key>
@@ -28,7 +28,7 @@ Future (v1.1, per WCP RFC 0031):
 did:wcp:<multibase-prefix><base58btc-or-other-encoding>
 ```
 
-Where multibase-prefix defaults to `z` (base58btc) per the multibase RFC draft. The v1.1 grammar accepts both forms during a three-version compatibility window; legacy raw-base58 identifiers (v1.0-rc1) remain valid through v2.0.
+Where multibase-prefix defaults to `z` (base58btc) per the multibase RFC draft. The v1.1 grammar accepts both forms during a three-version compatibility window; legacy raw-base58 identifiers (v0.2) remain valid through v2.0.
 
 ## 3. Method operations
 
@@ -50,7 +50,7 @@ Future: post-quantum signature algorithms when standardized; the multibase gramm
 - Workers' public keys are exposed in the audit chain to enable independent verification.
 - Worker DIDs are linkable across tasks within a coordinator (this is intentional; reputation binds to the DID).
 - Cross-coordinator linkability depends on federation peering; without a trust anchor between coordinators, a worker's identity on Coordinator A is unlinkable to its identity on Coordinator B even if it uses the same key (because resolution is bilateral).
-- Selective disclosure: not directly supported in v1.0-rc1; a future RFC may bridge VC Selective Disclosure into WCP audit chain entries.
+- Selective disclosure: not directly supported in v0.2; a future RFC may bridge VC Selective Disclosure into WCP audit chain entries.
 
 ## 6. Method-specific extensions
 
@@ -73,7 +73,7 @@ Example test vector (Ed25519 key bytes -> did:wcp):
 
 ```
 Ed25519 public key bytes (hex): 3F D6 ... (32 bytes)
-did:wcp v1.0-rc1: did:wcp:zA1B2... (raw base58)
+did:wcp v0.2: did:wcp:zA1B2... (raw base58)
 did:wcp v1.1: did:wcp:zzA1B2... (multibase-prefixed; the leading 'z' is multibase, the rest is base58btc payload)
 ```
 

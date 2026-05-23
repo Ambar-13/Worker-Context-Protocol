@@ -22,7 +22,7 @@ func main() {
     if err != nil { panic(err) }
     defer w.Close()
     _, err = w.PublishCapabilities(ctx, map[string]interface{}{
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "worker_id": w.Identity.DID,
         // ... rest of descriptor
     })

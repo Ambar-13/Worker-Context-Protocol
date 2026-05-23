@@ -1,10 +1,15 @@
 """
-Typed objects mirroring spec/1.0-rc1.md.
+Typed objects mirroring the WCP normative spec.
 
 These are Python dataclasses for ergonomic construction; they serialize to
 the JSON shapes defined in spec/schemas/. The SDK does NOT enforce schema
 validation on the wire (that is the coordinator's responsibility) but DOES
 construct shapes that pass the schemas by default.
+
+v0.955: the Settlement and SettlementSplitEntry types are removed; settlement
+is no longer a protocol concern (see spec/0.955.md). TaskDescriptor gains
+the optional ``max_attestation_attempts`` and ``marketplace_ref`` fields.
+The AttestationRequirement override_* fields are removed.
 """
 from __future__ import annotations
 
@@ -14,7 +19,7 @@ from enum import Enum
 from typing import Any, Optional
 
 
-SCHEMA_VERSION = "wcp/1.0-rc1"
+SCHEMA_VERSION = "wcp/0.2"
 
 
 class WorkerClass(str, Enum):
@@ -80,9 +85,6 @@ class AttestationRequirement:
     M: int
     N: int
     evidence_schema: list[dict[str, Any]]
-    override_allowed: bool = True
-    override_authority: Optional[str] = None
-    override_audit_required: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,40 +93,7 @@ class AttestationRequirement:
             "M": self.M,
             "N": self.N,
             "evidence_schema": self.evidence_schema,
-            "override_allowed": self.override_allowed,
-            "override_authority": self.override_authority
-            or "did:wcp:default-operator-ops",
-            "override_audit_required": self.override_audit_required,
         }
-
-
-@dataclass
-class SettlementSplitEntry:
-    party: str
-    pct: float
-
-    def to_dict(self) -> dict[str, Any]:
-        return {"party": self.party, "pct": self.pct}
-
-
-@dataclass
-class Settlement:
-    currency: str
-    amount: str
-    escrow_provider: str
-    split: list[SettlementSplitEntry]
-    partial_completion_schedule: list[dict[str, Any]] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        out: dict[str, Any] = {
-            "currency": self.currency,
-            "amount": self.amount,
-            "escrow_provider": self.escrow_provider,
-            "split": [e.to_dict() for e in self.split],
-        }
-        if self.partial_completion_schedule:
-            out["partial_completion_schedule"] = self.partial_completion_schedule
-        return out
 
 
 @dataclass
@@ -135,13 +104,14 @@ class TaskDescriptor:
     descriptor_payload: dict[str, Any]
     constraints: dict[str, Any]
     attestation_requirement: AttestationRequirement
-    settlement: Settlement
+    max_attestation_attempts: int = 1
+    marketplace_ref: Optional[str] = None
     supervision: dict[str, Any] = field(default_factory=lambda: {"default": "autonomous"})
     x_subcontract_allowed: bool = False
     schema_version: str = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "schema_version": self.schema_version,
             "task_id": self.task_id,
             "posted_by": self.posted_by,
@@ -149,10 +119,13 @@ class TaskDescriptor:
             "descriptor_payload": self.descriptor_payload,
             "constraints": self.constraints,
             "attestation_requirement": self.attestation_requirement.to_dict(),
-            "settlement": self.settlement.to_dict(),
+            "max_attestation_attempts": self.max_attestation_attempts,
             "supervision": self.supervision,
             "x-subcontract-allowed": self.x_subcontract_allowed,
         }
+        if self.marketplace_ref is not None:
+            out["marketplace_ref"] = self.marketplace_ref
+        return out
 
 
 @dataclass

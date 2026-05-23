@@ -1,10 +1,10 @@
 # RFC 0002: Subcontracting (deferred to v0.2)
 
 - Author(s): Rentably (principal)
-- Status: deferred
+- Status: deferred; v0.955 supersedes the open question on "settlement split" (settlement is no longer a protocol concern; cross-party value split happens at the settlement layer above WCP). Any future subcontracting design at the protocol layer concerns coordination only.
 - Type: standards-track
 - Created: 2026-05-23
-- Targets: v0.2
+- Targets: TBD post-v1.0
 
 ## Summary
 

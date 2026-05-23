@@ -10,7 +10,7 @@ agent = Agent(name="dock-orchestrator", coordinator="ws://localhost:8000/wcp/ws"
 def build_pallet_move(payload_desc: str, pickup: str, dropoff: str) -> dict:
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": "transport",
@@ -31,18 +31,10 @@ def build_pallet_move(payload_desc: str, pickup: str, dropoff: str) -> dict:
                 {"mode": "sensor-witness", "kinds": ["indoor_pose_track", "weight_delta"]},
                 {"mode": "third-party-witness", "kinds": ["iot_beacon_proximity"]},
             ],
-            "override_authority": "did:wcp:example-dock-supervisor",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD", "amount": "8.50", "escrow_provider": "example-escrow",
-            "split": [
-                {"party": "did:wcp:operator-fleet", "pct": 85},
-                {"party": "did:wcp:warehouse-platform", "pct": 12},
-                {"party": "did:wcp:cargo-insurance", "pct": 3},
-            ],
-        },
-        "supervision": {"default": "autonomous"},
+                "supervision": {"default": "autonomous"},
+        "max_attestation_attempts": 1,
+        "marketplace_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 
@@ -53,7 +45,6 @@ async def main() -> None:
                                  "bay-recv-3", "stage-d-row-14")
         res = await agent.post_task(
             task,
-            bond_ref=f"example-bond-{task['task_id']}",
             expiry=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
         )
         print(f"[agent] posted pallet-move task_id={res['task_id']} "

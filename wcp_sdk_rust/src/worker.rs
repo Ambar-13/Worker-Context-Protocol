@@ -75,7 +75,7 @@ impl Worker {
 
     fn build_descriptor(&self) -> Value {
         json!({
-            "schema_version": "wcp/1.0-rc1",
+            "schema_version": "wcp/0.2",
             "worker_id": self.identity.did,
             "principal_id": self.options.principal_id,
             "class": self.options.worker_class.as_str(),

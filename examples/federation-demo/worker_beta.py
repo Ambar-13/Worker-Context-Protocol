@@ -6,7 +6,7 @@ the federation trust anchor (provisioned by setup.sh). An agent on coord-alpha
 (see agent_alpha.py) discovers this worker via the federation capability
 discovery and posts a task; this worker claims, executes, and attests.
 
-This script targets the v1.0-rc1 reference coordinator API. The federation
+This script targets the v0.2 reference coordinator API. The federation
 endpoints expected by the demo (capability sync across peers, cross-coordinator
 task forwarding) are v1.1 RFC 0016 implementation; until they land in the
 reference coordinator, this script runs end-to-end on coord-beta only and
@@ -93,7 +93,7 @@ async def main() -> None:
     except Exception as exc:
         log.warning("worker_beta encountered: %s", exc)
         log.warning(
-            "v1.0-rc1 reference coordinator may not yet expose federation endpoints; "
+            "v0.2 reference coordinator may not yet expose federation endpoints; "
             "in that case the worker registers on coord-beta only and the federation "
             "demo's cross-coordinator path is a v1.1 implementation deliverable"
         )

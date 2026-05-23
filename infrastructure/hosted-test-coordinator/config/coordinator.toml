@@ -3,7 +3,7 @@
 # All sensitive values come from environment variables (see secrets/.env).
 # This file is committed to version control; .env is not.
 
-schema_version = "wcp/1.0-rc1"
+schema_version = "wcp/0.2"
 
 [server]
 listen_host = "0.0.0.0"

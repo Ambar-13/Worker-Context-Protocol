@@ -8,7 +8,9 @@ can do exactly the same thing with a plain ``Agent`` instance and a hand-built
 ``continuation_of`` block on the task descriptor. The helper just makes the
 common case one line.
 
-Spec: ``spec/1.0-rc5.md`` Sections 2 and 3.
+Spec: ``spec/0.95.md`` Sections 2 and 3 (continuation pattern), updated by
+``spec/0.955.md`` (settlement removed from descriptor; ``max_attestation_attempts``
+and ``marketplace_ref`` added).
 Pattern doc: ``docs/patterns/robot-as-agent.md``.
 Reference deployment: ``examples/agents/delivery-robot-dispatcher/``.
 
@@ -28,11 +30,17 @@ Example::
             descriptor_type="place_on_shelf",
             descriptor_payload={"shelf_id": "WS-7-A", "orientation_deg": 0},
             required_evidence_kinds=["indoor_pose_track", "weight_delta"],
+            constraints={"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+            attestation_requirement={
+                "modes": ["sensor-witness"],
+                "threshold": "M-of-N", "M": 1, "N": 1,
+                "evidence_schema": [{"mode": "sensor-witness",
+                                     "kinds": ["manipulator_pose_track"]}],
+            },
         )
         await robot.post_continuation(
             prior_claim_id=transport_claim_id,
             descriptor=follow_up,
-            bond_ref="bond-onboard-001",
             expiry=expiry_iso,
         )
 """
@@ -89,27 +97,29 @@ class RobotAgent(Agent):
         required_evidence_kinds: Optional[Iterable[str]] = None,
         constraints: Optional[dict[str, Any]] = None,
         attestation_requirement: Optional[dict[str, Any]] = None,
-        settlement: Optional[dict[str, Any]] = None,
+        max_attestation_attempts: int = 1,
+        marketplace_ref: Optional[str] = None,
     ) -> dict[str, Any]:
         """Construct a task descriptor that names a prior task via
         ``continuation_of`` and otherwise leaves the application layer to
         the caller.
 
-        The caller MUST supply ``constraints``, ``attestation_requirement``,
-        and ``settlement`` (the three required blocks per the descriptor
-        schema). The helper adds ``schema_version``, ``task_id``,
-        ``posted_by``, the descriptor type and payload, and the
-        ``continuation_of`` reference.
+        The caller MUST supply ``constraints`` and ``attestation_requirement``
+        (the two required blocks per the v0.955 descriptor schema). The helper
+        adds ``schema_version``, ``task_id``, ``posted_by``, the descriptor
+        type and payload, the ``continuation_of`` reference, and the optional
+        v0.955 fields ``max_attestation_attempts`` and ``marketplace_ref``.
+
+        Settlement is no longer a protocol concern at v0.955; the
+        ``settlement`` block was removed from the descriptor.
         """
         if constraints is None:
             raise ValueError("constraints is required (see TaskDescriptor schema)")
         if attestation_requirement is None:
             raise ValueError("attestation_requirement is required")
-        if settlement is None:
-            raise ValueError("settlement is required")
         kinds = list(required_evidence_kinds) if required_evidence_kinds else []
-        return {
-            "schema_version": "wcp/1.0-rc1",
+        descriptor: dict[str, Any] = {
+            "schema_version": "wcp/0.2",
             "task_id": str(uuid.uuid4()),
             "posted_by": self.did,
             "descriptor_type": descriptor_type,
@@ -120,15 +130,17 @@ class RobotAgent(Agent):
             },
             "constraints": constraints,
             "attestation_requirement": attestation_requirement,
-            "settlement": settlement,
+            "max_attestation_attempts": max_attestation_attempts,
         }
+        if marketplace_ref is not None:
+            descriptor["marketplace_ref"] = marketplace_ref
+        return descriptor
 
     async def post_continuation(
         self,
         *,
         prior_claim_id: str,
         descriptor: dict[str, Any],
-        bond_ref: str,
         expiry: str,
         supervision: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
@@ -148,7 +160,6 @@ class RobotAgent(Agent):
             )
         return await self.post_task(
             descriptor,
-            bond_ref=bond_ref,
             expiry=expiry,
             supervision=supervision,
         )

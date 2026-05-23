@@ -1,10 +1,11 @@
 # RFC 0032: Cross-Coordinator Settlement Clearing
 
 - Author(s): WCP TSC
-- Status: open (v1.1 candidate)
-- Type: standards-track
+- Status: **WITHDRAWN at v0.955.** Cross-coordinator settlement is out of scope for WCP. Settlement primitives moved out of the protocol entirely; marketplaces and other settlement layers build cross-coordinator value transfer above WCP using federated audit chain subscriptions. See `spec/0.955.md` Section 7.4. This RFC is preserved as history of the design exploration; do not implement.
+- Type: standards-track (historical)
 - Created: 2026-05-23
-- Targets: v1.1
+- Withdrawn: 2026-05-23 (v0.955)
+- Targets: (none; withdrawn)
 
 ## Summary
 
@@ -12,7 +13,7 @@ Specifies how settlement clears across federation boundaries when an agent on Co
 
 ## Motivation
 
-v1.0-rc1 settlement is intra-coordinator: the agent posts a task with `escrow_provider` and `split[]` on the same coordinator the worker is registered on. v1.0-rc1 federation (spec/federation.md) covers capability discovery and reputation portability but is silent on settlement.
+v0.2 settlement is intra-coordinator: the agent posts a task with `escrow_provider` and `split[]` on the same coordinator the worker is registered on. v0.2 federation (spec/federation.md) covers capability discovery and reputation portability but is silent on settlement.
 
 Real cross-coordinator scenarios exist:
 
@@ -79,7 +80,7 @@ This entry MUST appear in both A's and B's audit chains, referencing the same tr
 
 ### Insurance pool handling across federation
 
-When `split[]` includes an `insurance-pool` party (spec/1.0-rc1.md Section 5.3 example), the insurance-pool DID lives on one coordinator. v1.1 defines:
+When `split[]` includes an `insurance-pool` party (spec/0.2.md Section 5.3 example), the insurance-pool DID lives on one coordinator. v1.1 defines:
 
 - If insurance-pool DID is on A: A's coordinator handles the insurance share directly; no cross-coordinator transfer needed for the insurance leg.
 - If insurance-pool DID is on B: A's coordinator transfers the insurance share to B in the same `federation-settlement-transfer` entry as the worker payout, broken out as a sub-entry.
@@ -114,9 +115,9 @@ If A's dispute closes the task (`disputed -> refunded`) AFTER B has paid the wor
 
 ## Unresolved questions
 
-1. **Dispute window semantics when funder and executor live on different coordinators with different time-synchronization assumptions.** Specifically: if A's NTP source and B's NTP source drift beyond the v1.0-rc1 tolerance during a dispute window, what is the canonical timeline? Recommendation: federation trust anchor declares a primary time source; both coordinators MUST sync to it for federated tasks.
+1. **Dispute window semantics when funder and executor live on different coordinators with different time-synchronization assumptions.** Specifically: if A's NTP source and B's NTP source drift beyond the v0.2 tolerance during a dispute window, what is the canonical timeline? Recommendation: federation trust anchor declares a primary time source; both coordinators MUST sync to it for federated tasks.
 2. **Insurance pool on third-party coordinator C.** Batched form vs separate entries. Operator-side experience needed before normalizing.
-3. **Currency conversion across federation boundaries.** v1.0-rc1 settlement is single-currency. Cross-coordinator tasks may post in USD and pay in EUR (or another currency). Conversion source-of-truth, slippage allowance, and conversion-fee attribution are out of scope for RFC 0032; tracked as RFC 0035 candidate.
+3. **Currency conversion across federation boundaries.** v0.2 settlement is single-currency. Cross-coordinator tasks may post in USD and pay in EUR (or another currency). Conversion source-of-truth, slippage allowance, and conversion-fee attribution are out of scope for RFC 0032; tracked as RFC 0035 candidate.
 4. **Cross-coordinator dispute resolution.** Who arbitrates when A's coordinator declares dispute closed but B's coordinator's verifier reports the work as completed? Federation trust anchor MUST name the arbitration authority (could be either coordinator, a third coordinator, or an external body).
 
 ## Implementation track

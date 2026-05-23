@@ -170,12 +170,12 @@ async def run_level(
             "worker_pubkey_b64": worker_ident.public_key_b64url,
             "agent_did": agent_ident.did,
             "uuid": str(uuid.uuid4()),
-            "schema_version": "wcp/1.0-rc1",
+            "schema_version": "wcp/0.2",
             "now_iso": datetime.now(timezone.utc).isoformat(),
         }
         report = ConformanceReport(
             target_url=target_url,
-            schema_version="wcp/1.0-rc1",
+            schema_version="wcp/0.2",
             level_requested=level,
             level_passed=0,
             timestamp=datetime.now(timezone.utc).isoformat(),

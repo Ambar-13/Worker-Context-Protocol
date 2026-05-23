@@ -20,7 +20,6 @@ from .audit_chain import AuditChain, AuditSigner
 from .capabilities_service import CapabilitiesService
 from .did_resolver import DidResolver
 from .rpc_dispatch import Dispatcher, JsonRpcError
-from .settlement_adapter import FakeStripeAdapter, SettlementAdapter
 from .tasks_service import TasksService
 
 log = logging.getLogger("wcp.router")
@@ -29,24 +28,27 @@ log = logging.getLogger("wcp.router")
 def make_app(
     session_factory: Callable[[], Session],
     *,
-    settlement: SettlementAdapter | None = None,
     signer: AuditSigner | None = None,
 ) -> FastAPI:
-    """Construct a FastAPI app with WCP routes bound to the given session factory."""
+    """Construct a FastAPI app with WCP routes bound to the given session factory.
+
+    v0.955: the ``settlement`` parameter is removed; settlement is no longer a
+    protocol concern. The reference coordinator no longer ships an escrow
+    adapter. External settlement layers subscribe to the audit chain.
+    """
     app = FastAPI(
         title="WCP Coordinator",
-        version="0.1.0",
+        version="0.955.0",
         description="Worker Context Protocol reference backend",
     )
     router = APIRouter(prefix="/wcp")
-    settlement = settlement or FakeStripeAdapter()
     signer = signer or AuditSigner.ephemeral()
     resolver = DidResolver()
 
     def _build_dispatcher(db: Session) -> Dispatcher:
         audit = AuditChain(db, signer)
         caps = CapabilitiesService(db, resolver)
-        tasks = TasksService(db, resolver, audit, settlement)
+        tasks = TasksService(db, resolver, audit)
         return Dispatcher(caps, tasks)
 
     def _get_session() -> Session:

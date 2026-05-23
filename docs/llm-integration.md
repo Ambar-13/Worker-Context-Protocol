@@ -138,6 +138,6 @@ For production agent deployments:
 
 ## See also
 
-- `spec/1.0-rc1.md` Section 3 for the full RPC surface.
+- `spec/0.2.md` Section 3 for the full RPC surface.
 - `examples/agents/` for six fully runnable demos.
 - `integrations/` for the per-framework adapter source.

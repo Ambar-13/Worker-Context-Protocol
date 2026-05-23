@@ -27,11 +27,10 @@ export class Agent {
 
   async postTask(
     task: Record<string, unknown>,
-    args: { bondRef: string; expiry: string; supervision?: Record<string, unknown> },
+    args: { expiry: string; supervision?: Record<string, unknown> },
   ): Promise<Record<string, unknown>> {
     const params: Record<string, unknown> = {
       task,
-      bond_ref: args.bondRef,
       expiry: args.expiry,
     };
     if (args.supervision) params.supervision = args.supervision;

@@ -1,7 +1,7 @@
 # RFC 0012: RPC tasks/abort
 
 - Author(s): Rentably
-- Status: accepted (part of v0.1)
+- Status: accepted (part of v0.1); settlement-related portions amended at v0.955 (see `spec/0.955.md` — the `proposed_settlement` request field and the `settlement_disposition` response field are removed; the abort body shape becomes `{claim_id, reason, state_snapshot}` with response `{abort_id}`).
 - Type: standards-track
 - Created: 2026-05-23
 

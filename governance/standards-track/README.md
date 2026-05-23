@@ -6,7 +6,7 @@ This directory holds the pre-filled submission packets for the three standards b
 - **W3C** (`w3c/`): Member Submission for the `did:wcp` method and the protocol as a candidate interaction layer.
 - **IETF** (`ietf/`): Internet-Draft for the JSON-RPC-over-WebSocket transport binding, with a path to RFC status if the working group adopts.
 
-The packets are reformattings of the v1.0-rc1 spec and governance documents into each body's conventional shape. They are not re-authorings; substantive content is unchanged.
+The packets are reformattings of the v0.2 spec and governance documents into each body's conventional shape. They are not re-authorings; substantive content is unchanged.
 
 ## Recommended sequencing
 

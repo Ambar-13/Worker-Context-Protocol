@@ -1,6 +1,8 @@
 # Two-Coordinator Federation Demo
 
-This demo shows WCP federation in action: two coordinators peering via a signed trust anchor, a worker registered on one coordinator, an agent operating on the other, and a complete task lifecycle (post -> claim -> execute -> attest -> settle) crossing the federation boundary with mutually verifiable audit chains.
+**v0.955 status:** this demo was authored against the v0.95 / v0.2 surface, which included settlement primitives. v0.955 removed those from the protocol; the demo's settlement-related steps now live above WCP. The federation primitives the demo exercises (capability discovery, task forwarding, audit-chain interop) remain protocol-layer. A rewrite of this demo against the v0.955 surface is tracked as follow-on work.
+
+This demo shows WCP federation in action: two coordinators peering via a signed trust anchor, a worker registered on one coordinator, an agent operating on the other, and a complete task lifecycle crossing the federation boundary with mutually verifiable audit chains.
 
 The presence of this demo turns "WCP supports federation" from claim into evidence.
 
@@ -152,7 +154,7 @@ docker compose down -v
 
 ## Documents this demo references
 
-- `spec/1.0-rc1.md`: the protocol
+- `spec/0.2.md`: the protocol
 - `rfcs/0016-federation-primitives.md`: federation trust anchors and capability sync
 - `rfcs/0032-cross-coordinator-settlement-clearing.md`: settlement transfer across federation
 - `conformance/test-suite/level3.json`: the Level 3 conformance cases this demo validates

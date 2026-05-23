@@ -2,7 +2,7 @@
 
 **Status:** RECOMMENDED practice; not normative.
 
-WCP defines reputation portability across coordinators (`spec/1.0-rc1.md` Section 7.1, `spec/federation.md` Section 6). The protocol does not define how reputation is bootstrapped for a new worker on a new coordinator. This document describes patterns.
+WCP defines reputation portability across coordinators (`spec/0.2.md` Section 7.1, `spec/federation.md` Section 6). The protocol does not define how reputation is bootstrapped for a new worker on a new coordinator. This document describes patterns.
 
 ## The cold-start problem
 

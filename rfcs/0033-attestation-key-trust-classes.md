@@ -12,7 +12,7 @@ Specifies an OPTIONAL `trust_class` field on each `attestation_keys[]` entry in 
 
 ## Motivation
 
-A worker's attestation key signs every event it submits. v1.0-rc1 treats all keys as equivalent: a software keypair on a laptop signs as authoritatively as a TPM-attested key on an industrial controller. This is fine for the median case but breaks three specific deployments:
+A worker's attestation key signs every event it submits. v0.2 treats all keys as equivalent: a software keypair on a laptop signs as authoritatively as a TPM-attested key on an industrial controller. This is fine for the median case but breaks three specific deployments:
 
 1. **Industrial robotics with safety-critical attestation.** A pharmaceutical-manufacturing operator requires that every robot dispatching a sterile-fill task signs with a hardware-attested key whose attestation envelope traces to the TPM 2.0 manufacturer.
 2. **Healthcare logistics with regulated chain-of-custody.** Specimen-transport tasks under HIPAA-equivalent regimes (HITRUST, GDPR Article 32) require that the courier's signing key is at minimum hardware-attested via WebAuthn on the carrying device.
@@ -104,9 +104,9 @@ Trust class is durable on the worker DID. Downgrading is allowed (e.g., key rota
 
 ### Migration
 
-- v1.0-rc1 capabilities have no `trust_class` field. v1.1 verifiers treat them as `software-keypair`.
+- v0.2 capabilities have no `trust_class` field. v1.1 verifiers treat them as `software-keypair`.
 - v1.1 capabilities MAY declare any trust class.
-- v1.1 task descriptors with `minimum_trust_class` reject v1.0-rc1 workers if the requirement is above `software-keypair`.
+- v1.1 task descriptors with `minimum_trust_class` reject v0.2 workers if the requirement is above `software-keypair`.
 - No v1.2 default flip; trust class remains opt-in by operator policy.
 
 ## Drawbacks
@@ -118,7 +118,7 @@ Trust class is durable on the worker DID. Downgrading is allowed (e.g., key rota
 ## Alternatives
 
 1. **Operator-only policy, no spec change.** Each operator enforces its own trust gate; tasks specify trust requirements opaquely. Loses interoperability across federated coordinators and forces every implementer to roll their own gate. Rejected.
-2. **Mandatory trust classes on all keys.** Every key MUST declare a trust class explicitly. Breaks backward compat with v1.0-rc1. Rejected.
+2. **Mandatory trust classes on all keys.** Every key MUST declare a trust class explicitly. Breaks backward compat with v0.2. Rejected.
 3. **Boolean hardware_attested flag instead of enum.** Loses the granularity needed to distinguish TPM from WebAuthn from delegated. Operators in mixed fleets (some industrial controllers with TEE, some human workers with WebAuthn) need the distinction. Rejected.
 
 ## Prior art

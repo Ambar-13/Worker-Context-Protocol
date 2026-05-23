@@ -1,12 +1,12 @@
 # RFC 0018: Error Code Taxonomy
 
 - Author(s): Rentably (principal)
-- Status: accepted (part of v1.0-rc1)
+- Status: accepted (part of v0.2); amended at v0.955 (the -44xxx settlement range is removed; the -47xxx recheck range and the -42010 INVALID_DESCRIPTOR code are added — see `spec/error-codes.md`).
 - Type: standards-track
 
 ## Summary
 
-Adopts the error code taxonomy in `spec/error-codes.md`: numeric ranges by category (-32xxx standard, -40xxx identity, -41xxx attestation, -42xxx task lifecycle, -43xxx execution, -44xxx settlement, -45xxx scope, -46xxx policy, -5xxxx federation, -6xxxx conformance). Symbols namespaced under `wcp.error`. Structured retry semantics per error.
+Adopts the error code taxonomy in `spec/error-codes.md`: numeric ranges by category (-32xxx standard, -40xxx identity, -41xxx attestation, -42xxx task lifecycle, -43xxx execution, -45xxx scope, -46xxx policy, -47xxx recheck, -5xxxx federation, -6xxxx conformance). The -44xxx range previously carried settlement errors and was removed at v0.955. Symbols namespaced under `wcp.error`. Structured retry semantics per error.
 
 ## Drawbacks
 

@@ -16,5 +16,5 @@ export type {
   BuildContinuationArgs,
 } from "./robot-agent";
 
-export const SCHEMA_VERSION = "wcp/1.0-rc1";
+export const SCHEMA_VERSION = "wcp/0.2";
 export const SDK_VERSION = "0.95.0";

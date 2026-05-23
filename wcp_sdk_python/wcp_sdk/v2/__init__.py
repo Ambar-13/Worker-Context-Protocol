@@ -31,14 +31,16 @@ Agent example:
 
     agent = Agent(name="my-agent", coordinator="ws://...")
     async with agent:
-        result = await agent.post_task(task, bond_ref=..., expiry=...)
+        result = await agent.post_task(task, expiry=...)
 
 Coordinator example (extension points):
 
     from wcp_sdk.v2 import Coordinator
     coord = Coordinator()
     coord.register_attestation_verifier("custom-mode", my_verifier_fn)
-    coord.register_settlement_adapter("custom-escrow", MyAdapter())
+
+v0.955: the settlement_adapter registry was removed. Settlement is no longer
+a protocol concern; external settlement layers subscribe to the audit chain.
 """
 
 from .worker import Worker

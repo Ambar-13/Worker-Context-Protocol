@@ -8,6 +8,9 @@ node_modules/
 build/
 dist/
 
+# Local sprint scratch (design lock-ins, handoffs). Never committed.
+.agent/
+
 # LaTeX build artifacts (PDFs are committed; logs/aux/swap are not)
 *.aux
 *.log

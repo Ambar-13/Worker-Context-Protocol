@@ -1,5 +1,5 @@
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "worker_id": "did:wcp:6CvWy2cN5x2jKuJZpwOm2hRsT4vXkGcA5dK8XfMnEqRm",
   "principal_id": "did:wcp:5BuVx1cN5x2jKuJZpwOm2hRsT4vXkGcA5dK8XfMnEqRm",
   "class": "autonomous_robot",

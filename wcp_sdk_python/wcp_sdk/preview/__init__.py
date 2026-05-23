@@ -10,7 +10,10 @@ Modules:
     wcp_lite              - RFC 0029 (WCP-Lite for Intermittent Connectivity)
     trust_classes         - RFC 0033 (Attestation Key Trust Classes)
     external_trust_root   - RFC 0034 (External Trust-Root Signed Evidence)
-    federation_settlement - RFC 0032 (Cross-Coordinator Settlement Clearing)
+
+Removed at v0.955: federation_settlement (RFC 0032). Settlement is no longer
+a protocol concern; cross-coordinator value transfer happens at a layer
+above WCP that consumes federated audit chain events.
 
 Every preview module emits WCPPreviewWarning on first use. Production
 deployments SHOULD NOT depend on preview modules for v1.0 conformance;
@@ -68,7 +71,6 @@ from . import (  # noqa: E402,F401
     wcp_lite,
     trust_classes,
     external_trust_root,
-    federation_settlement,
 )
 
 __all__ = [
@@ -78,5 +80,4 @@ __all__ = [
     "wcp_lite",
     "trust_classes",
     "external_trust_root",
-    "federation_settlement",
 ]

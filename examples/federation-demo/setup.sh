@@ -14,17 +14,17 @@ COORD_BETA_URL="${COORD_BETA_URL:-http://localhost:9001}"
 
 echo "[setup] checking coord-alpha at $COORD_ALPHA_URL..."
 if ! curl -sf "$COORD_ALPHA_URL/health" > /dev/null 2>&1; then
-  # The reference coordinator may not expose /health at v1.0-rc1; try /wcp/capabilities
+  # The reference coordinator may not expose /health at v0.2; try /wcp/capabilities
   if ! curl -sf "$COORD_ALPHA_URL/wcp/capabilities" > /dev/null 2>&1; then
     echo "[setup] WARN: coord-alpha did not respond at $COORD_ALPHA_URL"
     echo "[setup] continuing in dry-run mode; this demo's federation provisioning"
     echo "[setup] requires the v1.1 federation primitives RFC to be implemented"
-    echo "[setup] in the reference coordinator. v1.0-rc1 coordinator does not yet"
+    echo "[setup] in the reference coordinator. v0.2 coordinator does not yet"
     echo "[setup] expose federation endpoints."
     echo "[setup] dry-run trust anchor:"
     cat <<EOF
 {
-  "schema_version": "wcp/1.0-rc1+federation-demo",
+  "schema_version": "wcp/0.2+federation-demo",
   "peer_a_coordinator_did": "did:wcp:coord-alpha-demo-key",
   "peer_b_coordinator_did": "did:wcp:coord-beta-demo-key",
   "peer_a_url": "ws://coord-alpha:9000/wcp/ws",
@@ -53,10 +53,10 @@ fi
 echo "[setup] coord-beta reachable"
 
 # Real provisioning would POST to /wcp/federation/establish-trust-anchor on
-# both coordinators with mutual signed payloads. v1.0-rc1 does not yet expose
+# both coordinators with mutual signed payloads. v0.2 does not yet expose
 # this endpoint; v1.1 RFC 0016 federation primitives spec out the call.
 
 echo "[setup] (v1.1 trust anchor establishment endpoint not yet exposed)"
-echo "[setup] demo will run in best-effort mode against current v1.0-rc1 coordinator"
+echo "[setup] demo will run in best-effort mode against current v0.2 coordinator"
 echo "[setup] when v1.1 federation lands, this script POSTs the trust anchor to both peers"
 echo "[setup] PASS (dry-run; no errors)"

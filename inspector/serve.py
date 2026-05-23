@@ -3,7 +3,7 @@
 The page is HTML + Alpine.js (no build step) and connects via WebSocket to a
 small relay that proxies the coordinator's audit chain and task state to the
 browser. The relay queries the coordinator's HTTP endpoints; it does not
-require any modification to the v1.0-rc1 coordinator.
+require any modification to the v0.2 coordinator.
 """
 from __future__ import annotations
 

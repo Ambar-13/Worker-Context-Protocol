@@ -120,7 +120,7 @@ async def _post(agent: Agent, args: dict[str, Any]) -> dict[str, Any]:
     M = int(args.get("M", 1))
     N = int(args.get("N", max(1, len(modes))))
     task = {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": args["descriptor_type"],
@@ -139,20 +139,11 @@ async def _post(agent: Agent, args: dict[str, Any]) -> dict[str, Any]:
         "attestation_requirement": {
             "modes": modes, "threshold": "M-of-N", "M": M, "N": N,
             "evidence_schema": [{"mode": m, "kinds": []} for m in modes],
-            "override_authority": "did:wcp:example-operator-ops",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": args["currency"],
-            "amount": args["amount"],
-            "escrow_provider": "example-escrow",
-            "split": [{"party": "did:wcp:worker-pool", "pct": 100}],
-        },
-        "supervision": {"default": "autonomous"},
+                "supervision": {"default": "autonomous"},
         "x-subcontract-allowed": False,
     }
     return await agent.post_task(
         task,
-        bond_ref=f"example-bond-{task['task_id']}",
         expiry=(now + timedelta(hours=24)).isoformat(),
     )

@@ -74,15 +74,15 @@ class Agent(AbstractAsyncContextManager["Agent"]):
         self,
         task: dict[str, Any],
         *,
-        bond_ref: str,
         expiry: str,
         supervision: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
+        """Post a task. Settlement is a layer above WCP at v0.955; any
+        external correlation key lives in ``task['marketplace_ref']``."""
         if self._session is None:
             raise RuntimeError("Agent.post_task requires async with agent: ...")
         return await self._session.post(
             type("_Td", (), {"to_dict": lambda self: task})(),
-            bond_ref=bond_ref,
             expiry=expiry,
             supervision=supervision,
         )

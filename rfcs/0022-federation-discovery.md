@@ -12,7 +12,7 @@ How to discover federation peers without a global directory while avoiding O(N^2
 
 ## Motivation
 
-`spec/federation.md` defines bilateral trust anchors. As the number of coordinators grows, bilateral discovery scales poorly. Some discovery primitive is needed without re-introducing the central-authority failure mode WCP rejects in `spec/1.0-rc1.md` Section 2 (MQTT-rejection).
+`spec/federation.md` defines bilateral trust anchors. As the number of coordinators grows, bilateral discovery scales poorly. Some discovery primitive is needed without re-introducing the central-authority failure mode WCP rejects in `spec/0.2.md` Section 2 (MQTT-rejection).
 
 ## Candidate approaches under evaluation
 
@@ -21,4 +21,4 @@ How to discover federation peers without a global directory while avoiding O(N^2
 3. **Self-publishing via well-known**: every coordinator publishes `/.well-known/wcp-federation-peers.json`; agents and other coordinators scrape on demand.
 4. **DNS-SD**: discover coordinators via DNS service records.
 
-Unresolved at v1.0-rc1.
+Unresolved at v0.2.

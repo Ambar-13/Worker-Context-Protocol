@@ -1,6 +1,6 @@
 # delivery_robot_dispatcher: the robot-as-agent reference deployment
 
-Reference implementation of the robot-as-agent pattern. An autonomous mobile robot inside a manufacturing facility claims a `transport` task, completes the move, and from inside its own execute loop posts a follow-up `place_on_shelf` task to a stationary manipulator. The wire protocol is unchanged from `wcp/1.0-rc1`; the new piece is that the AMR's onboard controller holds an agent credential (`agent_class: embodied_agent`) and uses the `continuation_of` block to link the two tasks in the audit chain.
+Reference implementation of the robot-as-agent pattern. An autonomous mobile robot inside a manufacturing facility claims a `transport` task, completes the move, and from inside its own execute loop posts a follow-up `place_on_shelf` task to a stationary manipulator. The wire protocol is unchanged from `wcp/0.2`; the new piece is that the AMR's onboard controller holds an agent credential (`agent_class: embodied_agent`) and uses the `continuation_of` block to link the two tasks in the audit chain.
 
 ## What this deployment shows
 
@@ -53,6 +53,6 @@ End-to-end in under sixty seconds on a developer laptop.
 
 ## See also
 
-- `spec/1.0-rc5.md` for the spec.
+- `spec/0.95.md` for the spec.
 - `docs/patterns/robot-as-agent.md` for the pattern walk-through and Mermaid diagram.
 - `rfcs/0002-subcontracting-v0.2.md` for the rejected worker-layer subcontracting design that the agent-layer continuation pattern supersedes.

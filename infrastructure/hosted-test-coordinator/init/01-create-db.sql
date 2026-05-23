@@ -30,4 +30,4 @@ CREATE TABLE IF NOT EXISTS _bootstrap_marker (
     applied_at  timestamptz NOT NULL DEFAULT now(),
     version     text NOT NULL
 );
-INSERT INTO _bootstrap_marker (version) VALUES ('hosted-test-coordinator-v1.0-rc4');
+INSERT INTO _bootstrap_marker (version) VALUES ('hosted-test-coordinator-v0.85');

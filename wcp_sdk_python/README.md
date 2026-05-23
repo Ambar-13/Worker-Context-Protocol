@@ -6,7 +6,7 @@ This SDK is for implementers building WCP workers or agents in Python. It is **v
 
 ## Status
 
-Pre-v1.0 final. The surface follows `spec/1.0-rc1.md` and MAY change before v1.0 final.
+Pre-v1.0 final. The surface follows `spec/0.2.md` and MAY change before v1.0 final.
 
 ## Install
 

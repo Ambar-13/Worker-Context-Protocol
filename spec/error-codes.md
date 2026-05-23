@@ -1,7 +1,7 @@
 # WCP Error Code Taxonomy
 
-**Companion to:** spec/1.0-rc1.md
-**Status:** normative
+**Companion to:** spec/0.2.md and spec/0.955.md
+**Status:** normative. Updated at v0.955: the -44xxx settlement range removed (settlement is no longer a protocol concern); -47xxx recheck range and -42010 INVALID_DESCRIPTOR added.
 **Compiled:** 2026-05-23
 
 Errors are returned as JSON-RPC 2.0 error objects with `code`, `message`, and `data`. Codes are partitioned by category. Symbols are namespaced under `wcp.error`. Messages are English; i18n message keys live in `data.i18n_key`. Structured retry semantics live in `data.retry` per `retry-idempotency.md`.
@@ -68,6 +68,7 @@ Errors are returned as JSON-RPC 2.0 error objects with `code`, `message`, and `d
 | -42002 | wcp.error.task_preempted | Another worker claimed first (within 100 ms grace) |
 | -42003 | wcp.error.task_expired | expiry passed before action |
 | -42004 | wcp.error.task_state_invalid | Operation invalid in current state |
+| -42010 | wcp.error.invalid_descriptor | TaskDescriptor contains a legacy `settlement` block, or legacy `override_authority` / `override_audit_required` / `override_allowed` field (v0.955 migration error) |
 
 ### -43xxx: Execution
 
@@ -76,19 +77,15 @@ Errors are returned as JSON-RPC 2.0 error objects with `code`, `message`, and `d
 | -43001 | wcp.error.heartbeat_timeout | Three missed heartbeats; auto-supervising |
 | -43002 | wcp.error.worker_lost | Supervision window expired without reconnect |
 
-### -44xxx: Settlement
+### -44xxx: (removed at v0.955)
 
-| Code | Symbol | When |
-|---|---|---|
-| -44001 | wcp.error.settlement_failed | Escrow provider refused capture |
-| -44002 | wcp.error.settlement_disputed | Dispute opened within dispute_window |
-| -44003 | wcp.error.settlement_refunded | Refund applied per disposition |
+The -44xxx range previously carried settlement errors (SETTLEMENT_FAILED, SETTLEMENT_DISPUTED, SETTLEMENT_REFUNDED). Settlement is no longer a protocol concern at v0.955. The range is reserved and unused; RFCs MAY repurpose it after a deprecation cycle past v1.0 final.
 
 ### -45xxx: Scope
 
 | Code | Symbol | When |
 |---|---|---|
-| -45001 | wcp.error.subcontract_forbidden | x-subcontract-allowed=true; not conformant at v1.0-rc1 |
+| -45001 | wcp.error.subcontract_forbidden | x-subcontract-allowed=true; not conformant at v0.2 |
 | -45002 | wcp.error.out_of_scope_task_class | Task tagged for medical, defense, minor-involving, or hazmat-above-consumer |
 
 ### -46xxx: Policy
@@ -96,6 +93,13 @@ Errors are returned as JSON-RPC 2.0 error objects with `code`, `message`, and `d
 | Code | Symbol | When |
 |---|---|---|
 | -46001 | wcp.error.policy_violation | Operator policy refused the operation (e.g., self-dealing without third-party witness) |
+
+### -47xxx: Recheck (added at v0.955)
+
+| Code | Symbol | When |
+|---|---|---|
+| -47001 | wcp.error.recheck_max_attempts_reached | `tasks/attest` called against a claim already in `voided` state because attempts were exhausted |
+| -47002 | wcp.error.recheck_not_available_for_task | `tasks/attest` called against a task that does not permit rechecking (e.g. operator policy override) |
 
 ### -5xxxx: Federation
 
@@ -140,10 +144,9 @@ Operators MAY define error codes in this range for their internal use. WCP clien
 | -42004 | depends on state | partial or permanent |
 | -43001 | yes | transient (after reconnect) |
 | -43002 | no | permanent |
-| -44001 | yes | transient (after escrow recovery) |
-| -44002 | no | partial (dispute resolution required) |
-| -44003 | no | partial |
 | -45xxx | no | permanent |
+| -47001 | no | permanent (claim is terminal in `voided`; post a new task with `continuation_of` if work should continue) |
+| -47002 | no | permanent (task does not permit rechecking) |
 | -46001 | no | permanent (operator policy change required) |
 | -50xxx | depends | varies (transient for unreachable; permanent for trust-insufficient) |
 | -60xxx | no | permanent |

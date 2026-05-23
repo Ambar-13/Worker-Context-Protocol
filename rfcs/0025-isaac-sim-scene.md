@@ -12,7 +12,7 @@ A reference Isaac Sim scene for the robot-side `transport` and `scheduled_presen
 
 ## Motivation
 
-Gazebo Harmonic is the v1.0-rc1 default for the simulator demo (cheap, Apache-licensed, no GPU required). Isaac Sim is more visually convincing and exercises NVIDIA's accelerated perception stack; an Isaac scene is useful for vendors who target real-time visual ML workloads.
+Gazebo Harmonic is the v0.2 default for the simulator demo (cheap, Apache-licensed, no GPU required). Isaac Sim is more visually convincing and exercises NVIDIA's accelerated perception stack; an Isaac scene is useful for vendors who target real-time visual ML workloads.
 
 ## Open questions
 

@@ -40,7 +40,6 @@ def test_happy_path_human_scheduled_presence(
     t = make_task(agent_did=agent_identity.did, worker_class_filter=["human"])
     posted = tasks.post(
         task=t,
-        bond_ref="pi_test_001",
         expiry="2026-12-31T23:59:00Z",
     )
     assert posted["eligible_workers_count"] >= 1
@@ -88,18 +87,9 @@ def test_happy_path_human_scheduled_presence(
     )
     assert attest_res["verifier_decision"] == "pass", attest_res
 
-    # Settle.
-    settle_res = tasks.settle(
-        claim_id=claim_result["claim_id"],
-        decision="release",
-        amount="100.00",
-        party_breakdown=[
-            {"party": "did:wcp:worker-principal", "amount": "80.00"},
-            {"party": "did:wcp:platform", "amount": "15.00"},
-            {"party": "did:wcp:insurance-pool", "amount": "5.00"},
-        ],
-    )
-    assert settle_res["state"] == "captured"
+    # v0.955: verifier=pass transitions the task to COMPLETED and emits a
+    # task_completed audit entry. No tasks/settle RPC; settlement happens at
+    # a layer above WCP that subscribes to the audit chain.
 
     # Audit chain integrity.
     assert audit.verify_chain(claim_result["claim_id"])
@@ -126,7 +116,7 @@ def test_happy_path_robot_transport(
         },
         worker_class_filter=["autonomous_robot"],
     )
-    posted = tasks.post(task=t, bond_ref="pi_test_002", expiry="2026-12-31T23:59:00Z")
+    posted = tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
     eta = "2026-06-01T10:00:00Z"
     acceptance = make_acceptance(worker_identity, t["task_id"], eta=eta)
     cr = tasks.claim(
@@ -153,17 +143,7 @@ def test_happy_path_robot_transport(
     )
     r = tasks.attest(claim_id=cr["claim_id"], attestations=[ev1, ev2])
     assert r["verifier_decision"] == "pass"
-    settle = tasks.settle(
-        claim_id=cr["claim_id"],
-        decision="release",
-        amount="50.00",
-        party_breakdown=[
-            {"party": "did:wcp:worker-principal", "amount": "40.00"},
-            {"party": "did:wcp:platform", "amount": "7.50"},
-            {"party": "did:wcp:insurance-pool", "amount": "2.50"},
-        ],
-    )
-    assert settle["state"] == "captured"
+    # v0.955: no tasks/settle; the COMPLETED transition is implicit on pass.
 
 
 def test_preempted_second_claim(
@@ -180,7 +160,7 @@ def test_preempted_second_claim(
     _publish_worker(services, w2, principal_identity, "human")
 
     t = make_task(agent_did=agent_identity.did, worker_class_filter=["human"])
-    tasks.post(task=t, bond_ref="pi_p1", expiry="2026-12-31T23:59:00Z")
+    tasks.post(task=t, expiry="2026-12-31T23:59:00Z")
 
     eta = "2026-06-01T10:00:00Z"
     a1 = make_acceptance(w1, t["task_id"], eta=eta)

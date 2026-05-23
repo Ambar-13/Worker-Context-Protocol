@@ -1,18 +1,18 @@
 # RFC 0029: WCP-Lite for Intermittent Connectivity
 
 - Author(s): WCP TSC
-- Status: open (v1.1 candidate)
+- Status: open (v1.1 candidate); amended at v0.955 (references to `disputed` state and `dispute window` are obsolete; replace with the v0.955 recheck-or-void semantics. Late-arriving audit entries for offline workers MUST still preserve hash-chain integrity per the buffer-and-replay design; the verifier evaluates them on arrival and emits `attestation_attempt` and either `task_completed` or `recheck_requested` per `spec/0.955.md` Section 3.).
 - Type: standards-track
-- Created: 2026-05-23 (expanded 2026-05-23 from v1.0-rc1 stub)
+- Created: 2026-05-23 (expanded 2026-05-23 from v0.2 stub)
 - Targets: v1.1
 
 ## Summary
 
-WCP-Lite is the connectivity profile for workers that operate under predictable or unpredictable disconnection: subsea ROVs, basement-tunnel AMRs, deployed quadruped robots inside metal-clad sites, remote-field-research stations, agricultural drones beyond cellular coverage, disaster-response teams in damaged-infrastructure zones, satellite-uplinked maritime workers, mining vehicles below ground, and orbital robots on the far side of a body. WCP-Lite is NOT a protocol subset; it is a connectivity profile declared in the CapabilityDescriptor. WCP-Lite workers remain full v1.0-rc1 conformance Level 1; the spec accommodates them through a buffer-and-replay pattern with hash-chain integrity preservation across the disconnect window.
+WCP-Lite is the connectivity profile for workers that operate under predictable or unpredictable disconnection: subsea ROVs, basement-tunnel AMRs, deployed quadruped robots inside metal-clad sites, remote-field-research stations, agricultural drones beyond cellular coverage, disaster-response teams in damaged-infrastructure zones, satellite-uplinked maritime workers, mining vehicles below ground, and orbital robots on the far side of a body. WCP-Lite is NOT a protocol subset; it is a connectivity profile declared in the CapabilityDescriptor. WCP-Lite workers remain full v0.2 conformance Level 1; the spec accommodates them through a buffer-and-replay pattern with hash-chain integrity preservation across the disconnect window.
 
 ## Motivation
 
-v1.0-rc1 (spec/1.0-rc1.md Section 7) defines a 15-second heartbeat with three-missed-beat transition to a `tasks/supervise(connectivity_lost)` flow. The spec assumes the supervisor can step in and resume control. In practice, two cases break:
+v0.2 (spec/0.2.md Section 7) defines a 15-second heartbeat with three-missed-beat transition to a `tasks/supervise(connectivity_lost)` flow. The spec assumes the supervisor can step in and resume control. In practice, two cases break:
 
 1. **Predictable disconnect.** A subsea ROV at 200 meters depth has no acoustic-modem coverage for the active-tool segment of its task. It executes for 40 minutes, then surfaces and uplinks. There is no human supervisor on the surface qualified to take over mid-task; the worker is autonomous by design. Triggering `tasks/supervise` every time the ROV submerges produces a flood of false supervision requests.
 
@@ -39,7 +39,7 @@ A WCP-Lite worker declares its connectivity profile in `CapabilityDescriptor.cla
 }
 ```
 
-- `connectivity_profile`: one of `continuous` (default; current v1.0-rc1 behavior), `intermittent` (WCP-Lite), or `unpredictable` (intermittent with no advance notice on disconnect timing).
+- `connectivity_profile`: one of `continuous` (default; current v0.2 behavior), `intermittent` (WCP-Lite), or `unpredictable` (intermittent with no advance notice on disconnect timing).
 - `max_offline_duration_seconds`: the longest disconnect window the worker can survive without losing audit chain integrity. Coordinator REJECTS tasks whose execution window plus heartbeat tolerance would exceed this value.
 - `expected_disconnect_pattern`: informational hint to the matching engine. `predictable` workers can be matched against tasks whose timing aligns with their connectivity (e.g., schedule the subsea ROV's task during its planned submersion). `unpredictable` workers should be matched against tasks that tolerate arbitrary disconnect.
 - `buffer_capacity_audit_entries`: how many audit chain entries the worker can buffer offline. Exceeding this is a hard error; the worker MUST abort the current task and emit a `task_aborted_buffer_overflow` event on reconnect.
@@ -66,7 +66,7 @@ Agents posting tasks intended for intermittent workers MUST set the new optional
 }
 ```
 
-- `accepts_intermittent_executor`: explicitly opt in. Default false maintains v1.0-rc1 behavior (only continuous workers can claim).
+- `accepts_intermittent_executor`: explicitly opt in. Default false maintains v0.2 behavior (only continuous workers can claim).
 - `max_acceptable_offline_seconds`: agent's maximum tolerance. The matching engine REJECTS workers whose declared `max_offline_duration_seconds` exceeds this.
 
 ### Worker-side audit chain buffer
@@ -85,7 +85,7 @@ When entries arrive late (worker reconnected after a 2-hour subsea segment), the
 
 ### Time-synchronization
 
-The worker's local clock drifts during offline windows. v1.0-rc1 (spec/time-synchronization.md) defines a drift tolerance for normal operation. For WCP-Lite workers, the spec accepts wider drift IF the buffered entries' hash chain is intact: drift bounded by `min(max_offline_duration_seconds * 0.01, 30 seconds)`. Workers exceeding this MUST resync their clock on reconnect via NTP or coordinator-provided time before emitting buffered entries.
+The worker's local clock drifts during offline windows. v0.2 (spec/time-synchronization.md) defines a drift tolerance for normal operation. For WCP-Lite workers, the spec accepts wider drift IF the buffered entries' hash chain is intact: drift bounded by `min(max_offline_duration_seconds * 0.01, 30 seconds)`. Workers exceeding this MUST resync their clock on reconnect via NTP or coordinator-provided time before emitting buffered entries.
 
 ### Cross-federation considerations
 
@@ -117,7 +117,7 @@ When a WCP-Lite worker on Coordinator B is discovered by an agent on Coordinator
 
 ## Unresolved questions
 
-1. **Should `connectivity_profile` be a first-class CapabilityDescriptor field rather than a `class_extension` field?** Recommendation: yes in v1.1, given the cross-cutting impact. Migrates v1.0-rc1 implementations that placed it in class_extension via a one-time canonicalization pass.
+1. **Should `connectivity_profile` be a first-class CapabilityDescriptor field rather than a `class_extension` field?** Recommendation: yes in v1.1, given the cross-cutting impact. Migrates v0.2 implementations that placed it in class_extension via a one-time canonicalization pass.
 
 2. **What is the right default `max_offline_duration_seconds` per worker class?** Recommendation: do not default; require the worker to declare explicitly. A missing declaration with `connectivity_profile != "continuous"` is a malformed capability, rejected by the verifier.
 

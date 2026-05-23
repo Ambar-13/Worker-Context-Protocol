@@ -8,7 +8,7 @@
 #    are mutually verifiable
 #
 # Until v1.1 federation primitives land in the reference coordinator, this
-# script reports the v1.0-rc1 baseline check and notes the v1.1 deliverables
+# script reports the v0.2 baseline check and notes the v1.1 deliverables
 # that close the remaining gaps.
 
 set -uo pipefail

@@ -4,6 +4,9 @@ These exercise the helper without standing up a coordinator. They cover the
 informational contract (agent_class accepted values, continuation_of block
 construction, mismatched-claim-id rejection on post_continuation) and the
 absence of any verifier or coordinator branching on agent_class.
+
+v0.955: settlement block removed from required inputs; build_continuation now
+requires only constraints and attestation_requirement.
 """
 from __future__ import annotations
 
@@ -16,8 +19,8 @@ COORD = "ws://localhost:8000/wcp/ws"
 
 
 def _required_blocks() -> dict:
-    """Minimal valid constraints/attestation_requirement/settlement blocks
-    suitable for build_continuation."""
+    """Minimal valid constraints and attestation_requirement blocks suitable
+    for build_continuation under the v0.955 descriptor schema."""
     return {
         "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
         "attestation_requirement": {
@@ -28,14 +31,6 @@ def _required_blocks() -> dict:
             "evidence_schema": [
                 {"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}
             ],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": True,
-        },
-        "settlement": {
-            "currency": "USD",
-            "amount": "0.00",
-            "escrow_provider": "internal-cost-allocation",
-            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}],
         },
     }
 
@@ -72,10 +67,12 @@ def test_build_continuation_emits_continuation_of_block():
     ]
     assert descriptor["descriptor_type"] == "place_on_shelf"
     assert descriptor["posted_by"] == robot.did
-    assert descriptor["schema_version"] == "wcp/1.0-rc1"
+    assert descriptor["schema_version"] == "wcp/0.2"
+    assert descriptor["max_attestation_attempts"] == 1
+    assert "settlement" not in descriptor
 
 
-def test_build_continuation_requires_all_three_blocks():
+def test_build_continuation_requires_both_blocks():
     robot = RobotAgent(name="amr", coordinator=COORD)
     # Missing constraints
     with pytest.raises(ValueError):
@@ -84,7 +81,6 @@ def test_build_continuation_requires_all_three_blocks():
             descriptor_type="place_on_shelf",
             descriptor_payload={},
             attestation_requirement=_required_blocks()["attestation_requirement"],
-            settlement=_required_blocks()["settlement"],
         )
     # Missing attestation_requirement
     with pytest.raises(ValueError):
@@ -93,16 +89,6 @@ def test_build_continuation_requires_all_three_blocks():
             descriptor_type="place_on_shelf",
             descriptor_payload={},
             constraints=_required_blocks()["constraints"],
-            settlement=_required_blocks()["settlement"],
-        )
-    # Missing settlement
-    with pytest.raises(ValueError):
-        robot.build_continuation(
-            prior_claim_id="claim-1",
-            descriptor_type="place_on_shelf",
-            descriptor_payload={},
-            constraints=_required_blocks()["constraints"],
-            attestation_requirement=_required_blocks()["attestation_requirement"],
         )
 
 
@@ -115,6 +101,18 @@ def test_required_evidence_kinds_defaults_to_empty_list():
         **_required_blocks(),
     )
     assert descriptor["continuation_of"]["required_evidence_kinds"] == []
+
+
+def test_build_continuation_carries_marketplace_ref_when_set():
+    robot = RobotAgent(name="amr", coordinator=COORD)
+    descriptor = robot.build_continuation(
+        prior_claim_id="claim-1",
+        descriptor_type="place_on_shelf",
+        descriptor_payload={},
+        marketplace_ref="external-ref-77",
+        **_required_blocks(),
+    )
+    assert descriptor["marketplace_ref"] == "external-ref-77"
 
 
 def test_agent_class_declaration_shape():
@@ -145,6 +143,5 @@ async def test_post_continuation_rejects_mismatched_prior_claim_id():
         await robot.post_continuation(
             prior_claim_id="claim-Y",
             descriptor=descriptor,
-            bond_ref="bond-1",
             expiry="2099-12-31T00:00:00Z",
         )

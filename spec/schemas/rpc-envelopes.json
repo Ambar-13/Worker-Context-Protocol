@@ -35,10 +35,9 @@
 
     "tasks_post_request": {
       "type": "object",
-      "required": ["task", "bond_ref", "expiry"],
+      "required": ["task", "expiry"],
       "properties": {
         "task":        { "$ref": "task-descriptor.json" },
-        "bond_ref":    { "type": "string" },
         "expiry":      { "type": "string", "format": "date-time" },
         "supervision": { "type": "object" }
       }
@@ -121,37 +120,9 @@
       "properties": {
         "verifier_decision": { "enum": ["pass", "fail", "review"] },
         "residual": { "type": "object" },
-        "reasons":  { "type": "array", "items": { "type": "string" } }
-      }
-    },
-
-    "tasks_settle_request": {
-      "type": "object",
-      "required": ["claim_id", "decision", "amount", "party_breakdown"],
-      "properties": {
-        "claim_id": { "type": "string", "format": "uuid" },
-        "decision": { "enum": ["release", "refund", "partial"] },
-        "amount":   { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
-        "party_breakdown": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["party", "amount"],
-            "properties": {
-              "party":  { "type": "string", "pattern": "^did:wcp:" },
-              "amount": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
-            }
-          }
-        }
-      }
-    },
-    "tasks_settle_response": {
-      "type": "object",
-      "required": ["settlement_id", "state"],
-      "properties": {
-        "settlement_id": { "type": "string" },
-        "state":         { "enum": ["captured", "refunded", "partial"] },
-        "receipt_url":   { "type": "string", "format": "uri" }
+        "reasons":  { "type": "array", "items": { "type": "string" } },
+        "attempt_number":     { "type": "integer", "minimum": 1 },
+        "attempts_remaining": { "type": "integer", "minimum": 0 }
       }
     },
 
@@ -177,20 +148,18 @@
 
     "tasks_abort_request": {
       "type": "object",
-      "required": ["claim_id", "reason", "state_snapshot", "proposed_settlement"],
+      "required": ["claim_id", "reason"],
       "properties": {
-        "claim_id":            { "type": "string", "format": "uuid" },
-        "reason":              { "type": "string" },
-        "state_snapshot":      { "type": "object" },
-        "proposed_settlement": { "enum": ["split", "refund", "dispute"] }
+        "claim_id":       { "type": "string", "format": "uuid" },
+        "reason":         { "type": "string" },
+        "state_snapshot": { "type": "object" }
       }
     },
     "tasks_abort_response": {
       "type": "object",
-      "required": ["abort_id", "settlement_disposition"],
+      "required": ["abort_id"],
       "properties": {
-        "abort_id":               { "type": "string", "format": "uuid" },
-        "settlement_disposition": { "enum": ["applied", "disputed"] }
+        "abort_id": { "type": "string", "format": "uuid" }
       }
     }
   }

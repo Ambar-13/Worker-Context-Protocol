@@ -1,12 +1,12 @@
 # RFC 0016: Federation Primitives
 
 - Author(s): Rentably (principal)
-- Status: accepted (part of v1.0-rc1)
+- Status: accepted (part of v0.2); amended at v0.955 (the `cross_coordinator_settlement` trust class is removed; federation rides on eight RPCs after v0.955).
 - Type: standards-track
 
 ## Summary
 
-Adopts the federation primitives in `spec/federation.md`: trust anchors, the four trust classes (capability_discovery, reputation_query, audit_chain_export, cross_coordinator_settlement), and the rule that federation rides on the existing nine RPCs.
+Adopts the federation primitives in `spec/federation.md`: trust anchors, three trust classes after the v0.955 amendment (capability_discovery, reputation_query, audit_chain_export), and the rule that federation rides on the existing eight RPCs.
 
 ## Design
 
@@ -25,4 +25,4 @@ Bilateral trust-anchor exchange does not scale linearly. RFC 0022 explores disco
 
 ## Implementation track
 
-Federation endpoints documented in `federation.md`. The reference coordinator's federation implementation lands at v1.0-rc1 final; v1.0-rc1 ships the schema and contract.
+Federation endpoints documented in `federation.md`. The reference coordinator's federation implementation lands at v0.2 final; v0.2 ships the schema and contract.

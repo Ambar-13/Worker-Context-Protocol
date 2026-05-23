@@ -76,7 +76,7 @@ At submission time, the following community-of-record indicators apply:
 - [PRINCIPAL TO PROVIDE: list of independent implementations or adopters, if any, with their consent to be named]
 - Conformance suite at `conformance/` with Level 1, 2, and 3 test bundles; the suite is the canonical determinant of "WCP-conformant" status.
 - 34+ RFCs covering the protocol surface, federation, attestation, identity, settlement, trust classes, and connectivity profiles.
-- v1.0-rc1 paper draft (`paper/chi-2027-draft.md`) targeting CHI 2027 (deadline 2026-09-10 AoE; verified).
+- v0.2 paper draft (`paper/chi-2027-draft.md`) targeting CHI 2027 (deadline 2026-09-10 AoE; verified).
 
 ## 9. Roadmap
 

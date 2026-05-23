@@ -11,7 +11,7 @@ wcp dev
 
 ## What this worker does
 
-Implements two descriptor types from `spec/1.0-rc1.md`:
+Implements two descriptor types from `spec/0.2.md`:
 
 - `scheduled_presence`: be present in a zone for a duration.
 - `observe_and_report`: collect sensor evidence across a polygon.

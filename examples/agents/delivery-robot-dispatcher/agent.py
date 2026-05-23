@@ -9,9 +9,9 @@ from inside the execute handler and posts the place_on_shelf follow-up).
 Instead, this script plays the role of the upstream planner agent: it posts
 the initial `transport` task that the AMR claims. Once the AMR has attested
 the transport and the AMR's onboard RobotAgent has posted the follow-up
-`place_on_shelf` task, this script watches both tasks settle.
+`place_on_shelf` task, this script watches both tasks complete.
 
-Reference: spec/1.0-rc5.md Sections 2-6.
+Reference: spec/0.95.md Sections 2-6.
 Pattern doc: docs/patterns/robot-as-agent.md.
 """
 from __future__ import annotations
@@ -39,7 +39,7 @@ def build_transport_task(
     claims; the runbook for that follow-up lives inside the AMR worker."""
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": "transport",
@@ -71,21 +71,8 @@ def build_transport_task(
                     "kinds": ["iot_beacon_proximity"],
                 },
             ],
-            "override_authority": "did:wcp:line-supervisor",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD",
-            "amount": "0.00",
-            "escrow_provider": "internal-cost-allocation",
-            "split": [
-                {
-                    "party": "did:wcp:cost-center-line-7-amr-ops",
-                    "pct": 100,
-                }
-            ],
-        },
-        "supervision": {"default": "autonomous"},
+                "supervision": {"default": "autonomous"},
     }
 
 
@@ -98,7 +85,6 @@ async def main() -> None:
         )
         result = await agent.post_task(
             task,
-            bond_ref=f"line7-bond-{task['task_id']}",
             expiry=(
                 datetime.now(timezone.utc) + timedelta(hours=2)
             ).isoformat(),

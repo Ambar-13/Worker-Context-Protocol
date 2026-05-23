@@ -1,6 +1,6 @@
 # WCP Security Baseline
 
-**Companion to:** spec/1.0-rc1.md
+**Companion to:** spec/0.2.md
 **Status:** normative
 **Compiled:** 2026-05-23
 
@@ -36,7 +36,6 @@ This document defines the minimum security posture a conformant implementation M
 | tasks/execute (open) | Worker (session level) |
 | tasks/execute (events) | Worker (per-event signature in stream message) |
 | tasks/attest | Worker (per-evidence signature) |
-| tasks/settle | Coordinator (internal; the settlement adapter sees a signed instruction) |
 | tasks/supervise | Initiator (worker or coordinator) |
 | tasks/abort | Initiator |
 
@@ -44,7 +43,7 @@ Audit chain entries are signed by the coordinator's audit signer (an Ed25519 key
 
 ## 5. Key management
 
-- Worker key MUST be Ed25519. Other curves are not conformant at v1.0-rc1.
+- Worker key MUST be Ed25519. Other curves are not conformant at v0.2.
 - Coordinator audit signing key MUST be Ed25519; production deployments SHOULD use an HSM or KMS-backed signer.
 - Worker keys SHOULD be rotated on principal change or on suspicion of compromise. The `did:wcp` document key history supports rotation; see `did-method-wcp.md`.
 

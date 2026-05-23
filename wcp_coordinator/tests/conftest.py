@@ -23,7 +23,6 @@ from wcp_coordinator.capabilities_service import CapabilitiesService
 from wcp_coordinator.did_resolver import DidResolver, _b58encode
 from wcp_coordinator.models import Base
 from wcp_coordinator.rpc_dispatch import Dispatcher
-from wcp_coordinator.settlement_adapter import FakeStripeAdapter
 from wcp_coordinator.tasks_service import TasksService
 
 
@@ -65,15 +64,10 @@ def signer() -> AuditSigner:
 
 
 @pytest.fixture()
-def settlement() -> FakeStripeAdapter:
-    return FakeStripeAdapter()
-
-
-@pytest.fixture()
-def services(db, resolver, signer, settlement):
+def services(db, resolver, signer):
     audit = AuditChain(db, signer)
     caps = CapabilitiesService(db, resolver)
-    tasks = TasksService(db, resolver, audit, settlement)
+    tasks = TasksService(db, resolver, audit)
     return caps, tasks, audit
 
 
@@ -166,16 +160,17 @@ def make_task(
     attestation_kinds: dict[str, list[str]] | None = None,
     M: int = 2,
     N: int = 2,
-    amount: str = "100.00",
     worker_class_filter: list[str] | None = None,
+    max_attestation_attempts: int = 1,
+    marketplace_ref: str | None = None,
 ) -> dict[str, Any]:
     modes = attestation_modes or ["cryptographic-presence", "owner-sign-off"]
     kinds_map = attestation_kinds or {
         "cryptographic-presence": ["geofence_check_in_out"],
         "owner-sign-off": ["whatsapp_business_signed_link"],
     }
-    return {
-        "schema_version": "wcp/0.1",
+    task: dict[str, Any] = {
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent_did,
         "descriptor_type": descriptor_type,
@@ -195,22 +190,13 @@ def make_task(
             "evidence_schema": [
                 {"mode": m, "kinds": kinds_map.get(m, [])} for m in modes
             ],
-            "override_allowed": True,
-            "override_authority": "did:wcp:rentably-ops",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "SGD",
-            "amount": amount,
-            "escrow_provider": "stripe-rentably",
-            "split": [
-                {"party": "did:wcp:worker-principal", "pct": 80},
-                {"party": "did:wcp:platform", "pct": 15},
-                {"party": "did:wcp:insurance-pool", "pct": 5},
-            ],
-        },
+        "max_attestation_attempts": max_attestation_attempts,
         "x-subcontract-allowed": False,
     }
+    if marketplace_ref is not None:
+        task["marketplace_ref"] = marketplace_ref
+    return task
 
 
 def make_acceptance(

@@ -67,16 +67,20 @@ result = await agent.discover_capabilities(
 )
 ```
 
-## 5. Post a task with bonded escrow
+## 5. Post a task
 
-The TaskDescriptor shape is defined in `spec/1.0-rc1.md` Section 5. The minimum required fields:
+The TaskDescriptor shape at v0.955 is defined in `spec/0.955.md` Section 4. The minimum required fields:
 
 - `descriptor_type` (transport, scheduled_presence, observe_and_report, or application-defined)
 - `descriptor_payload` (opaque application-layer data)
 - `attestation_requirement` with `modes`, `threshold`, `M`, `N`, `evidence_schema`
-- `settlement` with `currency`, `amount`, `escrow_provider`, `split`
 
-`wcp_sdk.session.make_task_descriptor` is an ergonomic helper.
+Optional v0.955 fields:
+
+- `max_attestation_attempts` (default 1): bounds the recheck loop on verifier failure.
+- `marketplace_ref` (opaque string): correlation key for any settlement layer above WCP (a Stripe PaymentIntent, an SAP work-order, a grant code).
+
+Settlement, escrow, dispute, and refund were removed from the protocol at v0.955. If your deployment needs them, build that layer above WCP and subscribe to the audit chain. `wcp_sdk.session.make_task_descriptor` is an ergonomic helper.
 
 ## Next steps
 

@@ -40,7 +40,7 @@ A coordinator publishes a self-signed descriptor in this shape:
 
 ```json
 {
-  "schema_version": "wcp/1.0-rc1",
+  "schema_version": "wcp/0.2",
   "did": "did:wcp:example-coordinator",
   "endpoint": "wss://wcp.example.com/wcp/ws",
   "operator": "Example Operations, Ltd.",

@@ -51,7 +51,7 @@ def test_decode_multibase_base64url_roundtrip():
 
 
 def test_decode_legacy_raw_base58btc():
-    # Legacy v1.0-rc1 form: did:wcp:<base58btc> with no multibase prefix
+    # Legacy v0.2 form: did:wcp:<base58btc> with no multibase prefix
     pubkey = b"legacy-test-key-payload-bytes!!!"
     # Build a known legacy identifier
     encoded = mb._b58btc_encode(pubkey)

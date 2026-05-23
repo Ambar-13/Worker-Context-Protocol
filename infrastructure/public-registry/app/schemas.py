@@ -18,7 +18,7 @@ _WS_RE = re.compile(r"^wss?://")
 class CoordinatorDescriptor(BaseModel):
     """The descriptor a coordinator publishes to the registry."""
 
-    schema_version: str = Field("wcp/1.0-rc1")
+    schema_version: str = Field("wcp/0.2")
     did: str
     endpoint: str
     operator: str

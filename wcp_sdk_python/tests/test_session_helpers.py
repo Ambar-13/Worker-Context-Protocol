@@ -37,4 +37,4 @@ def test_build_evidence_includes_schema_version():
         kind="customer_signature",
         payload={"signed_text": "ok", "signature_image_hash": "abc"},
     )
-    assert ev.to_dict()["schema_version"] == "wcp/1.0-rc1"
+    assert ev.to_dict()["schema_version"] == "wcp/0.2"

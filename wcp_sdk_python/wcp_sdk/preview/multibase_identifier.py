@@ -2,7 +2,7 @@
 RFC 0031 preview: Multibase Identifier Migration.
 
 Provides encode/decode/is_multibase helpers for the v1.1 `did:wcp:z<base58btc>`
-identifier grammar, while remaining backward-compatible with v1.0-rc1's raw
+identifier grammar, while remaining backward-compatible with v0.2's raw
 `did:wcp:<base58>` form during the three-version compatibility window.
 
 Encodings supported in this preview:
@@ -107,7 +107,7 @@ def decode(identifier: str) -> bytes:
     """Decode a `did:wcp:...` identifier (legacy or multibase) into raw pubkey bytes.
 
     Accepts:
-    - Legacy v1.0-rc1: `did:wcp:<base58btc-bytes>` (no multibase prefix)
+    - Legacy v0.2: `did:wcp:<base58btc-bytes>` (no multibase prefix)
     - Multibase v1.1: `did:wcp:z<base58btc-bytes>` (or u/b/f prefixes)
 
     Raises ValueError on malformed input.
@@ -129,7 +129,7 @@ def decode(identifier: str) -> bytes:
             return base64.b32decode(up + "=" * (-len(up) % 8))
         if prefix == _PREFIX_HEX:
             return bytes.fromhex(payload)
-    # Legacy raw-base58btc form (v1.0-rc1 compatibility).
+    # Legacy raw-base58btc form (v0.2 compatibility).
     return _b58btc_decode(body)
 
 

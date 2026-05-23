@@ -79,7 +79,7 @@ def build_capability_descriptor(
         | (profile.get("service_map") or {}).keys()
     ) or ["ros1_generic_task"]
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "did": worker_did,
         "worker_class": "autonomous_robot",
         "coordinator_did": coordinator_did,

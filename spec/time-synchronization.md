@@ -1,10 +1,10 @@
 # WCP Time Synchronization
 
-**Companion to:** spec/1.0-rc1.md
+**Companion to:** spec/0.2.md
 **Status:** normative
 **Compiled:** 2026-05-23
 
-Time-sensitive operations in WCP include: heartbeat timeout (15s with 3-missed transition), claim tie-break grace (100 ms), dispute window (72 hours), expiry checks on `tasks/post`, replay protection on `acceptance_attestation` (5 minutes), and audit chain timestamps. Clock drift across workers, coordinators, and federation peers can cause misclassification of these events.
+Time-sensitive operations in WCP include: heartbeat timeout (15s with 3-missed transition), claim tie-break grace (100 ms), claim-expiry (operator-defined; 72-hour default from the most recent state change), expiry checks on `tasks/post`, replay protection on `acceptance_attestation` (5 minutes), and audit chain timestamps. Clock drift across workers, coordinators, and federation peers can cause misclassification of these events.
 
 ## 1. Canonical time source
 

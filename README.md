@@ -1,8 +1,12 @@
 # Worker Context Protocol (WCP)
 
-**Current version:** v0.95 (pre-v1.0; not v1.0 final until adoption validates)
+**Current version:** v0.955 (architectural simplification; settlement primitives moved out of protocol)
 **License:** Apache 2.0
-**Schema version:** `wcp/1.0-rc1`
+**Schema version:** `wcp/0.2`
+
+## What changed in v0.955
+
+WCP v0.955 removes settlement, escrow, dispute, and refund primitives from the wire protocol. The RPC surface contracts from nine to eight (drops `tasks/settle`). The marketplace-flavoured `disputed` and `refunded` terminal states are replaced by a recheck mechanism: when the verifier rejects evidence, the worker may re-attest up to `max_attestation_attempts` times before the task voids. Marketplaces, ERPs, grant systems, and any other settlement layer subscribe to the coordinator's audit chain (`task_completed`, `task_voided`, `task_aborted`) and run their own value-flow logic. WCP is now strictly a coordination protocol. Migration guide and full change list in `spec/0.955.md`.
 
 WCP is an open standard that coordinates AI agents and physical-world workers across institutional and industrial domains. Human technicians, autonomous robots, teleoperated systems, and hybrid worker classes share **one RPC surface**. The matching engine and the attestation verifier discriminate by **structural properties** (capabilities, evidence kinds), not by worker class.
 
@@ -60,7 +64,7 @@ Templates for eight additional domains (agriculture, infrastructure, manufacturi
 
 ## The protocol
 
-The full normative specification is in `spec/1.0-rc1.md` (~30 pages). Companion normative documents in `spec/`:
+The full normative specification is in `spec/0.2.md` (~30 pages). Companion normative documents in `spec/`:
 
 - `threat-model.md` (STRIDE per RPC and per trust boundary)
 - `privacy-architecture.md` (PII tagging, hash-only audit chain, tombstone pattern, PDPA/GDPR/CCPA alignment)
@@ -68,7 +72,7 @@ The full normative specification is in `spec/1.0-rc1.md` (~30 pages). Companion 
 - `conformance.md` (3 levels; the suite at `conformance/` is the canonical determinant of "WCP-conformant at Level N")
 - `semver-policy.md`, `error-codes.md`, `security-baseline.md`, `time-synchronization.md`, `retry-idempotency.md`, `performance-conformance.md`
 - `did-method-wcp.md` (W3C DID Core registration for `did:wcp`)
-- `d4-verification-1.0-rc1.md` (six base D4 cells + four federation cells, all pass)
+- `d4-verification-0.2.md` (six base D4 cells + four federation cells, all pass)
 
 ## Languages
 
@@ -127,15 +131,15 @@ Before public traffic, work through `deployments/PRODUCTION_HARDENING.md`.
 ## Layout
 
 ```
-spec/                       # the normative specification (v1.0-rc1)
+spec/                       # the normative specification (v0.2)
 wcp_cli/                    # `wcp` CLI + 14 domain templates
 wcp_sdk_python/             # Python SDK (v1 + v2 decorator API)
 wcp_sdk_typescript/         # @wcp/sdk (TypeScript)
 wcp_sdk_rust/               # wcp-sdk (Rust crate)
 wcp_sdk_go/                 # wcp-go (Go module)
-wcp_coordinator/            # FastAPI reference backend (frozen v1.0-rc1)
-wcp_worker/                 # ROS 2 Humble reference plugin (frozen v1.0-rc1)
-pwa/wcp/                    # PWA module (frozen v1.0-rc1)
+wcp_coordinator/            # FastAPI reference backend (frozen v0.2)
+wcp_worker/                 # ROS 2 Humble reference plugin (frozen v0.2)
+pwa/wcp/                    # PWA module (frozen v0.2)
 wcp_dev_runtime/            # `wcp dev` ASGI app wrapper
 examples/agents/            # six reference agents across distinct domains
 integrations/               # 8 LLM-framework adapters

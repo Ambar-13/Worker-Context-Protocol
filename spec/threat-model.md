@@ -1,7 +1,7 @@
 # WCP Threat Model
 
-**Companion to:** spec/1.0-rc1.md
-**Status:** normative
+**Companion to:** spec/0.2.md and spec/0.955.md
+**Status:** normative. Updated at v0.955: settlement-specific threats and trust boundaries removed (settlement is no longer a protocol concern). The remaining STRIDE analysis covers the eight RPCs and the audit chain.
 **Compiled:** 2026-05-23
 
 This document applies STRIDE analysis (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) per asset and per trust boundary across three adversary profiles.
@@ -13,36 +13,37 @@ This document applies STRIDE analysis (Spoofing, Tampering, Repudiation, Informa
 | Worker DID and keypair | Identity rooted in the worker's hardware or software keypair | Worker |
 | Principal DID | Employer, owner, or operator-of-record account credential | Principal |
 | Agent DID | AI-platform issued credential | Agent |
-| TaskDescriptor | Posted task with bonded escrow reference | Agent |
+| TaskDescriptor | Posted task; carries an optional opaque `marketplace_ref` for external settlement-layer correlation | Agent |
 | acceptance_attestation | Worker's signed claim acceptance | Worker |
 | AttestationEvidence | Per-mode, per-kind signed proof of work | Worker |
 | AuditChainEntry | Hash-linked signed event in the coordinator's log | Coordinator |
-| Bonded escrow funds | Held by escrow_provider; released by tasks/settle | Settlement layer |
 | Reputation pointer (DID document service entry) | Cross-coordinator reputation reference | Worker / coordinator pair |
 | Capability descriptor | Worker self-published; matching input | Worker |
 
 ## 2. Trust boundaries
 
 ```
-+---------+    1. signed RPC    +-------------+    2. settle      +-------------------+
-| Worker  |-------------------->| Coordinator |------------------>| Escrow provider   |
-| device  |                     |   (server)  |                   |  (third party)    |
-+---------+                     +------+------+                   +-------------------+
++---------+    1. signed RPC    +-------------+
+| Worker  |-------------------->| Coordinator |
+| device  |                     |   (server)  |
++---------+                     +------+------+
                                        |
-                                       | 3. signed RPC
+                                       | 2. signed RPC
                                        |
-+---------+                       +----v----+                     +-----------+
-| Agent   |---------------------->| Backend |<--------------------| Federation |
-| (AI     |    4. signed RPC      | services|   5. federation     | peer       |
-|  agent) |                       +---------+                     +-----------+
++---------+                       +----v----+                     +-------------+
+| Agent   |---------------------->| Backend |<--------------------| Federation  |
+| (AI     |    3. signed RPC      | services|   4. federation     | peer        |
+|  agent) |                       +---------+                     +-------------+
 +---------+
 ```
 
-Boundaries 1, 3, 4: signed JSON-RPC over WSS. Boundary 2: HTTPS to the escrow provider's REST API. Boundary 5: signed coordinator-to-coordinator messages per `federation.md`.
+Boundaries 1, 2, 3: signed JSON-RPC over WSS. Boundary 4: signed coordinator-to-coordinator messages per `federation.md`.
+
+Settlement layer (Stripe, an ERP, a grant management system, etc.) sits above WCP and subscribes to the audit chain. It is outside the protocol's threat model; the settlement layer authenticates to the coordinator's audit-chain export endpoint and uses the audit-chain entries as the trusted signal. Its internal security posture is its own concern.
 
 ## 3. Adversary profiles
 
-- **Rational economic adversary.** Maximizes utility; will collude if cost of collusion < expected reward. Examples: a worker who fakes completion to capture escrow; a customer who refuses sign-off to capture refund; a coordinator that biases matching toward affiliated workers.
+- **Rational economic adversary.** Maximizes utility; will collude if cost of collusion < expected reward. Examples: a worker who fakes completion to trigger a downstream settlement-layer payout; a customer who refuses sign-off to block downstream settlement; a coordinator that biases matching toward affiliated workers.
 - **Regulatory adversary.** Demands tamper-evident audit trail under PDPA, GDPR, CCPA, MOM-equivalent labor law, or jurisdictional consumer-protection regulation. Threat is exposure or invalidation of the operator's compliance posture.
 - **Safety-critical adversary.** A worker may injure a human or damage property. Threat is failure mode where the protocol mechanically permits an unsafe action.
 
@@ -78,7 +79,7 @@ Boundaries 1, 3, 4: signed JSON-RPC over WSS. Boundary 2: HTTPS to the escrow pr
 | Tampering | Adversary modifies a task after posting | TaskDescriptor is signed by the agent; coordinator records `task_json` immutably; audit chain entry |
 | Repudiation | Agent denies posting | Audit chain + signed payload |
 | Information disclosure | Task details (location, payload, customer identity) leak | Privacy architecture defines PII tagging; coordinators MUST honor the worker_class_filter and not broadcast sensitive descriptor_payload beyond eligible workers |
-| Denial of service | Task posting flood | Per-agent rate limit; bond requirement (held escrow) tied to task posting |
+| Denial of service | Task posting flood | Per-agent rate limit; the settlement layer above WCP MAY require a bond or reservation as a posting precondition, but this is not a protocol-level mitigation |
 | Elevation | Agent attempts to post tasks tagged for out-of-scope classes | Reference coordinator refuses; RFC clearance gate |
 
 ### 4.4 tasks/claim
@@ -109,21 +110,14 @@ Boundaries 1, 3, 4: signed JSON-RPC over WSS. Boundary 2: HTTPS to the escrow pr
 |---|---|---|
 | Spoofing | Attacker submits fabricated evidence | Per-evidence signature verification |
 | Tampering | Evidence payload modified post-collection | payload_hash binds payload; signature over canonical-JSON |
-| Repudiation | Worker denies evidence after dispute | Audit chain entry on each attestation submission |
+| Repudiation | Worker denies evidence after recheck or void | Audit chain entry on each attestation submission, including `attestation_attempt` entries per Section 3 of `spec/0.955.md` |
 | Information disclosure | Customer signature image leaks | Only hash leaves the worker device; raw image stays under operator's PDPA-compatible retention |
 | Denial of service | Attestation submission flood | Per-claim attestation count cap |
 | Elevation | Self-validating attestation (GNoME failure mode) | M-of-N requirement with at least one non-sensor witness for paid tasks; verifier discriminates by (mode, kind) not by worker class |
 
-### 4.7 tasks/settle
+### 4.7 (removed at v0.955) tasks/settle
 
-| Threat | Description | Mitigation |
-|---|---|---|
-| Spoofing | Attacker triggers settlement under coordinator authority | tasks/settle is coordinator-internal; signed by coordinator's settlement key; escrow provider authenticates |
-| Tampering | party_breakdown mutated | Audit chain entry over settle payload |
-| Repudiation | Coordinator denies a settlement | Audit chain + escrow receipt |
-| Information disclosure | Party identity in split exposed | Split entries are DIDs, not personal info; resolve via did:wcp method spec |
-| Denial of service | Settlement provider unavailable | retry-idempotency.md defines idempotent retry; SETTLEMENT_FAILED with `retryable: true` |
-| Elevation | Coordinator captures more than verifier authorized | Settlement amount derived strictly from attesting transition |
+The `tasks/settle` RPC was removed at v0.955. Settlement is no longer a protocol concern; the threats it carried (settlement-amount tampering, escrow-provider spoofing, payout repudiation) move to the settlement layer above WCP and are out of WCP's threat model. The coordinator emits `task_completed` and `task_voided` audit entries; the settlement layer authenticates to the coordinator's audit-chain export endpoint and applies its own threat model to value flow.
 
 ### 4.8 tasks/supervise
 
@@ -141,11 +135,11 @@ Boundaries 1, 3, 4: signed JSON-RPC over WSS. Boundary 2: HTTPS to the escrow pr
 | Threat | Description | Mitigation |
 |---|---|---|
 | Spoofing | Attacker aborts another party's claim | Caller DID authenticated; abort authorization checked (worker, agent, principal, supervisor) |
-| Tampering | proposed_settlement mutated | Signed payload; audit chain |
-| Repudiation | Initiator denies abort | Audit chain |
+| Tampering | reason or state_snapshot mutated | Signed payload; audit chain |
+| Repudiation | Initiator denies abort | Audit chain `task_aborted` entry |
 | Information disclosure | state_snapshot exposes sensitive context | Privacy tombstone pattern |
 | Denial of service | Repeated aborts | Per-DID rate limit; reputation penalty |
-| Elevation | Worker aborts to escape attestation in the moment of failure | partial_completion_schedule applies; settlement disposition recorded |
+| Elevation | Worker aborts to escape attestation in the moment of failure | The terminal `task_aborted` audit entry is the trusted signal; downstream settlement layers apply their own partial-completion logic against it |
 
 ## 5. Cross-cutting threats
 
@@ -155,7 +149,7 @@ The audit chain is hash-linked and signed. An attacker with database access who 
 
 ### 5.2 Time-source manipulation
 
-Adversary skews timestamps to evade heartbeat timeouts or dispute windows. See `time-synchronization.md`: coordinators MUST declare a canonical time source and clients MUST surface drift > 5 seconds as a warning. Audit chain timestamps come from the coordinator, not the worker.
+Adversary skews timestamps to evade heartbeat timeouts or claim-expiry windows. See `time-synchronization.md`: coordinators MUST declare a canonical time source and clients MUST surface drift > 5 seconds as a warning. Audit chain timestamps come from the coordinator, not the worker.
 
 ### 5.3 Federation poisoning
 

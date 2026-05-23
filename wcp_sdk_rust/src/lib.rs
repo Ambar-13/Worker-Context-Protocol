@@ -35,5 +35,5 @@ pub use rpc::{RpcClient, RpcError};
 pub use types::{AttestationMode, WorkerClass};
 pub use worker::{Worker, WorkerOptions};
 
-pub const SCHEMA_VERSION: &str = "wcp/1.0-rc1";
+pub const SCHEMA_VERSION: &str = "wcp/0.2";
 pub const SDK_VERSION: &str = "0.95.0";

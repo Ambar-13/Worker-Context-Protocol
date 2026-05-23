@@ -10,7 +10,7 @@ agent = Agent(name="watershed-monitoring-agent", coordinator="ws://localhost:800
 def build_sample_route(sites: list[dict]) -> dict:
     now = datetime.now(timezone.utc)
     return {
-        "schema_version": "wcp/1.0-rc1",
+        "schema_version": "wcp/0.2",
         "task_id": str(uuid.uuid4()),
         "posted_by": agent.did,
         "descriptor_type": "observe_and_report",
@@ -31,15 +31,10 @@ def build_sample_route(sites: list[dict]) -> dict:
             "evidence_schema": [
                 {"mode": "sensor-witness", "kinds": ["gps_track", "signed_sensor_recording"]},
             ],
-            "override_authority": "did:wcp:example-watershed-pi",
-            "override_audit_required": True,
         },
-        "settlement": {
-            "currency": "USD", "amount": "280.00", "escrow_provider": "example-grant-escrow",
-            "split": [{"party": "did:wcp:researcher-pool", "pct": 95},
-                      {"party": "did:wcp:research-org-platform", "pct": 5}],
-        },
-        "supervision": {"default": "autonomous"},
+                "supervision": {"default": "autonomous"},
+        "max_attestation_attempts": 1,
+        "marketplace_ref": "external-allocation",
         "x-subcontract-allowed": False,
     }
 
@@ -53,7 +48,6 @@ async def main() -> None:
         ])
         res = await agent.post_task(
             task,
-            bond_ref=f"example-bond-{task['task_id']}",
             expiry=(datetime.now(timezone.utc) + timedelta(hours=12)).isoformat(),
         )
         print(f"[agent] posted sample-route task_id={res['task_id']} "

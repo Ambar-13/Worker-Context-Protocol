@@ -12,13 +12,13 @@ Specifies a v1.1 evolution of the `did:wcp` identifier grammar from raw base58 (
 
 ## Motivation
 
-The v1.0-rc1 identifier grammar declares Ed25519 keys via base58 with no encoding prefix. This is fine when every key is 32 bytes of Ed25519, but the grammar foreseeably breaks against three realistic v1.x or v2.x extensions:
+The v0.2 identifier grammar declares Ed25519 keys via base58 with no encoding prefix. This is fine when every key is 32 bytes of Ed25519, but the grammar foreseeably breaks against three realistic v1.x or v2.x extensions:
 
 1. **Post-quantum keys.** Dilithium, SPHINCS+, and other PQ signatures produce public keys ranging from hundreds to thousands of bytes. The current spec has no way for a verifier to tell whether `did:wcp:<base58>` decodes to a 32-byte Ed25519 key or a 1952-byte Dilithium key without out-of-band context. [REASONED] PQ migration in IETF and W3C is on a 3-7 year horizon; building the prefix mechanism now is cheap insurance.
 2. **Alternate encodings.** Operators in low-bandwidth contexts (subsea telemetry, satellite uplinks) may prefer base32 (RFC 4648) for case-insensitivity and DTMF compatibility. Operators in URL contexts may prefer base64url. The multibase registry already covers these.
 3. **Cross-DID interop.** `did:key`, `did:peer`, and `did:cheqd` all use multibase prefixes. A WCP coordinator that federates capability discovery with non-WCP DIDs benefits from a uniform decoding path.
 
-A second motivation is removing an implicit ecosystem-specific anchor. The v1.0-rc1 base58 alphabet comments referred to the encoding by its association with a single ecosystem (since rewritten in v1.0-rc2.1 to use the standards-grounded base58btc Multibase reference). Multibase is the W3C-and-IETF-tracked formalization; using its prefix is the explicit, neutral, future-proof choice.
+A second motivation is removing an implicit ecosystem-specific anchor. The v0.2 base58 alphabet comments referred to the encoding by its association with a single ecosystem (since rewritten in v0.55 to use the standards-grounded base58btc Multibase reference). Multibase is the W3C-and-IETF-tracked formalization; using its prefix is the explicit, neutral, future-proof choice.
 
 ## Design
 
@@ -42,9 +42,9 @@ A coordinator MUST accept `z`-prefixed identifiers in v1.1. Coordinators SHOULD 
 
 The decoded byte sequence is interpreted per the spec's key-type rules. For Ed25519 (current default), the decoded length is 32 bytes. Future RFCs MAY register additional key types with associated decoded-length constraints.
 
-### v1.0-rc1 backward compatibility
+### v0.2 backward compatibility
 
-Identifiers issued under v1.0-rc1 (no multibase prefix; raw base58) remain valid:
+Identifiers issued under v0.2 (no multibase prefix; raw base58) remain valid:
 
 - v1.1 coordinators MUST accept both `did:wcp:<base58>` (legacy) and `did:wcp:z<base58btc>` (multibase).
 - v1.1 SDKs SHOULD emit a deprecation warning when generating new legacy identifiers.
@@ -55,7 +55,7 @@ The compatibility window is therefore three minor versions (v1.1 introduces, v1.
 
 ### Migration impact assessment
 
-**Identifier persistence.** A worker's reputation lookup is keyed by the canonical identifier. v1.1 coordinators MUST canonicalize legacy identifiers to multibase form before reputation lookup, and persist the canonicalized form in their reputation index. Workers with reputation history under v1.0-rc1 transition transparently.
+**Identifier persistence.** A worker's reputation lookup is keyed by the canonical identifier. v1.1 coordinators MUST canonicalize legacy identifiers to multibase form before reputation lookup, and persist the canonicalized form in their reputation index. Workers with reputation history under v0.2 transition transparently.
 
 **Audit chain implications.** Audit chain entries record identifier strings as opaque values. The hash chain is unaffected by the identifier format change. Existing entries reference legacy identifiers; v1.1 verifiers MUST resolve both forms to the same canonical identity.
 
@@ -68,7 +68,7 @@ The compatibility window is therefore three minor versions (v1.1 introduces, v1.
 
 ## Drawbacks
 
-- Every implementer touches identifier parsing twice (v1.0-rc1 then v1.1). Lower bar than touching the wire protocol, but real.
+- Every implementer touches identifier parsing twice (v0.2 then v1.1). Lower bar than touching the wire protocol, but real.
 - Operators with deep deployments may resist a flag day in v2.0. The three-version window is the mitigation; v2.0 can defer flag day to v2.1 if operator feedback demands.
 - The multibase RFC is itself in draft (draft-msporny-multibase), not yet IETF-published. [VERIFIED, https://datatracker.ietf.org/doc/draft-msporny-multibase/]. The prefix table is stable enough to depend on; the formal RFC status is the only soft dependency.
 

@@ -17,7 +17,7 @@ The worker did not actually do the task; submits forged evidence.
 - Customer signature collected via a signing URL the customer never opened (telemetry on the operator's signing endpoint).
 - IoT beacon proximity ping from a beacon installed in a location inconsistent with the task scope.
 
-Mitigation: M-of-N with at least one non-sensor witness for paid tasks (spec/1.0-rc1.md Section 7 Scenario 1).
+Mitigation: M-of-N with at least one non-sensor witness for paid tasks (spec/0.2.md Section 7 Scenario 1).
 
 ### Type B: Collusion
 
