@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wcp-conformance"
-version = "1.0.0rc1"
-description = "WCP v1.0-rc1 conformance suite runner (Python)"
+version = "0.95.0"
+description = "WCP conformance suite runner (Python)"
 authors = [{name = "Worker Context Protocol contributors"}]
 license = {text = "Apache-2.0"}
 requires-python = ">=3.11"
 dependencies = [
-  "wcp-sdk >= 1.0.0rc1",
+  "wcp-sdk >= 0.95.0",
   "websockets >= 11",
   "click >= 8.1",
 ]

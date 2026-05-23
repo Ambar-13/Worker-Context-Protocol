@@ -16,5 +16,5 @@ The CLI is vendor-neutral. Templates use abstract operator names
 templates cover institutional and industrial coordination contexts.
 """
 
-__version__ = "1.0.0rc2"
+__version__ = "0.95.0"
 __schema_version__ = "wcp/1.0-rc1"

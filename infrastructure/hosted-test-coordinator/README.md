@@ -37,7 +37,7 @@ make migrate
 
 # 4. Check health
 curl https://test.<your-org>.example/health
-# -> {"status":"healthy","coordinator_did":"did:wcp:test-<your-org>","version":"v1.0-rc4"}
+# -> {"status":"healthy","coordinator_did":"did:wcp:test-<your-org>","version":"v0.95"}
 
 # 5. Open Grafana
 open https://test.<your-org>.example/grafana

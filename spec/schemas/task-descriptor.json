@@ -12,6 +12,22 @@
     "posted_by": { "type": "string", "pattern": "^did:wcp:" },
     "descriptor_type": { "type": "string" },
     "descriptor_payload": { "type": "object" },
+    "continuation_of": {
+      "description": "v1.0-rc5 (informational). Names a prior task whose attestation a follow-up posts against. The verifier MAY read this for audit-chain readability but MUST NOT enforce continuation as a precondition for accepting tasks/post.",
+      "type": "object",
+      "required": ["claim_id"],
+      "properties": {
+        "claim_id": {
+          "type": "string",
+          "description": "claim_id of the prior task whose evidence this task continues."
+        },
+        "required_evidence_kinds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Evidence kinds the prior task is expected to have produced. Operators MAY use this for pre-claim runbook checks."
+        }
+      }
+    },
     "constraints": {
       "type": "object",
       "properties": {

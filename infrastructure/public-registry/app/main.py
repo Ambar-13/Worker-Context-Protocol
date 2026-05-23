@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="WCP Public Coordinator Registry",
-    version="v1.0-rc4",
+    version="v0.95",
     description=(
         "Read-and-write registry of WCP coordinators. Inclusion confers "
         "no trust; agents must independently verify trust anchors per "

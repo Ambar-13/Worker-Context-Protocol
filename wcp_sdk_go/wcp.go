@@ -13,7 +13,7 @@ const (
 	// SchemaVersion is the WCP wire-protocol schema version this SDK targets.
 	SchemaVersion = "wcp/1.0-rc1"
 	// SdkVersion is this SDK's own version.
-	SdkVersion = "1.0.0-rc2"
+	SdkVersion = "0.95.0"
 )
 
 // WorkerClass enumerates the locked v1.0-rc1 worker class set.

@@ -126,8 +126,8 @@ async def dispatch_tool_call(
 
     if tool_name == "wcp_get_audit_chain":
         # The reference coordinator exposes audit chain via /wcp/audit/<task_id>
-        # in a future RFC. For v1.0-rc2 we return a stub indicating the call
-        # was recorded.
+        # in a future RFC. Until that endpoint ships, return a stub indicating
+        # the call was recorded.
         return {"task_id": tool_input["task_id"], "note": "audit-chain endpoint pending"}
 
     return {"error": f"unknown tool: {tool_name}"}

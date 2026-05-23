@@ -79,9 +79,9 @@ def make_app(coordinator_ws: str) -> FastAPI:
 async def _snapshot(coordinator_http: str) -> dict[str, Any]:
     """Build a minimal dashboard snapshot.
 
-    The v1.0-rc1 coordinator exposes /wcp/health. Production inspectors will
-    add /wcp/admin/* endpoints (RFC tracked); for v1.0-rc2 we render a
-    health probe plus a notice that admin endpoints land in a v1.1 RFC.
+    The reference coordinator exposes /wcp/health. Production inspectors will
+    add /wcp/admin/* endpoints (tracked in an upcoming RFC); until those ship
+    we render a health probe plus a notice that admin endpoints land in v1.1.
     """
     async with httpx.AsyncClient(timeout=2.0) as client:
         try:
@@ -99,7 +99,7 @@ async def _snapshot(coordinator_http: str) -> dict[str, Any]:
             "capability_subscriptions": [],
         },
         "note": (
-            "WCP coordinators expose /wcp/health at v1.0-rc1. The full set of "
+            "WCP coordinators expose /wcp/health. The full set of "
             "/wcp/admin/* introspection endpoints (active tasks, audit chain "
             "tail, live RPC traffic) is tracked in an upcoming RFC. The "
             "inspector renders what the coordinator exposes; when admin "

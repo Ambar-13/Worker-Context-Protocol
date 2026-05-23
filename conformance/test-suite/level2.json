@@ -241,6 +241,78 @@
         ]
       },
       "expected": {"error_code": -41004}
+    },
+    {
+      "id": "L2.rc5.continuation_evidence_kinds_visible_in_audit",
+      "level": 2,
+      "description": "When tasks/post carries a continuation_of block with required_evidence_kinds, the audit chain entry for the posted task preserves those kinds verbatim. The verifier MUST NOT use them as a precondition for accepting the post.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "place_on_shelf",
+          "descriptor_payload": {},
+          "continuation_of": {
+            "claim_id": "{{prior_claim_id}}",
+            "required_evidence_kinds": ["indoor_pose_track", "weight_delta"]
+          },
+          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "0.00",
+            "escrow_provider": "internal-cost-allocation",
+            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        },
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"audit_chain_entry_field_preserved": "continuation_of.required_evidence_kinds"}
+    },
+    {
+      "id": "L2.rc5.continuation_of_does_not_gate_attest",
+      "level": 2,
+      "description": "tasks/attest for a follow-up task referencing continuation_of MUST be evaluated by the verifier purely against its own attestation_requirement. The prior task's evidence kinds in continuation_of MUST NOT add or remove verifier preconditions.",
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{claim_id}}",
+        "evidence": [
+          {
+            "schema_version": "wcp/1.0-rc1",
+            "mode": "sensor-witness",
+            "kind": "manipulator_pose_track",
+            "payload": {"joint_states": [{"t": "{{now_iso}}", "q": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}]},
+            "payload_hash": "{{hash}}",
+            "signature": "{{sig}}",
+            "signer_did": "{{worker_did}}",
+            "collected_at": "{{now_iso}}"
+          }
+        ]
+      },
+      "expected": {"result_keys": ["audit_chain_entry_id"]}
+    },
+    {
+      "id": "L2.rc5.continuation_chain_resolves_in_audit",
+      "level": 2,
+      "description": "Walking the audit chain backwards from a follow-up task's settled entry MUST resolve to the prior task's claim_id named in continuation_of. The chain is operator-readable forensic evidence.",
+      "method": "audit/walk_continuation",
+      "params_template": {
+        "task_id": "{{follow_up_task_id}}"
+      },
+      "expected": {"resolves_prior_claim_id": "{{prior_claim_id}}"}
     }
   ],
   "notes": [

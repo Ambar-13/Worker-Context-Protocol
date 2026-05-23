@@ -5,8 +5,8 @@ Provides an ASGI `app` plus `__main__` entry so uvicorn can find it via
 `uvicorn wcp_dev_runtime.coordinator_dev_app:app` and the CLI/run.sh scripts can rely
 on a single launch path. Uses in-memory SQLite by default.
 
-This module is v1.0-rc2 DX infrastructure layered on top of the v1.0-rc1
-coordinator without modifying any v1.0-rc1 file.
+This module is developer-experience infrastructure layered on top of the
+reference coordinator without modifying any coordinator file.
 """
 from __future__ import annotations
 

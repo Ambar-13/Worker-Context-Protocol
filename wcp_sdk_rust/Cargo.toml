@@ -1,6 +1,6 @@
 [package]
 name = "wcp-sdk"
-version = "1.0.0-rc2"
+version = "0.95.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "Worker Context Protocol (WCP) SDK for Rust. Vendor-neutral; for embedded workers (drones, AMRs, sensor nodes, industrial controllers) and cloud coordinator integrators."

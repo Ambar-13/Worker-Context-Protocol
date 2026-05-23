@@ -43,6 +43,7 @@ Coordinator example (extension points):
 
 from .worker import Worker
 from .agent import Agent
+from .robot_agent import RobotAgent
 from .coordinator import Coordinator
 
-__all__ = ["Worker", "Agent", "Coordinator"]
+__all__ = ["Worker", "Agent", "RobotAgent", "Coordinator"]

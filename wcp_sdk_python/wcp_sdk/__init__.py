@@ -1,5 +1,5 @@
 """
-Worker Context Protocol (WCP) v1.0-rc1 Python SDK.
+Worker Context Protocol (WCP) Python SDK.
 
 This SDK is for implementers building WCP workers or agents in Python. It is
 vendor-neutral: it does not depend on any specific operator, escrow provider,
@@ -44,7 +44,7 @@ from .types import (
     WorkerClass,
 )
 
-__version__ = "1.0.0rc2"
+__version__ = "0.95.0"
 __schema_version__ = "wcp/1.0-rc1"
 
 # v2 additive imports (decorator-style three-role API). Available as

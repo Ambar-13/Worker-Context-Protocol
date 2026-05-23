@@ -1,6 +1,6 @@
 # Five-Minute Screencast Script
 
-A storyboard for the README hero demo. Record after the v1.0-rc2 sprint lands.
+A storyboard for the README hero demo.
 
 ## Setup before recording
 
@@ -43,11 +43,11 @@ Run the example script: `python examples/agents/industrial-maintenance/agent.py`
 Show the report summary.
 
 ### 04:45 - 05:00 Close
-"v1.0-rc2 is a release candidate. v1.0 final requires adoption validation. Try it. File RFCs. Federate."
+"This is pre-v1.0. v1.0 final requires adoption validation. Try it. File RFCs. Federate."
 GitHub URL on screen.
 
 ## Post-production
 
-- Title: "Worker Context Protocol: 5-minute walk-through (v1.0-rc2)"
+- Title: "Worker Context Protocol: 5-minute walk-through"
 - Description includes spec link, RFC pointers, donation commitment.
 - Subtitles in English; community translations land per RFC 0030.

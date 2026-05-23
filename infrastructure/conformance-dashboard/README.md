@@ -17,7 +17,7 @@ This dashboard is the reference visualization. It is NOT canonical: anyone may r
 - `sample-data/`: example result manifests for three fictional coordinators (Levels 1, 2, 3)
 - `README.md`: this file
 
-The actual web frontend implementation (React/Svelte/etc.) is out of scope for the v1.0-rc4 sprint; the deliverable here is the schema + mockup that fixes the contract a frontend would build against.
+The actual web frontend implementation (React/Svelte/etc.) is out of scope here; the deliverable in this directory is the schema plus mockup that fixes the contract a frontend would build against.
 
 ## Data flow
 

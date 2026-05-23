@@ -11,8 +11,8 @@ from rich.console import Console
 
 console = Console()
 
-# 14 domain templates per the v1.0-rc2 sprint scope. Institutional and
-# industrial coordination contexts only.
+# 14 domain templates covering institutional and industrial coordination
+# contexts.
 DOMAINS = (
     "industrial",
     "scientific",

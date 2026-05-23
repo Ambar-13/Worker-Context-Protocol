@@ -48,4 +48,4 @@ Each packet contains explicit `[PRINCIPAL TO PROVIDE: X]` markers where the dona
 - W3C: W3C member organization sponsor, contact name, contact email
 - IETF: author name(s), author email(s), affiliation
 
-These placeholders are preserved verbatim; the sprint MUST NOT fabricate.
+These placeholders are preserved verbatim; the WCP project does not fabricate values for them.

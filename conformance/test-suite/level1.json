@@ -118,6 +118,119 @@
         "expiry": "2099-12-31T23:59:00Z"
       },
       "expected": {"error_code": -45002}
+    },
+    {
+      "id": "L1.rc5.robot_as_agent_post_accepted",
+      "level": 1,
+      "description": "tasks/post by an agent declaring agent_class=embodied_agent is accepted (informational field; no semantic branching).",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "place_on_shelf",
+          "descriptor_payload": {"shelf_id": "WS-7-A"},
+          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "0.00",
+            "escrow_provider": "internal-cost-allocation",
+            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        },
+        "agent_class": "embodied_agent",
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"accepts_post": true}
+    },
+    {
+      "id": "L1.rc5.continuation_of_field_preserved",
+      "level": 1,
+      "description": "tasks/post with continuation_of metadata is accepted; the field is preserved on the resulting audit chain entry (verifier does not enforce continuation).",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "place_on_shelf",
+          "descriptor_payload": {"shelf_id": "WS-7-A"},
+          "continuation_of": {
+            "claim_id": "prior-claim-abc-123",
+            "required_evidence_kinds": ["indoor_pose_track", "weight_delta"]
+          },
+          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "0.00",
+            "escrow_provider": "internal-cost-allocation",
+            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        },
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"audit_chain_entry_carries_continuation_of": true}
+    },
+    {
+      "id": "L1.rc5.no_per_class_branch_on_agent_class",
+      "level": 1,
+      "description": "Two tasks/post calls, one with agent_class=llm_agent and one with agent_class=embodied_agent, yield identical matching engine behaviour. The matching engine MUST NOT branch on agent_class.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["autonomous_robot"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["indoor_pose_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "0.00",
+            "escrow_provider": "internal-cost-allocation",
+            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        },
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"matching_invariant": "agent_class_does_not_affect_eligibility"}
     }
   ]
 }

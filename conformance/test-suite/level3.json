@@ -214,6 +214,84 @@
         "expected_signer_chain_root": "{{coord_a_did}}"
       },
       "expected": {"result_keys": ["chain_verifies", "signer_chain_complete"]}
+    },
+    {
+      "id": "L3.rc5.cross_coord_robot_as_agent_continuation",
+      "level": 3,
+      "description": "A RobotAgent on coordinator alpha posts a continuation task whose target worker is on coordinator beta. Federation must route the post, preserve continuation_of on both audit chains, and require no protocol changes beyond the existing federation primitives.",
+      "method": "federation/forward_continuation_post",
+      "params_template": {
+        "source_coordinator": "coord-alpha",
+        "target_coordinator": "coord-beta",
+        "agent_class": "embodied_agent",
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{robot_agent_did_on_alpha}}",
+          "descriptor_type": "place_on_shelf",
+          "descriptor_payload": {},
+          "continuation_of": {
+            "claim_id": "{{prior_claim_id_on_alpha}}",
+            "required_evidence_kinds": ["indoor_pose_track"]
+          },
+          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "0.00",
+            "escrow_provider": "internal-cost-allocation",
+            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        }
+      },
+      "expected": {"both_chains_carry_continuation_of": true, "federation_uses_only_existing_rpcs": true}
+    },
+    {
+      "id": "L3.rc5.cross_coord_agent_class_preserved",
+      "level": 3,
+      "description": "agent_class declared on the posting agent's credential MUST be preserved across federation forwarding. The audit chain entries on both coordinators record the same agent_class value; neither coordinator branches matching or settlement on it.",
+      "method": "federation/forward_continuation_post",
+      "params_template": {
+        "source_coordinator": "coord-alpha",
+        "target_coordinator": "coord-beta",
+        "agent_class": "embodied_agent",
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{robot_agent_did_on_alpha}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["autonomous_robot"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["indoor_pose_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "0.00",
+            "escrow_provider": "internal-cost-allocation",
+            "split": [{"party": "did:wcp:cost-center-ops", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        }
+      },
+      "expected": {"agent_class_preserved_on_both_chains": "embodied_agent", "no_matching_branch_on_agent_class": true}
     }
   ],
   "notes": [

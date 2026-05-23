@@ -1,6 +1,6 @@
 # Worker Context Protocol (WCP)
 
-**Current version:** v1.0-rc2 (release candidate; not v1.0 final until adoption validates)
+**Current version:** v0.95 (pre-v1.0; not v1.0 final until adoption validates)
 **License:** Apache 2.0
 **Schema version:** `wcp/1.0-rc1`
 
@@ -41,7 +41,7 @@ To explore a different domain, swap the `--domain` flag. The 14 templates each s
 
 ## Six reference agents across institutionally distinct domains
 
-The same nine RPCs handle every domain below. The variance lives in `descriptor_payload` and the registered `(mode, kind)` pairs the verifier accepts; the RPC surface is unchanged. This is the v1.0-rc1 D4 forcing function proven in code.
+The same nine RPCs handle every domain below. The variance lives in `descriptor_payload` and the registered `(mode, kind)` pairs the verifier accepts; the RPC surface is unchanged. This is the D4 forcing function proven in code.
 
 | Domain | Path | What the agent does |
 |---|---|---|

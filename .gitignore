@@ -7,3 +7,17 @@ node_modules/
 *.egg-info/
 build/
 dist/
+
+# LaTeX build artifacts (PDFs are committed; logs/aux/swap are not)
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+
+# Editor swap files
+*.swp
+*.swo
+*~

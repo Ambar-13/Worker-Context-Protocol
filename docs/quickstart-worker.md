@@ -1,6 +1,6 @@
 # Quickstart: Build and Run a WCP Worker in Five Minutes
 
-This quickstart shows the v1.0-rc2 decorator-style Python SDK. Primary illustration: **industrial-maintenance** (a hybrid worker that does cooling-tower thermal inspections). The same flow applies across the 14 domain templates.
+This quickstart shows the decorator-style Python SDK. Primary illustration: **industrial-maintenance** (a hybrid worker that does cooling-tower thermal inspections). The same flow applies across the 14 domain templates.
 
 ## Prerequisites
 
