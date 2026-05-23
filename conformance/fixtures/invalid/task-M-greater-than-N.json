@@ -1,0 +1,26 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "task_id": "00000000-0000-0000-0000-000000000001",
+  "posted_by": "did:wcp:agent",
+  "descriptor_type": "transport",
+  "descriptor_payload": {},
+  "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+  "attestation_requirement": {
+    "modes": ["sensor-witness"],
+    "threshold": "M-of-N",
+    "M": 5,
+    "N": 2,
+    "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+    "override_authority": "did:wcp:operator-ops",
+    "override_audit_required": true
+  },
+  "settlement": {
+    "currency": "USD",
+    "amount": "10.00",
+    "escrow_provider": "example-escrow",
+    "split": [{"party": "did:wcp:worker", "pct": 100}]
+  },
+  "supervision": {"default": "autonomous"},
+  "x-subcontract-allowed": false,
+  "wcp:expected_error": -41001
+}

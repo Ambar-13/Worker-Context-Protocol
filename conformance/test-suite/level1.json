@@ -1,0 +1,123 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "level": 1,
+  "description": "WCP v1.0-rc1 Level 1 (Protocol surface) test bundle.",
+  "cases": [
+    {
+      "id": "L1.1.health",
+      "level": 1,
+      "description": "Coordinator responds to a health probe (sanity).",
+      "method": "capabilities/list",
+      "params_template": {"worker_id": "{{worker_did}}"},
+      "expected": {"error_code": -40003}
+    },
+    {
+      "id": "L1.9.subcontract_forbidden",
+      "level": 1,
+      "description": "tasks/post with x-subcontract-allowed: true is rejected.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "10.00",
+            "escrow_provider": "example-escrow",
+            "split": [{"party": "did:wcp:worker", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": true
+        },
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"error_code": -45001}
+    },
+    {
+      "id": "L1.9.M_greater_than_N",
+      "level": 1,
+      "description": "tasks/post with M > N is rejected.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "scheduled_presence",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N",
+            "M": 5,
+            "N": 2,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "10.00",
+            "escrow_provider": "example-escrow",
+            "split": [{"party": "did:wcp:worker", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        },
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"error_code": -41001}
+    },
+    {
+      "id": "L1.9.out_of_scope_medical",
+      "level": 1,
+      "description": "tasks/post for a medical class is rejected.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/1.0-rc1",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "medical",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "any",
+            "M": 1,
+            "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}],
+            "override_authority": "did:wcp:operator-ops",
+            "override_audit_required": true
+          },
+          "settlement": {
+            "currency": "USD",
+            "amount": "10.00",
+            "escrow_provider": "example-escrow",
+            "split": [{"party": "did:wcp:worker", "pct": 100}]
+          },
+          "supervision": {"default": "autonomous"},
+          "x-subcontract-allowed": false
+        },
+        "bond_ref": "test-bond-{{uuid}}",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"error_code": -45002}
+    }
+  ]
+}

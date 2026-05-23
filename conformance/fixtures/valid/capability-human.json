@@ -1,0 +1,25 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "worker_id": "did:wcp:8FCQz2bN7y4kQvKZqxPm3hRsT5wYjHbA6dL9XfMnEqRk",
+  "principal_id": "did:wcp:7BvWx1cN5x2jKuJZpwOm2hRsT4vXkGcA5dK8XfMnEqRk",
+  "class": "human",
+  "required": {
+    "current_location": {"venue_id": "v1", "map_id": "m1"},
+    "available_windows": [
+      {"rrule": "FREQ=DAILY;BYHOUR=8-22", "timezone": "Asia/Singapore"}
+    ],
+    "attestation_methods_supported": [
+      "sensor-witness", "third-party-witness",
+      "cryptographic-presence", "owner-sign-off"
+    ],
+    "certifications": [],
+    "policy_windows": [{"type": "geographic", "scope": "Singapore"}],
+    "attestation_keys": [
+      {"kty": "OKP", "crv": "Ed25519", "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}
+    ],
+    "as_of": "2026-05-23T00:00:00Z"
+  },
+  "class_extension": {
+    "skills": ["aircon_servicing_quarterly"]
+  }
+}

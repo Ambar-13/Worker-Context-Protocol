@@ -1,0 +1,27 @@
+{
+  "schema_version": "wcp/1.0-rc1",
+  "worker_id": "did:wcp:6CvWy2cN5x2jKuJZpwOm2hRsT4vXkGcA5dK8XfMnEqRm",
+  "principal_id": "did:wcp:5BuVx1cN5x2jKuJZpwOm2hRsT4vXkGcA5dK8XfMnEqRm",
+  "class": "autonomous_robot",
+  "required": {
+    "current_location": {"venue_id": "v1", "map_id": "m1"},
+    "available_windows": [
+      {"rrule": "FREQ=DAILY", "timezone": "Asia/Singapore"}
+    ],
+    "attestation_methods_supported": [
+      "sensor-witness", "third-party-witness", "cryptographic-presence"
+    ],
+    "certifications": [],
+    "policy_windows": [{"type": "geographic", "scope": "Singapore"}],
+    "attestation_keys": [
+      {"kty": "OKP", "crv": "Ed25519", "x": "22pXAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURp"}
+    ],
+    "as_of": "2026-05-23T00:00:00Z"
+  },
+  "class_extension": {
+    "kinematics": {"locomotion": "wheeled", "max_speed_mps": 1.4, "footprint_m": [0.6, 0.4]},
+    "payload": {"max_kg": 5, "max_dim_m": [0.4, 0.4, 0.3]},
+    "end_effectors": [{"class": "tray", "rated_for": ["solid_under_5kg"]}],
+    "environment": {"indoor": true, "ip_rating": "IP54", "operating_temp_c": [5, 40]}
+  }
+}
