@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp-spec.rentably.ai/schemas/audit-chain-entry.json",
+  "title": "AuditChainEntry",
+  "type": "object",
+  "required": ["schema_version", "entry_id", "claim_id", "event_type",
+               "timestamp", "actor_did", "payload_hash", "prev_hash",
+               "this_hash", "sig"],
+  "properties": {
+    "schema_version": { "const": "wcp/0.1" },
+    "entry_id":     { "type": "string", "format": "uuid" },
+    "claim_id":     { "type": "string", "format": "uuid" },
+    "task_id":      { "type": "string", "format": "uuid" },
+    "event_type":   { "type": "string" },
+    "timestamp":    { "type": "string", "format": "date-time" },
+    "actor_did":    { "type": "string", "pattern": "^did:wcp:" },
+    "payload":      { "type": "object" },
+    "payload_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "prev_hash":    { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$|^$" },
+    "this_hash":    { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "sig":          { "type": "string" }
+  },
+  "examples": [
+    {
+      "schema_version": "wcp/0.1",
+      "entry_id": "770e8400-e29b-41d4-a716-446655440000",
+      "claim_id": "660e8400-e29b-41d4-a716-446655440000",
+      "task_id":  "550e8400-e29b-41d4-a716-446655440000",
+      "event_type": "execution_started",
+      "timestamp": "2026-06-01T10:00:00+08:00",
+      "actor_did": "did:wcp:8FCQz2bN7y4kQvKZqxPm3hRsT5wYjHbA6dL9XfMnEqRk",
+      "payload": { "claim_id": "660e8400-e29b-41d4-a716-446655440000" },
+      "payload_hash": "abc123...",
+      "prev_hash": null,
+      "this_hash": "def456...",
+      "sig": "ed25519:..."
+    }
+  ]
+}

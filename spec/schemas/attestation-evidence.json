@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp-spec.rentably.ai/schemas/attestation-evidence.json",
+  "title": "AttestationEvidence",
+  "type": "object",
+  "required": ["schema_version", "mode", "kind", "payload", "payload_hash",
+               "sig", "worker_id", "claim_id", "collected_at"],
+  "properties": {
+    "schema_version": { "const": "wcp/0.1" },
+    "mode": { "enum": ["sensor-witness", "third-party-witness",
+                       "cryptographic-presence", "owner-sign-off"] },
+    "kind": { "type": "string" },
+    "payload": { "type": "object" },
+    "payload_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "sig": { "type": "string" },
+    "worker_id": { "type": "string", "pattern": "^did:wcp:" },
+    "claim_id": { "type": "string", "format": "uuid" },
+    "collected_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "schema_version": "wcp/0.1",
+      "mode": "third-party-witness",
+      "kind": "customer_signature",
+      "payload": {
+        "signed_text": "I confirm the work was completed satisfactorily.",
+        "customer_phone": "+65********",
+        "signature_image_hash": "abc123..."
+      },
+      "payload_hash": "5d41402abc4b2a76b9719d911017c592aabbccddeeff00112233445566778899",
+      "sig": "ed25519:...",
+      "worker_id": "did:wcp:8FCQz2bN7y4kQvKZqxPm3hRsT5wYjHbA6dL9XfMnEqRk",
+      "claim_id": "660e8400-e29b-41d4-a716-446655440000",
+      "collected_at": "2026-06-01T10:45:00+08:00"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+wcp_worker:
+  ros__parameters:
+    coordinator_url: "ws://localhost:8000/wcp/ws"
+    key_path: "/tmp/wcp_worker_key"
+    principal_id: "did:wcp:rentably-fleet"
+    venue_id: "v1"
+    map_id: "m1"
+    heartbeat_interval_seconds: 15
+    nav2:
+      action_server: "navigate_to_pose"
+      goal_timeout_seconds: 300
+    supervision:
+      enabled: true
+      default_takeover_authority: "advise"

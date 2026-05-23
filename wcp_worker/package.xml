@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>wcp_worker</name>
+  <version>0.1.0</version>
+  <description>
+    Worker Context Protocol (WCP) v0.1 reference ROS 2 plugin.
+    Implements the worker side of the nine WCP RPCs (capabilities/list,
+    capabilities/subscribe, tasks/post, tasks/claim, tasks/execute,
+    tasks/attest, tasks/settle, tasks/supervise, tasks/abort) and bridges
+    to Nav2 BehaviorTree for transport, ROS 2 lifecycle for plugin state,
+    and WebRTC for graded-autonomy supervision handoff.
+  </description>
+  <maintainer email="dev@rentably.ai">Rentably Pte Ltd</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>lifecycle_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <exec_depend>python3-websockets</exec_depend>
+  <exec_depend>python3-cryptography</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+    <!-- Compatibility declared via CI matrix; see .github/workflows/ros.yml -->
+    <rosdistro>humble</rosdistro>
+    <rosdistro>jazzy</rosdistro>
+  </export>
+</package>

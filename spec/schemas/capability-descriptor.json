@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp-spec.rentably.ai/schemas/capability-descriptor.json",
+  "title": "CapabilityDescriptor",
+  "type": "object",
+  "required": ["schema_version", "worker_id", "principal_id", "class", "required"],
+  "properties": {
+    "schema_version": { "const": "wcp/0.1" },
+    "worker_id":      { "type": "string", "pattern": "^did:wcp:[1-9A-HJ-NP-Za-km-z]+(:.+)?$" },
+    "principal_id":   { "type": "string", "pattern": "^did:wcp:[1-9A-HJ-NP-Za-km-z]+(:.+)?$" },
+    "class": {
+      "enum": ["human", "autonomous_robot", "teleoperated_robot",
+               "semi_autonomous", "hybrid"]
+    },
+    "required": {
+      "type": "object",
+      "required": ["current_location", "available_windows",
+                   "attestation_methods_supported", "attestation_keys", "as_of"],
+      "properties": {
+        "current_location": {
+          "oneOf": [
+            { "type": "object", "required": ["geohash"],
+              "properties": { "geohash": { "type": "string" } } },
+            { "type": "object", "required": ["venue_id", "map_id"],
+              "properties": { "venue_id": { "type": "string" },
+                              "map_id":   { "type": "string" } } }
+          ]
+        },
+        "available_windows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rrule", "timezone"],
+            "properties": {
+              "rrule":    { "type": "string" },
+              "timezone": { "type": "string" }
+            }
+          }
+        },
+        "attestation_methods_supported": {
+          "type": "array",
+          "items": { "enum": ["sensor-witness", "third-party-witness",
+                              "cryptographic-presence", "owner-sign-off"] },
+          "minItems": 1
+        },
+        "certifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["issuer", "id"],
+            "properties": {
+              "issuer":  { "type": "string" },
+              "id":      { "type": "string" },
+              "expires": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "policy_windows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "scope"],
+            "properties": {
+              "type":  { "type": "string" },
+              "scope": { "type": "string" }
+            }
+          }
+        },
+        "attestation_keys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["kty", "crv", "x"],
+            "properties": {
+              "kty": { "const": "OKP" },
+              "crv": { "enum": ["Ed25519", "Ed448"] },
+              "x":   { "type": "string" }
+            }
+          }
+        },
+        "as_of": { "type": "string", "format": "date-time" }
+      }
+    },
+    "class_extension": { "type": "object" }
+  },
+  "examples": [
+    {
+      "schema_version": "wcp/0.1",
+      "worker_id": "did:wcp:8FCQz2bN7y4kQvKZqxPm3hRsT5wYjHbA6dL9XfMnEqRk",
+      "principal_id": "did:wcp:7BvWx1cN5x2jKuJZpwOm2hRsT4vXkGcA5dK8XfMnEqRk",
+      "class": "human",
+      "required": {
+        "current_location": { "venue_id": "v1", "map_id": "m1" },
+        "available_windows": [
+          { "rrule": "FREQ=DAILY;BYHOUR=8-22", "timezone": "Asia/Singapore" }
+        ],
+        "attestation_methods_supported": [
+          "sensor-witness", "third-party-witness", "cryptographic-presence"
+        ],
+        "certifications": [
+          { "issuer": "BCA", "id": "CERT-12345", "expires": "2027-03-01T00:00:00Z" }
+        ],
+        "policy_windows": [
+          { "type": "geographic", "scope": "Singapore" }
+        ],
+        "attestation_keys": [
+          { "kty": "OKP", "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo" }
+        ],
+        "as_of": "2026-05-23T00:00:00Z"
+      },
+      "class_extension": {
+        "skills": ["aircon_servicing_quarterly", "fire_safety_inspection"],
+        "languages": ["en", "zh", "ms"],
+        "tools_carried": ["multimeter", "drain_snake_5m"]
+      }
+    }
+  ]
+}

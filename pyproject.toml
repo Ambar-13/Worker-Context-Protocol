@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wcp-coordinator"
+version = "0.1.0"
+description = "Worker Context Protocol reference coordinator backend"
+authors = [{name = "Rentably Pte Ltd"}]
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+  "sqlalchemy>=2.0",
+  "cryptography>=42.0",
+  "alembic>=1.13",
+  "jsonschema>=4.21",
+  "pydantic>=2.6",
+  "structlog>=24.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "hypothesis>=6.98",
+  "httpx>=0.27",
+]
+
+[tool.setuptools.packages.find]
+include = ["wcp_coordinator*"]
+
+[tool.pytest.ini_options]
+testpaths = ["wcp_coordinator/tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.mypy]
+strict = true
+files = ["wcp_coordinator"]
+ignore_missing_imports = true

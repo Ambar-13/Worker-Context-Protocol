@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp-spec.rentably.ai/schemas/task-descriptor.json",
+  "title": "TaskDescriptor",
+  "type": "object",
+  "required": ["schema_version", "task_id", "posted_by", "descriptor_type",
+               "descriptor_payload", "constraints", "attestation_requirement",
+               "settlement"],
+  "properties": {
+    "schema_version": { "const": "wcp/0.1" },
+    "task_id":   { "type": "string", "format": "uuid" },
+    "posted_by": { "type": "string", "pattern": "^did:wcp:" },
+    "descriptor_type": { "type": "string" },
+    "descriptor_payload": { "type": "object" },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "capabilities_required": { "type": "object" },
+        "time_window": {
+          "type": "object",
+          "properties": {
+            "earliest": { "type": "string" },
+            "latest":   { "type": "string" }
+          }
+        },
+        "location_scope": { "type": "object" },
+        "worker_class_filter": {
+          "type": "object",
+          "properties": {
+            "allowed": {
+              "type": "array",
+              "items": { "enum": ["human", "autonomous_robot",
+                                  "teleoperated_robot", "semi_autonomous", "hybrid"] }
+            }
+          }
+        }
+      }
+    },
+    "attestation_requirement": {
+      "type": "object",
+      "required": ["modes", "threshold", "evidence_schema"],
+      "properties": {
+        "modes": {
+          "type": "array",
+          "items": { "enum": ["sensor-witness", "third-party-witness",
+                              "cryptographic-presence", "owner-sign-off"] },
+          "minItems": 1
+        },
+        "threshold": { "enum": ["any", "all", "M-of-N"] },
+        "M": { "type": "integer", "minimum": 1 },
+        "N": { "type": "integer", "minimum": 1 },
+        "evidence_schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["mode", "kinds"],
+            "properties": {
+              "mode": { "enum": ["sensor-witness", "third-party-witness",
+                                 "cryptographic-presence", "owner-sign-off"] },
+              "kinds": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "override_allowed":        { "type": "boolean" },
+        "override_authority":      { "type": "string", "pattern": "^did:wcp:" },
+        "override_audit_required": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "threshold": { "const": "M-of-N" } } },
+          "then": { "required": ["M", "N"] }
+        }
+      ]
+    },
+    "settlement": {
+      "type": "object",
+      "required": ["currency", "amount", "escrow_provider", "split"],
+      "properties": {
+        "currency":        { "type": "string", "minLength": 3, "maxLength": 3 },
+        "amount":          { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
+        "escrow_provider": { "type": "string" },
+        "split": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["party", "pct"],
+            "properties": {
+              "party": { "type": "string", "pattern": "^did:wcp:" },
+              "pct":   { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+        "partial_completion_schedule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["milestone", "release_pct"],
+            "properties": {
+              "milestone":   { "type": "string" },
+              "release_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        }
+      }
+    },
+    "supervision": {
+      "type": "object",
+      "properties": {
+        "default":             { "type": "string" },
+        "escalation_policy":   { "type": "string" }
+      }
+    },
+    "x-subcontract-allowed": { "type": "boolean", "default": false }
+  },
+  "examples": [
+    {
+      "schema_version": "wcp/0.1",
+      "task_id": "550e8400-e29b-41d4-a716-446655440000",
+      "posted_by": "did:wcp:agent-rentably-ops",
+      "descriptor_type": "scheduled_presence",
+      "descriptor_payload": {
+        "location": { "venue_id": "v1", "unit_id": "12-04" },
+        "duration_minutes": 45,
+        "activity_class": "quarterly_aircon_service"
+      },
+      "constraints": {
+        "time_window": { "earliest": "2026-06-01T09:00:00+08:00",
+                         "latest":   "2026-06-01T18:00:00+08:00" }
+      },
+      "attestation_requirement": {
+        "modes": ["cryptographic-presence", "owner-sign-off"],
+        "threshold": "M-of-N", "M": 2, "N": 2,
+        "evidence_schema": [
+          { "mode": "cryptographic-presence", "kinds": ["geofence_check_in_out"] },
+          { "mode": "owner-sign-off", "kinds": ["whatsapp_business_signed_link"] }
+        ],
+        "override_allowed": true,
+        "override_authority": "did:wcp:rentably-ops",
+        "override_audit_required": true
+      },
+      "settlement": {
+        "currency": "SGD", "amount": "120.00",
+        "escrow_provider": "stripe-rentably",
+        "split": [
+          { "party": "did:wcp:worker-principal-1", "pct": 80 },
+          { "party": "did:wcp:platform-rentably",  "pct": 15 },
+          { "party": "did:wcp:insurance-pool-sg",  "pct": 5  }
+        ]
+      },
+      "x-subcontract-allowed": false
+    }
+  ]
+}

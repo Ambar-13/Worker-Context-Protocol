@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wcp-spec.rentably.ai/schemas/rpc-envelopes.json",
+  "title": "WCP JSON-RPC envelopes (per-method schemas)",
+  "$defs": {
+
+    "capabilities_list_request":  { "type": "object", "additionalProperties": false },
+    "capabilities_list_response": {
+      "type": "object",
+      "required": ["worker_id", "capabilities", "ttl_seconds", "revision"],
+      "properties": {
+        "worker_id":    { "type": "string", "pattern": "^did:wcp:" },
+        "capabilities": { "$ref": "capability-descriptor.json" },
+        "ttl_seconds":  { "type": "integer", "minimum": 1 },
+        "revision":     { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "capabilities_subscribe_request": {
+      "type": "object",
+      "properties": {
+        "filter":         { "type": "object" },
+        "since_revision": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "capabilities_subscribe_response": {
+      "type": "object",
+      "required": ["subscription_id", "stream_endpoint", "ttl_seconds"],
+      "properties": {
+        "subscription_id": { "type": "string", "format": "uuid" },
+        "stream_endpoint": { "type": "string", "format": "uri" },
+        "ttl_seconds":     { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "tasks_post_request": {
+      "type": "object",
+      "required": ["task", "bond_ref", "expiry"],
+      "properties": {
+        "task":        { "$ref": "task-descriptor.json" },
+        "bond_ref":    { "type": "string" },
+        "expiry":      { "type": "string", "format": "date-time" },
+        "supervision": { "type": "object" }
+      }
+    },
+    "tasks_post_response": {
+      "type": "object",
+      "required": ["task_id", "eligible_workers_count", "posted_at"],
+      "properties": {
+        "task_id":                { "type": "string", "format": "uuid" },
+        "eligible_workers_count": { "type": "integer", "minimum": 0 },
+        "posted_at":              { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "tasks_claim_request": {
+      "type": "object",
+      "required": ["task_id", "worker_id", "eta", "acceptance_attestation"],
+      "properties": {
+        "task_id":   { "type": "string", "format": "uuid" },
+        "worker_id": { "type": "string", "pattern": "^did:wcp:" },
+        "bid":       { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
+        "eta":       { "type": "string", "format": "date-time" },
+        "acceptance_attestation": {
+          "type": "object",
+          "required": ["sig", "alg", "payload_hash", "signed_at"],
+          "properties": {
+            "sig":          { "type": "string" },
+            "alg":          { "enum": ["Ed25519"] },
+            "payload_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "signed_at":    { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "tasks_claim_response": {
+      "type": "object",
+      "required": ["claim_id", "accepted"],
+      "properties": {
+        "claim_id": { "type": "string", "format": "uuid" },
+        "accepted": { "type": "boolean" },
+        "counter":  { "type": "object" },
+        "reason":   { "type": ["string", "null"] }
+      }
+    },
+
+    "tasks_execute_request": {
+      "type": "object",
+      "required": ["claim_id"],
+      "properties": {
+        "claim_id": { "type": "string", "format": "uuid" }
+      }
+    },
+    "tasks_execute_event": {
+      "type": "object",
+      "required": ["event_type", "timestamp", "payload", "sig"],
+      "properties": {
+        "event_type": { "type": "string" },
+        "timestamp":  { "type": "string", "format": "date-time" },
+        "payload":    { "type": "object" },
+        "sig":        { "type": "string" }
+      }
+    },
+
+    "tasks_attest_request": {
+      "type": "object",
+      "required": ["claim_id", "attestations"],
+      "properties": {
+        "claim_id":    { "type": "string", "format": "uuid" },
+        "attestations": {
+          "type": "array",
+          "items": { "$ref": "attestation-evidence.json" },
+          "minItems": 1
+        },
+        "compensating_action": { "type": "object" }
+      }
+    },
+    "tasks_attest_response": {
+      "type": "object",
+      "required": ["verifier_decision"],
+      "properties": {
+        "verifier_decision": { "enum": ["pass", "fail", "review"] },
+        "residual": { "type": "object" },
+        "reasons":  { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "tasks_settle_request": {
+      "type": "object",
+      "required": ["claim_id", "decision", "amount", "party_breakdown"],
+      "properties": {
+        "claim_id": { "type": "string", "format": "uuid" },
+        "decision": { "enum": ["release", "refund", "partial"] },
+        "amount":   { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
+        "party_breakdown": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["party", "amount"],
+            "properties": {
+              "party":  { "type": "string", "pattern": "^did:wcp:" },
+              "amount": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+            }
+          }
+        }
+      }
+    },
+    "tasks_settle_response": {
+      "type": "object",
+      "required": ["settlement_id", "state"],
+      "properties": {
+        "settlement_id": { "type": "string" },
+        "state":         { "enum": ["captured", "refunded", "partial"] },
+        "receipt_url":   { "type": "string", "format": "uri" }
+      }
+    },
+
+    "tasks_supervise_request": {
+      "type": "object",
+      "required": ["claim_id", "handoff_reason", "state_snapshot", "urgency"],
+      "properties": {
+        "claim_id":       { "type": "string", "format": "uuid" },
+        "handoff_reason": { "type": "string" },
+        "state_snapshot": { "type": "object" },
+        "urgency":        { "enum": ["low", "high", "critical"] }
+      }
+    },
+    "tasks_supervise_response": {
+      "type": "object",
+      "required": ["supervisor_id", "session_url", "takeover_authority"],
+      "properties": {
+        "supervisor_id":      { "type": "string", "pattern": "^did:wcp:" },
+        "session_url":        { "type": "string", "format": "uri" },
+        "takeover_authority": { "enum": ["advise", "co_pilot", "full"] }
+      }
+    },
+
+    "tasks_abort_request": {
+      "type": "object",
+      "required": ["claim_id", "reason", "state_snapshot", "proposed_settlement"],
+      "properties": {
+        "claim_id":            { "type": "string", "format": "uuid" },
+        "reason":              { "type": "string" },
+        "state_snapshot":      { "type": "object" },
+        "proposed_settlement": { "enum": ["split", "refund", "dispute"] }
+      }
+    },
+    "tasks_abort_response": {
+      "type": "object",
+      "required": ["abort_id", "settlement_disposition"],
+      "properties": {
+        "abort_id":               { "type": "string", "format": "uuid" },
+        "settlement_disposition": { "enum": ["applied", "disputed"] }
+      }
+    }
+  }
+}

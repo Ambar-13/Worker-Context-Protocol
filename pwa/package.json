@@ -1,0 +1,22 @@
+{
+  "name": "@rentably/wcp-pwa",
+  "version": "0.1.0",
+  "description": "WCP human-worker PWA module. Designed to merge into the existing Rentably contractor app at app/(contractor)/wcp/.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "wcp/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint wcp"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.3.0"
+  }
+}
