@@ -167,7 +167,7 @@
     {
       "id": "L2.7.recheck_voids_after_exhaustion",
       "level": 2,
-      "description": "Recheck: task with max_attestation_attempts=1 fails verifier; task voids. Subsequent tasks/attest returns RECHECK_MAX_ATTEMPTS_REACHED.",
+      "description": "Recheck: task with max_attestation_attempts=1 fails verifier; task voids. Subsequent tasks/attest returns RECHECK_MAX_ATTEMPTS_REACHED. Requires a registered worker (no capabilities/register RPC in v0.955; covered by wcp_coordinator/tests/test_lifecycle.py instead).",
       "method": "tasks/attest",
       "params_template": {
         "claim_id": "{{recheck_claim_attempts_1_failed}}",
