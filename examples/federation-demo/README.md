@@ -1,10 +1,15 @@
 # Two-Coordinator Federation Demo
 
-**v0.955 status:** this demo was authored against the v0.95 / v0.2 surface, which included settlement primitives. v0.955 removed those from the protocol; the demo's settlement-related steps now live above WCP. The federation primitives the demo exercises (capability discovery, task forwarding, audit-chain interop) remain protocol-layer. A rewrite of this demo against the v0.955 surface is tracked as follow-on work.
+This demo shows WCP v0.955.1 federation working end-to-end: two
+coordinators with mutually signed bilateral trust anchors, a worker
+registered on one coordinator, an agent on the other, and a complete
+task whose lifecycle crosses the federation boundary with both audit
+chains verifying.
 
-This demo shows WCP federation in action: two coordinators peering via a signed trust anchor, a worker registered on one coordinator, an agent operating on the other, and a complete task lifecycle crossing the federation boundary with mutually verifiable audit chains.
-
-The presence of this demo turns "WCP supports federation" from claim into evidence.
+The federation primitives live in `wcp_coordinator/federation/`:
+trust anchors with declared scope, capability advertisement, task
+forwarding, and audit-chain interop with payload-binding plus
+link-binding verification.
 
 ## Topology
 
@@ -80,69 +85,80 @@ sequenceDiagram
 
 ### Prerequisites
 
-- Docker and Docker Compose installed
-- Python 3.10+ (for the worker and agent scripts)
-- wcp-sdk Python package (`pip install wcp-sdk` from PyPI, or `pip install -e ../../wcp_sdk_python` in development)
+- Python 3.10+ with the repo's `.venv` (or any environment with
+  `wcp_coordinator` and `cryptography` installed)
 
 ### Quick start
 
 ```bash
-cd examples/federation-demo
-docker compose up -d            # bring up both coordinators + databases
-./setup.sh                       # provision trust anchor between coord-alpha and coord-beta
-python worker_beta.py &          # register logistics worker on coord-beta
-python agent_alpha.py            # post a task from coord-alpha; watch federation in action
-./verify.sh                      # confirm audit chains on both coordinators are mutually verifiable
+./examples/federation-demo/setup.sh    # clean any stale demo databases
+./examples/federation-demo/verify.sh   # run the end-to-end demo
 ```
 
-Or with the WCP CLI:
+`verify.sh` exits 0 on success. The demo runs in under a second.
 
-```bash
-wcp dev --example federation-demo
-```
+### What setup.sh + verify.sh do
 
-(Brings up the full demo in one command.)
+The actual demo logic lives in `demo.py`. It:
 
-### Expected output
+1. Spins up `coord-alpha` and `coord-beta` in-process, each with its
+   own ephemeral SQLite database.
+2. Generates Ed25519 keys for both coordinators and mutually exchanges
+   signed bilateral trust anchors. Both signatures are verified before
+   the anchors are stored.
+3. Registers a logistics worker (London-zone-c) on `coord-beta`.
+4. Has `coord-alpha`'s capability-sync record a
+   `federation_capability_advertised` audit entry for the peer worker.
+5. Has `coord-alpha`'s federation router pick the peer, forward a
+   `tasks/post` (transport task) to `coord-beta` through the in-process
+   forwarder, and record `federation_task_forwarded` on alpha's chain.
+6. Has `coord-beta` record `task_claimed` and `task_completed` for the
+   forwarded task on its own chain.
+7. Has `coord-alpha`'s audit-export module fetch beta's chain segment,
+   verify link continuity, link binding, and payload binding, and
+   record `federation_audit_chain_imported` on alpha's chain.
+8. Runs `verify_chain` on beta's chain and confirms the completion
+   event was found and verified.
 
-The exact output is whatever `setup.sh` and `verify.sh` actually print
-when you run them against a live two-coordinator deployment. Inline
-"expected output" snippets are deliberately omitted from this README to
-avoid drift between the documented and the actual behaviour; copy/paste
-the real output from your own run if you need a reference.
+### Pass criteria
 
-### Cleanup
+`verify.sh` is exit 0 only when ALL of:
+- both trust-anchor signatures verify
+- the forward succeeds and the peer reports `eligible_workers_count >= 1`
+- `import_peer_chain` returns `ok=True` with a `task_completed`
+  completion event
+- `verify_chain` on beta's chain returns True
+- alpha records exactly the three federation entry kinds
+  (`federation_capability_advertised`, `federation_task_forwarded`,
+  `federation_audit_chain_imported`)
 
-```bash
-docker compose down -v
-```
+### Docker variant
 
-(removes containers and volumes)
+`docker-compose.yml` describes a two-container variant with separate
+Postgres backends. The in-process `demo.py` is the canonical artifact
+for the paper's Section 6 claim; the Docker variant is supplementary
+and exercises the same federation primitives over real HTTP transport.
 
 ## What this proves
 
-- Federation works across coordinator boundaries with bilateral trust anchors (no central authority).
-- Capability discovery, task posting, and task execution all cross the federation boundary using the existing eight RPCs (no new RPCs needed for federation; the trust anchor and routing are operator-side).
-- Audit chain integrity is preserved across coordinators; cryptographic verification holds.
-
-## Known limitations of this demo
-
-- The trust anchor is provisioned via a shared secret in `setup.sh` for simplicity. Production deployments use signed certificates per the federation trust anchor spec.
-- The settlement transfer in the demo uses a stub escrow provider; production uses operator-chosen providers per RFC 0032.
-- The two coordinators run on the same host (different ports). Production deployments separate them by network for isolation.
-- Worker-beta is a stub logistics worker; for industrial-maintenance, scientific-ops, or other domains, swap the worker script with the matching reference agent worker from `examples/agents/`.
+- Federation works across coordinator boundaries with bilateral
+  signed trust anchors (no central directory, no global registry).
+- Capability discovery, task posting, and audit-chain interop all
+  ride on the existing eight RPCs. The only protocol additions are
+  three audit-chain entry kinds; no new wire calls.
+- Audit chain integrity is preserved across coordinators. Payload
+  tampering and link breaks in a peer's exported chain are caught
+  by the local importer.
+- Trust anchors are policy-gated: a peer that requests
+  `audit_chain_export` but only has `capability_discovery` scope is
+  silently refused (no exception, no chain entry).
 
 ## Documents this demo references
 
-- `spec/0.2.md`: the protocol
-- `rfcs/0016-federation-primitives.md`: federation trust anchors and capability sync
-- `rfcs/0032-cross-coordinator-settlement-clearing.md`: settlement transfer across federation
-- `conformance/test-suite/level3.json`: the Level 3 conformance cases this demo validates
-
-## v1.1 extensions
-
-When v1.1 lands, this demo is extended:
-
-- Multibase identifier migration (RFC 0031): worker_beta's DID uses `did:wcp:z<base58btc>` form; coord-alpha and coord-beta exchange both legacy and multibase identifiers during the compatibility window.
-- Attestation key trust classes (RFC 0033): worker_beta declares `hardware-attested-tpm2` trust class; agent_alpha's task posts `minimum_trust_class: hardware-attested-tpm2`.
-- External trust-root signed evidence (RFC 0034): worker_beta emits a `external-trust-root.iso-3691-4-amr-compliant` evidence kind tied to ISO 3691-4 certification PKI.
+- `spec/0.955.md`: the v0.955 protocol surface (8 RPCs)
+- `rfcs/0016-federation-primitives.md`: federation trust anchors and
+  capability sync (as amended at v0.955)
+- `wcp_coordinator/federation/`: the federation module this demo
+  exercises end-to-end
+- `wcp_coordinator/tests/test_federation.py`: the 11 unit tests that
+  pin the federation invariants

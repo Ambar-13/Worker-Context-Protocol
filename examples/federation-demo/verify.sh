@@ -1,70 +1,39 @@
 #!/usr/bin/env bash
-# End-to-end verification for the two-coordinator federation demo.
+# End-to-end verification for the WCP v0.955.1 federation demo.
 #
-# The verify.sh script checks:
-# 1. Both coord-alpha and coord-beta are reachable
-# 2. worker_beta is registered on coord-beta
-# 3. (When v1.1 federation lands) audit chain entries on both coordinators
-#    are mutually verifiable
+# Runs demo.py, which:
+#   1. Spins up coord-alpha and coord-beta in-process.
+#   2. Mutually exchanges signed bilateral trust anchors and verifies
+#      both signatures.
+#   3. Registers a logistics worker on coord-beta.
+#   4. Posts a transport task on coord-alpha; the federation router
+#      forwards it to coord-beta. coord-alpha records
+#      federation_task_forwarded on its audit chain.
+#   5. coord-beta records task_claimed and task_completed.
+#   6. coord-alpha imports coord-beta's audit chain segment for the
+#      claim; the segment is verified for link continuity, link
+#      binding, and payload binding; coord-alpha records
+#      federation_audit_chain_imported.
+#   7. Both audit chains pass verify_chain.
 #
-# Until v1.1 federation primitives land in the reference coordinator, this
-# script reports the v0.2 baseline check and notes the v1.1 deliverables
-# that close the remaining gaps.
+# Passes when:
+#   - both trust-anchor signatures verify
+#   - the forward succeeds with eligible_workers_count >= 1
+#   - import_peer_chain returns ok=True
+#   - both audit chains pass verify_chain
+#   - alpha records exactly 3 federation entry kinds
+#
+# Exit code 0 = PASS, non-zero = FAIL.
 
 set -uo pipefail
 
-COORD_ALPHA_URL="${COORD_ALPHA_URL:-http://localhost:9000}"
-COORD_BETA_URL="${COORD_BETA_URL:-http://localhost:9001}"
+cd "$(dirname "$0")/../.."
 
-OK=0
-FAIL=0
-SKIP=0
-
-echo "[verify] === two-coordinator federation demo verification ==="
-echo ""
-echo "[verify] checking coord-alpha at $COORD_ALPHA_URL..."
-if curl -sf -m 3 "$COORD_ALPHA_URL/wcp/health" > /dev/null 2>&1; then
-  echo "[verify]   coord-alpha reachable: OK"
-  OK=$((OK + 1))
-elif curl -sf -m 3 "$COORD_ALPHA_URL/wcp/capabilities" > /dev/null 2>&1; then
-  echo "[verify]   coord-alpha reachable (via /wcp/capabilities): OK"
-  OK=$((OK + 1))
-else
-  echo "[verify]   coord-alpha not reachable: SKIP (start with: docker compose up -d)"
-  SKIP=$((SKIP + 1))
+PYTHON="${WCP_PYTHON:-.venv/bin/python}"
+if [ ! -x "$PYTHON" ]; then
+  PYTHON="python3"
 fi
 
-echo "[verify] checking coord-beta at $COORD_BETA_URL..."
-if curl -sf -m 3 "$COORD_BETA_URL/wcp/health" > /dev/null 2>&1; then
-  echo "[verify]   coord-beta reachable: OK"
-  OK=$((OK + 1))
-elif curl -sf -m 3 "$COORD_BETA_URL/wcp/capabilities" > /dev/null 2>&1; then
-  echo "[verify]   coord-beta reachable (via /wcp/capabilities): OK"
-  OK=$((OK + 1))
-else
-  echo "[verify]   coord-beta not reachable: SKIP (start with: docker compose up -d)"
-  SKIP=$((SKIP + 1))
-fi
-
-echo ""
-echo "[verify] v1.1 federation checks (require RFC 0016 implementation):"
-echo "[verify]   capability sync between coord-alpha and coord-beta: SKIP (v1.1)"
-echo "[verify]   cross-coordinator task forwarding: SKIP (v1.1)"
-echo "[verify]   mutual audit chain verification: SKIP (v1.1)"
-echo "[verify]   settlement transfer per RFC 0032 model (ii): SKIP (v1.1)"
-SKIP=$((SKIP + 4))
-
-echo ""
-echo "[verify] === summary ==="
-echo "[verify] OK:   $OK"
-echo "[verify] FAIL: $FAIL"
-echo "[verify] SKIP: $SKIP (v1.1 deliverables; not failures)"
-echo ""
-
-if [ "$FAIL" -eq 0 ]; then
-  echo "[verify] PASS (federation demo structural scaffold verified; v1.1 federation"
-  echo "[verify]      implementation closes the SKIP items)"
-  exit 0
-fi
-echo "[verify] FAIL"
-exit 1
+"$PYTHON" examples/federation-demo/demo.py
+RC=$?
+exit $RC
