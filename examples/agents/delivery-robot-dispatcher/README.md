@@ -7,7 +7,7 @@ Reference implementation of the robot-as-agent pattern. An autonomous mobile rob
 - An autonomous robot acting as a WCP agent.
 - A typed `continuation_of` block linking two tasks across the audit chain.
 - A different worker class (`semi_autonomous` stationary manipulator) claiming the follow-up posted by the autonomous-robot AMR.
-- All of the above through the existing nine RPCs. No protocol surface change.
+- All of the above through the existing eight RPCs. No protocol surface change.
 
 ## What this deployment is NOT
 

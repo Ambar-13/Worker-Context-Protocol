@@ -116,10 +116,30 @@ class ConformanceRunner:
         self, template: dict[str, Any], context: dict[str, Any]
     ) -> dict[str, Any]:
         # Simple {{key}} substitution; recursively walks template.
+        # `{{uuid}}` is special-cased to produce a fresh uuid per
+        # substitution site (not per run), so a single test case can
+        # safely use multiple {{uuid}} placeholders for distinct ids.
         def walk(node: Any) -> Any:
             if isinstance(node, str):
                 if node.startswith("{{") and node.endswith("}}"):
-                    return context.get(node[2:-2].strip(), node)
+                    key = node[2:-2].strip()
+                    if key == "uuid":
+                        return str(uuid.uuid4())
+                    return context.get(key, node)
+                # Inline {{uuid}} inside a longer string (e.g.
+                # "test-bond-{{uuid}}") is also expanded.
+                if "{{uuid}}" in node:
+                    parts: list[str] = []
+                    i = 0
+                    while i < len(node):
+                        j = node.find("{{uuid}}", i)
+                        if j == -1:
+                            parts.append(node[i:])
+                            break
+                        parts.append(node[i:j])
+                        parts.append(str(uuid.uuid4()))
+                        i = j + len("{{uuid}}")
+                    return "".join(parts)
                 return node
             if isinstance(node, dict):
                 return {k: walk(v) for k, v in node.items()}

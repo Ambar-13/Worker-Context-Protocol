@@ -1,5 +1,11 @@
 """
-The 13 adversarial scenarios from PLAN.md Section 7 / spec/d4-verification.md.
+Lifecycle-layer adversarial scenarios from PLAN.md Section 7 / spec/d4-verification.md.
+
+11 scenarios at v0.955 (the original v0.95 set of 13 collapsed to 11 when
+settlement was removed; the two settlement-dispute scenarios no longer
+apply because settlement is no longer a protocol concern). Cryptographic
+attack scenarios (nonce replay, key revocation, payload tamper, signature
+forgery) live in test_adversarial_crypto.py.
 
 Each scenario verifies the spec response under hostile inputs.
 """

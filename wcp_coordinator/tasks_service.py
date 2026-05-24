@@ -95,7 +95,12 @@ class TasksService:
         task: dict[str, Any],
         expiry: str,
         supervision: Optional[dict[str, Any]] = None,
+        informational: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
+        # `informational` carries v0.95+ non-semantic siblings of `task`
+        # (agent_class, bond_ref, etc.). The coordinator records them on
+        # the audit chain entry but never branches matching or verifier
+        # logic on them.
         # v0.955: reject legacy settlement / override fields up-front.
         if "settlement" in task:
             raise ValueError(
@@ -164,13 +169,23 @@ class TasksService:
         # task_voided, task_aborted) and run their own value-flow logic.
         accounting_ref = task.get("accounting_ref")
 
+        audit_payload: dict[str, Any] = {
+            "task_id": task_id,
+            "accounting_ref": accounting_ref,
+        }
+        # Record informational siblings on the audit chain entry for the
+        # forensic record. The verifier never sees them.
+        if informational:
+            audit_payload["informational"] = informational
+        # Section 3.6 of the paper / spec/0.95 §3: continuation_of is
+        # preserved on the audit chain entry verbatim.
+        if "continuation_of" in task:
+            audit_payload["continuation_of"] = task["continuation_of"]
+
         self._audit.append(
             event_type="task_posted",
             actor_did=posted_by,
-            payload={
-                "task_id": task_id,
-                "accounting_ref": accounting_ref,
-            },
+            payload=audit_payload,
             task_id=task_id,
         )
 

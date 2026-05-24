@@ -2,7 +2,7 @@
 
 Detailed test bundle definitions for the three conformance levels in `spec/conformance.md`.
 
-**v0.955 note:** this document was written against the v0.95 / v0.2 surface (nine RPCs, settlement primitives, dispute / refund states). The canonical machine-runnable suites at `conformance/test-suite/level{1,2,3}.json` track the v0.955 surface (eight RPCs, recheck flow, no settlement). Where this prose and the JSON bundles disagree, the JSON bundles bind. The narrative content below is preserved for historical context; future RFCs may rewrite it.
+**v0.955 note:** this document was written against the v0.95 / v0.2 surface (eight RPCs, settlement primitives, dispute / refund states). The canonical machine-runnable suites at `conformance/test-suite/level{1,2,3}.json` track the v0.955 surface (eight RPCs, recheck flow, no settlement). Where this prose and the JSON bundles disagree, the JSON bundles bind. The narrative content below is preserved for historical context; future RFCs may rewrite it.
 
 ## Level 1: Protocol surface (60 tests)
 
@@ -10,7 +10,7 @@ Test count is approximate; suite versioning per `spec/semver-policy.md`.
 
 ### 1.1 RPC surface (9 tests, one per method)
 
-For each of the 9 RPCs, send a syntactically valid request with valid payload; verify the response shape matches `spec/schemas/rpc-envelopes.json`.
+For each of the 8 RPCs, send a syntactically valid request with valid payload; verify the response shape matches `spec/schemas/rpc-envelopes.json`.
 
 ### 1.2 Schema validation (12 tests)
 

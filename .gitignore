@@ -24,3 +24,4 @@ dist/
 *.swp
 *.swo
 *~
+wcp_coordinator_dev.db

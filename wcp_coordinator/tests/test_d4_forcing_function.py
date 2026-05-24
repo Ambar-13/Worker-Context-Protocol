@@ -1,5 +1,5 @@
 """
-D4 forcing function in code: the same nine RPCs handle all six cells
+D4 forcing function in code: the same eight RPCs handle all six cells
 (3 descriptors x 2 worker classes) without modification.
 
 The asymmetry between cells lives only in `descriptor_payload` and
@@ -123,7 +123,7 @@ def test_d4_cell_round_trips(
     cell_name, worker_class, descriptor_type, modes, kinds, evidence_specs,
 ):
     """For each of the 6 D4 cells, post -> claim -> execute -> attest -> settle
-    using the EXACT SAME 9 RPCs. No new RPC. No new parameter."""
+    using the EXACT SAME 8 RPCs. No new RPC. No new parameter."""
     _, tasks, audit = services
     w = Identity(cell_name)
     _pub(services, w, principal_identity, worker_class)

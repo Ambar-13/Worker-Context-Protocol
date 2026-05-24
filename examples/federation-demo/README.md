@@ -105,30 +105,11 @@ wcp dev --example federation-demo
 
 ### Expected output
 
-`agent_alpha.py` prints something like:
-
-```
-[agent_alpha] subscribing with federation filter on coord-alpha (ws://localhost:9000)...
-[agent_alpha] discovered 1 federated worker: did:wcp:logistics-worker-1 (on coord-beta)
-[agent_alpha] posting transport task for delivery to logistics-zone-c
-[agent_alpha] task posted: task_id=t_b8a16l7si on coord-alpha
-[agent_alpha] task forwarded to coord-beta per federation routing
-[agent_alpha] watching for execution on coord-beta...
-[agent_alpha] worker claimed at 2026-05-23T14:32:01Z
-[agent_alpha] worker attested at 2026-05-23T14:32:08Z (sensor-witness)
-[agent_alpha] settlement transfer recorded in audit chain: tr_alpha_to_beta_1
-[agent_alpha] cross-coordinator audit chain verified: chain_intact=true, entries=4
-```
-
-`verify.sh` prints something like:
-
-```
-[verify] reading audit chain from coord-alpha for task_id=t_b8a16l7si
-[verify] reading audit chain from coord-beta for task_id=t_b8a16l7si
-[verify] cross-coordinator hash-chain continuity: OK
-[verify] settlement_transfer audit entry: present on both
-[verify] verify.sh PASS
-```
+The exact output is whatever `setup.sh` and `verify.sh` actually print
+when you run them against a live two-coordinator deployment. Inline
+"expected output" snippets are deliberately omitted from this README to
+avoid drift between the documented and the actual behaviour; copy/paste
+the real output from your own run if you need a reference.
 
 ### Cleanup
 
@@ -141,9 +122,8 @@ docker compose down -v
 ## What this proves
 
 - Federation works across coordinator boundaries with bilateral trust anchors (no central authority).
-- Capability discovery, task posting, and task execution all cross the federation boundary using the existing nine RPCs (no new RPCs needed for federation; the trust anchor and routing are operator-side).
+- Capability discovery, task posting, and task execution all cross the federation boundary using the existing eight RPCs (no new RPCs needed for federation; the trust anchor and routing are operator-side).
 - Audit chain integrity is preserved across coordinators; cryptographic verification holds.
-- Settlement clearing across federation (Model (ii) per RFC 0032) records the transfer as a typed audit entry on both coordinators.
 
 ## Known limitations of this demo
 

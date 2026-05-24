@@ -32,7 +32,7 @@ Browser: open `http://localhost:8765`, the inspector now shows the coordinator's
 
 ### 02:45 - 03:30 Six domains
 Cut to a screen displaying the six reference agents (table from the README).
-Point at each: "Same nine RPCs. Different descriptor payloads. The verifier never branches on worker class."
+Point at each: "Same eight RPCs. Different descriptor payloads. The verifier never branches on worker class."
 
 ### 03:30 - 04:15 LLM integration
 Show `docs/llm-integration.md` opened to the Anthropic example.

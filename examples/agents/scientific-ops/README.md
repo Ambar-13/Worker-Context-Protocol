@@ -24,4 +24,4 @@ Or simply `./run.sh`.
 
 ## What this proves
 
-The same nine RPCs handle this research-operations dispatch with no modification. The variance vs the other five reference agents lives entirely in `descriptor_payload` and the `(mode, kind)` pairs in the attestation requirement.
+The same eight RPCs handle this research-operations dispatch with no modification. The variance vs the other five reference agents lives entirely in `descriptor_payload` and the `(mode, kind)` pairs in the attestation requirement.

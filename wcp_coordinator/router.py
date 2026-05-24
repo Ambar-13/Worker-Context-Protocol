@@ -64,7 +64,7 @@ def make_app(
 
     @router.get("/health")
     def health() -> dict[str, str]:
-        return {"status": "ok", "schema_version": "wcp/0.1"}
+        return {"status": "ok", "schema_version": "wcp/0.2"}
 
     @router.post("/rpc")
     def rpc(payload: dict, db: Session = Depends(_get_session)) -> JSONResponse:

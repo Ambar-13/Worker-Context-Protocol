@@ -1,8 +1,8 @@
 """
 JSON-RPC method dispatch for the WCP coordinator.
 
-Each method is wired to a service method; all errors mapped to spec/0.1.md
-Section 11 error codes.
+Each method is wired to a service method; all errors mapped to the
+normative taxonomy in `spec/error-codes.md` (companion to spec/0.955.md).
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class JsonRpcError(Exception):
         return d
 
 
-# Spec/0.1.md Section 11 error codes.
+# spec/error-codes.md taxonomy (v0.955).
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
 METHOD_NOT_FOUND = -32601
@@ -50,15 +50,23 @@ TASK_NOT_FOUND = -42001
 TASK_PREEMPTED = -42002
 TASK_EXPIRED = -42003
 TASK_STATE_INVALID = -42004
+# Added at v0.955: legacy descriptor migration error (settlement block, or
+# legacy override_authority / override_audit_required / override_allowed).
+INVALID_DESCRIPTOR = -42010
 
 HEARTBEAT_TIMEOUT = -43001
 
-SETTLEMENT_FAILED = -44001
+# -44xxx range removed at v0.955: settlement is no longer a protocol concern.
+# (SETTLEMENT_FAILED = -44001 deleted.)
 
 SUBCONTRACT_FORBIDDEN = -45001
 OUT_OF_SCOPE_TASK_CLASS = -45002
 
 POLICY_VIOLATION = -46001
+
+# Added at v0.955: bounded attestation retry semantics.
+RECHECK_MAX_ATTEMPTS_REACHED = -47001
+RECHECK_NOT_AVAILABLE_FOR_TASK = -47002
 
 
 def _map_value_error(exc: ValueError) -> JsonRpcError:
@@ -79,6 +87,12 @@ def _map_value_error(exc: ValueError) -> JsonRpcError:
         return JsonRpcError(OUT_OF_SCOPE_TASK_CLASS, msg)
     if msg.startswith("POLICY_VIOLATION"):
         return JsonRpcError(POLICY_VIOLATION, msg)
+    if msg.startswith("INVALID_DESCRIPTOR"):
+        return JsonRpcError(INVALID_DESCRIPTOR, msg)
+    if msg.startswith("RECHECK_MAX_ATTEMPTS_REACHED"):
+        return JsonRpcError(RECHECK_MAX_ATTEMPTS_REACHED, msg)
+    if msg.startswith("RECHECK_NOT_AVAILABLE_FOR_TASK"):
+        return JsonRpcError(RECHECK_NOT_AVAILABLE_FOR_TASK, msg)
     return JsonRpcError(INVALID_PARAMS, msg)
 
 
@@ -90,20 +104,23 @@ class Dispatcher:
     ) -> None:
         self._caps = capabilities
         self._tasks = tasks
+        # The wire surface is EIGHT RPCs (see spec/0.955.md Section 1).
+        # `tasks/execute.event` is the in-session event sub-channel of
+        # `tasks/execute`; the dispatcher exposes both keys for client
+        # convenience, but the wire-surface count is eight, not nine.
+        # `tasks/settle` was removed at v0.955; calls return
+        # -32601 METHOD_NOT_FOUND via the standard dispatch path.
         self._methods: dict[str, Callable[..., Any]] = {
             "capabilities/list": self._capabilities_list,
             "capabilities/subscribe": self._capabilities_subscribe,
             "tasks/post": self._tasks_post,
             "tasks/claim": self._tasks_claim,
             "tasks/execute": self._tasks_execute_open,
-            "tasks/execute.event": self._tasks_execute_event,
+            "tasks/execute.event": self._tasks_execute_event,  # sub-channel of tasks/execute
             "tasks/attest": self._tasks_attest,
             "tasks/supervise": self._tasks_supervise,
             "tasks/abort": self._tasks_abort,
         }
-        # tasks/settle removed at v0.955 (settlement is no longer a protocol
-        # concern). Calls to it return -32601 METHOD_NOT_FOUND via the standard
-        # dispatch path.
 
     def dispatch(self, method: str, params: dict | None) -> Any:
         params = params or {}
@@ -148,11 +165,18 @@ class Dispatcher:
         task: dict,
         expiry: str,
         supervision: dict | None = None,
+        **informational: Any,
     ) -> dict[str, Any]:
+        # The v0.95+ spec lets agents attach informational fields alongside
+        # the task (e.g. agent_class, bond_ref). The coordinator records
+        # them on the audit chain entry but MUST NOT branch matching or
+        # verifier behaviour on them — they are observational, not
+        # semantic. Unknown extras are accepted for forward-compat.
         return self._tasks.post(
             task=task,
             expiry=expiry,
             supervision=supervision,
+            informational=informational or None,
         )
 
     def _tasks_claim(

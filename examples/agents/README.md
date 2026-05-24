@@ -1,6 +1,6 @@
 # Reference Agents
 
-Six reference agents demonstrate WCP's D4 forcing function across institutionally distinct domains. Each runs against a local coordinator started by `wcp dev`, exercises the same nine RPCs, and completes a full task lifecycle (post -> claim -> execute -> attest -> settle).
+Six reference agents demonstrate WCP's D4 forcing function across institutionally distinct domains. Each runs against a local coordinator started by `wcp dev`, exercises the same eight RPCs, and completes a full task lifecycle (post -> claim -> execute -> attest -> settle).
 
 | Agent | Domain | Worker class focus | Attestation modes |
 |---|---|---|---|
@@ -11,7 +11,7 @@ Six reference agents demonstrate WCP's D4 forcing function across institutionall
 | `field-research/` | scientific field operations | human researcher | sensor-witness (GPS + timestamp + signed sensor) |
 | `healthcare-logistics/` | regulated healthcare operations | hybrid courier | sensor-witness (cold-chain temperature) + owner-sign-off (chain-of-custody) |
 
-These are six visibly different institutional domains. The same nine RPCs handle every one. This is the proof in code of `spec/d4-verification-0.2.md`.
+These are six visibly different institutional domains. The same eight RPCs handle every one. This is the proof in code of `spec/d4-verification-0.2.md`.
 
 ## Run any agent
 

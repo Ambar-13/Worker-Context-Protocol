@@ -18,7 +18,7 @@ Three application-layer descriptors x two worker classes = six cells. Result: al
 
 ## Federation extension cells (new at v0.2)
 
-Federation primitives in `federation.md` ride on the same nine RPCs. We verify that the federation surface holds without new RPCs across four representative cells.
+Federation primitives in `federation.md` ride on the same eight RPCs. We verify that the federation surface holds without new RPCs across four representative cells.
 
 ### F1: Cross-coordinator capability discovery
 

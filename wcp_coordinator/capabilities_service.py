@@ -39,9 +39,13 @@ class CapabilitiesService:
         except DIDResolutionError as exc:
             raise ValueError(f"DID_NOT_RESOLVED: {exc}") from exc
 
-        if capabilities.get("schema_version") != "wcp/0.1":
+        # Accept both wcp/0.1 and wcp/0.2 capability envelopes. The v0.2
+        # envelope is the v0.955 default; v0.1 is grandfathered for
+        # back-compat. The capability structure itself is identical.
+        if capabilities.get("schema_version") not in ("wcp/0.1", "wcp/0.2"):
             raise ValueError(
-                "INVALID_PARAMS: capabilities.schema_version must be wcp/0.1"
+                "INVALID_PARAMS: capabilities.schema_version must be "
+                "wcp/0.1 or wcp/0.2"
             )
         worker_class_str = capabilities.get("class")
         try:

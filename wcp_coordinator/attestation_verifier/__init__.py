@@ -135,20 +135,24 @@ DEFAULT_REGISTRY: dict[str, set[str]] = {
     "sensor-witness": {
         "gps_track",
         "indoor_pose_track",
+        "manipulator_pose_track",  # added at v0.95 for embodied-agent robot work
         "weight_delta",
         "photo_with_exif",
         "signed_sensor_recording",
         "coverage_map",
         "gps_stamped_checkpoint_coverage",
+        "thermal_image_capture_manifest",  # paper §3.1 example
     },
     "third-party-witness": {
         "customer_signature",
         "phone_app_attestation",
         "iot_beacon_proximity",
+        "inspection_checklist_signed",  # paper §3.1 example
     },
     "cryptographic-presence": {
         "pose_bounded_presence_proof",
         "geofence_check_in_out",
+        "cryptographic_nonce_exchange",  # paper §4 unified kind
     },
     "owner-sign-off": {
         "self_attestation_with_waiver",

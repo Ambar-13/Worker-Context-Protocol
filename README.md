@@ -45,7 +45,7 @@ To explore a different domain, swap the `--domain` flag. The 14 templates each s
 
 ## Six reference agents across institutionally distinct domains
 
-The same nine RPCs handle every domain below. The variance lives in `descriptor_payload` and the registered `(mode, kind)` pairs the verifier accepts; the RPC surface is unchanged. This is the D4 forcing function proven in code.
+The same eight RPCs handle every domain below. The variance lives in `descriptor_payload` and the registered `(mode, kind)` pairs the verifier accepts; the RPC surface is unchanged. This is the D4 forcing function proven in code.
 
 | Domain | Path | What the agent does |
 |---|---|---|

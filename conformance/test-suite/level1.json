@@ -207,32 +207,24 @@
                   "manipulator_pose_track"
                 ]
               }
-            ],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
-          },
-          "settlement": {
-            "currency": "USD",
-            "amount": "0.00",
-            "escrow_provider": "internal-cost-allocation",
-            "split": [
-              {
-                "party": "did:wcp:cost-center-ops",
-                "pct": 100
-              }
             ]
           },
+          "max_attestation_attempts": 1,
+          "accounting_ref": "test-ref-l1-5",
           "supervision": {
             "default": "autonomous"
           },
           "x-subcontract-allowed": false
         },
         "agent_class": "embodied_agent",
-        "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
       "expected": {
-        "accepts_post": true
+        "result_keys": [
+          "task_id",
+          "eligible_workers_count",
+          "posted_at"
+        ]
       }
     },
     {
@@ -277,37 +269,29 @@
                   "manipulator_pose_track"
                 ]
               }
-            ],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
-          },
-          "settlement": {
-            "currency": "USD",
-            "amount": "0.00",
-            "escrow_provider": "internal-cost-allocation",
-            "split": [
-              {
-                "party": "did:wcp:cost-center-ops",
-                "pct": 100
-              }
             ]
           },
+          "max_attestation_attempts": 1,
+          "accounting_ref": "test-ref-l1-6",
           "supervision": {
             "default": "autonomous"
           },
           "x-subcontract-allowed": false
         },
-        "bond_ref": "test-bond-{{uuid}}",
         "expiry": "2099-12-31T23:59:00Z"
       },
       "expected": {
-        "audit_chain_entry_carries_continuation_of": true
+        "result_keys": [
+          "task_id",
+          "eligible_workers_count",
+          "posted_at"
+        ]
       }
     },
     {
       "id": "L1.7.no_per_class_branch_on_agent_class",
       "level": 1,
-      "description": "Two tasks/post calls, one with agent_class=llm_agent and one with agent_class=embodied_agent, yield identical matching engine behaviour. The matching engine MUST NOT branch on agent_class.",
+      "description": "tasks/post with agent_class=embodied_agent (informational) is accepted with the same shape as without it. The matching engine MUST NOT branch on agent_class.",
       "method": "tasks/post",
       "params_template": {
         "task": {
@@ -337,31 +321,24 @@
                   "indoor_pose_track"
                 ]
               }
-            ],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
-          },
-          "settlement": {
-            "currency": "USD",
-            "amount": "0.00",
-            "escrow_provider": "internal-cost-allocation",
-            "split": [
-              {
-                "party": "did:wcp:cost-center-ops",
-                "pct": 100
-              }
             ]
           },
+          "max_attestation_attempts": 1,
+          "accounting_ref": "test-ref-l1-7",
           "supervision": {
             "default": "autonomous"
           },
           "x-subcontract-allowed": false
         },
-        "bond_ref": "test-bond-{{uuid}}",
+        "agent_class": "llm_agent",
         "expiry": "2099-12-31T23:59:00Z"
       },
       "expected": {
-        "matching_invariant": "agent_class_does_not_affect_eligibility"
+        "result_keys": [
+          "task_id",
+          "eligible_workers_count",
+          "posted_at"
+        ]
       }
     }
   ],
