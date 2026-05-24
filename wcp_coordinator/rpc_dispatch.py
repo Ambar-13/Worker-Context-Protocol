@@ -104,26 +104,29 @@ class Dispatcher:
     ) -> None:
         self._caps = capabilities
         self._tasks = tasks
-        # Eight load-bearing RPCs (paper Section 3.2 and spec/0.955.md
-        # Section 1): capabilities/list, capabilities/subscribe,
-        # tasks/post, tasks/claim, tasks/execute, tasks/attest,
-        # tasks/supervise, tasks/abort.
+        # WCP v0.955.1 wire surface: ten RPCs.
         #
-        # The dispatch table also exposes three operational sub-channels
-        # that the paper treats as part of their parent RPC's lifecycle:
-        #   - tasks/execute.event   : in-session event channel of tasks/execute
-        #   - capabilities/upsert   : worker self-registration; the spec
-        #                             treats this as the write counterpart
-        #                             of capabilities/list (which, per
-        #                             spec/0.2.md §3.1, is "worker ->
-        #                             coordinator" — i.e. the worker side
-        #                             writes its descriptor up). Explicit
-        #                             method name added at v0.955.1 so
-        #                             over-the-wire conformance no longer
-        #                             requires out-of-band DB seeding.
-        #   - audit/observe         : read-only audit-chain segment fetch.
-        #                             Used by conformance to inspect chain
-        #                             contents without privileged access.
+        # Eight LIFECYCLE RPCs (paper Section 3.2 and spec/0.955.md
+        # Section 1) carry task coordination:
+        #   capabilities/list, capabilities/subscribe,
+        #   tasks/post, tasks/claim, tasks/execute, tasks/attest,
+        #   tasks/supervise, tasks/abort
+        #
+        # Two ADMINISTRATIVE RPCs (added at v0.955.1) support
+        # over-the-wire administration:
+        #   capabilities/upsert  - worker self-registration (a write
+        #                          RPC; not the read direction of
+        #                          capabilities/list — independent
+        #                          method, distinct authorization
+        #                          shape, distinct state effect)
+        #   audit/observe        - read-only audit-chain segment fetch
+        #                          by claim_id or task_id (new
+        #                          `audit/` namespace)
+        #
+        # In-session sub-channel of tasks/execute (the only TRUE
+        # sub-channel; it requires an active execute session):
+        #   tasks/execute.event  - heartbeats and application events
+        #                          flowing over the execute session
         #
         # `tasks/settle` was removed at v0.955; calls return -32601
         # METHOD_NOT_FOUND via the standard dispatch path.
