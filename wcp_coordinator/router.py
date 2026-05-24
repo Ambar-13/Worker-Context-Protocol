@@ -148,6 +148,29 @@ def make_app(
                                 }
                             )
                         )
+                    except Exception as exc:
+                        # Surface unhandled exceptions to the client as
+                        # an internal error rather than silently dropping
+                        # the connection. Without this branch a stray
+                        # TypeError (e.g. unexpected kwarg) takes down
+                        # the whole WebSocket session and the client
+                        # sees only a timeout.
+                        db.rollback()
+                        log.exception(
+                            "dispatch failed: method=%s", method
+                        )
+                        await websocket.send_text(
+                            json.dumps(
+                                {
+                                    "jsonrpc": "2.0",
+                                    "id": req_id,
+                                    "error": {
+                                        "code": -32603,
+                                        "message": f"Internal error: {type(exc).__name__}: {exc}",
+                                    },
+                                }
+                            )
+                        )
                 finally:
                     db.close()
         except Exception:

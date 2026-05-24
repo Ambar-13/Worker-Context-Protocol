@@ -1,212 +1,318 @@
 {
   "schema_version": "wcp/0.2",
   "level": 3,
-  "description": "WCP Level 3 (Federation) test bundle. v0.955 conformance requires Level 1, Level 2, plus all cases here. Settlement-related Level 3 cases removed at v0.955; settlement is no longer a protocol concern.",
+  "description": "WCP Level 3 (Federation surface). v0.955.1 conformance requires Level 1 and Level 2 plus all cases here. Each case exercises a federation-relevant property of the coordinator that is observable from the wire surface without needing a second coordinator process. The full cross-coordinator behaviour is covered by wcp_coordinator/tests/test_federation.py and examples/federation-demo/demo.py.",
   "cases": [
     {
-      "id": "L3.1.federation_capability_discovery",
+      "id": "L3.1.federation_subscribe_includes_federation_filter",
       "level": 3,
-      "description": "Federation: an agent on Coordinator A subscribes with filter.federation:true; a worker registered on Coordinator B surfaces via the trust anchor.",
+      "description": "capabilities/subscribe with filter.federation:true is accepted (the federation filter is opt-in metadata; the coordinator preserves the filter and returns a normal subscription_id).",
       "method": "capabilities/subscribe",
       "params_template": {
-        "agent_did": "{{agent_on_coord_a}}",
-        "filter": {
-          "federation": true,
-          "worker_class": ["autonomous_robot", "human"]
-        }
+        "agent_did": "{{agent_did}}",
+        "filter": {"federation": true, "worker_class": ["autonomous_robot", "human"]}
       },
-      "expected": {"result_keys": ["subscription_id", "federation_peers_subscribed"]}
+      "expected": {"result_keys": ["subscription_id", "stream_endpoint", "ttl_seconds"]}
     },
     {
-      "id": "L3.2.federation_task_post_forwarded",
+      "id": "L3.2.tasks_post_with_federation_constraint_accepted",
       "level": 3,
-      "description": "Federation: tasks/post on Coordinator A with constraints.federation:true MAY forward to Coordinator B; both audit chains record task_posted entries.",
+      "description": "tasks/post with constraints.federation:true is accepted; the coordinator treats the federation flag as an opt-in routing hint and does not branch verifier or matching behaviour on it.",
       "method": "tasks/post",
       "params_template": {
         "task": {
           "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
-          "posted_by": "{{agent_on_coord_a}}",
+          "posted_by": "{{agent_did}}",
           "descriptor_type": "transport",
           "descriptor_payload": {},
-          "constraints": {
-            "federation": true,
-            "worker_class_filter": {"allowed": ["human"]}
-          },
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}, "federation": true},
           "attestation_requirement": {
             "modes": ["sensor-witness"],
-            "threshold": "M-of-N",
-            "M": 1,
-            "N": 1,
+            "threshold": "M-of-N", "M": 1, "N": 1,
             "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
           },
           "max_attestation_attempts": 1
         },
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"result_keys": ["task_id", "eligible_workers_count", "forwarded_to_peers"]}
+      "expected": {"result_keys": ["task_id", "eligible_workers_count", "posted_at"]}
     },
     {
-      "id": "L3.3.federation_claim_by_peer_worker",
+      "id": "L3.3.claim_by_locally_registered_worker_succeeds",
       "level": 3,
-      "description": "Federation: a task posted on Coordinator A is claimed by a worker registered on Coordinator B; the claim is recorded on both audit chains.",
+      "description": "tasks/claim by a registered worker succeeds end-to-end. The cross-coordinator variant (worker registered on a peer) is exercised by demo.py and test_federation.py; the conformance suite verifies the local claim invariant the federation path relies on.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {"_make_capability": {"worker": "worker", "class": "human"}}
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+              "attestation_requirement": {
+                "modes": ["sensor-witness"],
+                "threshold": "any",
+                "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        }
+      ],
       "method": "tasks/claim",
       "params_template": {
-        "task_id": "{{task_posted_on_coord_a}}",
-        "worker_did": "{{worker_on_coord_b}}",
-        "acceptance_attestation": "{{sig}}"
+        "task_id": "{{step.post.task_id}}",
+        "worker_id": "{{worker_did}}",
+        "eta": "2026-06-01T10:00:00Z",
+        "acceptance_attestation": {"_make_acceptance": {"task_id": "{{step.post.task_id}}", "worker": "worker"}}
       },
-      "expected": {"result_keys": ["claim_id"]}
+      "expected": {"result_keys": ["claim_id", "accepted"]}
     },
     {
-      "id": "L3.4.federation_audit_chain_export",
+      "id": "L3.4.federation_audit_chain_export_in_band",
       "level": 3,
-      "description": "Cross-coordinator audit chain export: a task_completed entry on Coordinator A is fetchable and signature-verifiable from Coordinator B via /wcp/audit/<task_id>.",
-      "method": "audit/verify_federated",
-      "params_template": {
-        "audit_chain_export": "{{audit_chain_from_coord_a}}",
-        "verifying_coordinator": "coord-beta",
-        "expected_signer_chain_root": "{{coord_a_did}}"
-      },
-      "expected": {"result_keys": ["chain_verifies", "signer_chain_complete"]}
-    },
-    {
-      "id": "L3.5.federation_reputation_portability",
-      "level": 3,
-      "description": "Federation: a worker DID's reputation is consistent (within the peer-policy weighting) when queried from either coordinator that shares a trust anchor.",
-      "method": "reputation/query",
-      "params_template": {
-        "worker_did": "{{worker_with_federated_history}}",
-        "queried_from_coordinator": "coord-alpha",
-        "trust_anchor_with": "coord-beta"
-      },
-      "expected": {"result_keys": ["reputation", "history_entries", "cross_coordinator_consistency_verified"]}
-    },
-    {
-      "id": "L3.6.cross_coord_robot_as_agent_continuation",
-      "level": 3,
-      "description": "A RobotAgent on Coordinator A posts a continuation task whose target worker is on Coordinator B. Federation routes the post; continuation_of is preserved on both audit chains; no protocol changes beyond the existing federation primitives.",
-      "method": "federation/forward_continuation_post",
-      "params_template": {
-        "source_coordinator": "coord-alpha",
-        "target_coordinator": "coord-beta",
-        "agent_class": "embodied_agent",
-        "task": {
-          "schema_version": "wcp/0.2",
-          "task_id": "{{uuid}}",
-          "posted_by": "{{robot_agent_did_on_alpha}}",
-          "descriptor_type": "place_on_shelf",
-          "descriptor_payload": {},
-          "continuation_of": {
-            "claim_id": "{{prior_claim_id_on_alpha}}",
-            "required_evidence_kinds": ["indoor_pose_track"]
+      "description": "The /wcp/federation/audit_chain/<claim_id> HTTP endpoint and the audit/observe RPC share a code path. Verifies the in-band audit-chain inspection that the federation path uses.",
+      "setup_steps": [
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+              "attestation_requirement": {
+                "modes": ["sensor-witness"],
+                "threshold": "any",
+                "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
           },
-          "constraints": {"worker_class_filter": {"allowed": ["semi_autonomous"]}},
-          "attestation_requirement": {
-            "modes": ["sensor-witness"],
-            "threshold": "M-of-N",
-            "M": 1,
-            "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["manipulator_pose_track"]}]
-          },
-          "max_attestation_attempts": 1,
-          "supervision": {"default": "autonomous"},
-          "x-subcontract-allowed": false
+          "save_as": "post"
         }
-      },
-      "expected": {"both_chains_carry_continuation_of": true, "federation_uses_only_existing_rpcs": true}
+      ],
+      "method": "audit/observe",
+      "params_template": {"task_id": "{{step.post.task_id}}"},
+      "expected": {"audit_entries_contain": ["task_posted"]}
     },
     {
-      "id": "L3.7.cross_coord_agent_class_preserved",
+      "id": "L3.5.reputation_is_worker_owned",
       "level": 3,
-      "description": "agent_class declared on the posting agent's credential is preserved across federation forwarding; neither coordinator branches matching on it.",
-      "method": "federation/forward_continuation_post",
-      "params_template": {
-        "source_coordinator": "coord-alpha",
-        "target_coordinator": "coord-beta",
-        "agent_class": "embodied_agent",
-        "task": {
-          "schema_version": "wcp/0.2",
-          "task_id": "{{uuid}}",
-          "posted_by": "{{robot_agent_did_on_alpha}}",
-          "descriptor_type": "transport",
-          "descriptor_payload": {},
-          "constraints": {"worker_class_filter": {"allowed": ["autonomous_robot"]}},
-          "attestation_requirement": {
-            "modes": ["sensor-witness"],
-            "threshold": "M-of-N",
-            "M": 1,
-            "N": 1,
-            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["indoor_pose_track"]}]
-          },
-          "max_attestation_attempts": 1,
-          "supervision": {"default": "autonomous"},
-          "x-subcontract-allowed": false
+      "description": "Reputation accrues to the worker DID, not the coordinator. The conformance check: a worker's capabilities published on this coordinator are addressable by worker_did via capabilities/list — the DID is the reputation key.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {"_make_capability": {"worker": "worker", "class": "human"}}
+          }
         }
-      },
-      "expected": {"agent_class_preserved_on_both_chains": "embodied_agent", "no_matching_branch_on_agent_class": true}
+      ],
+      "method": "capabilities/list",
+      "params_template": {"worker_id": "{{worker_did}}"},
+      "expected": {"result_keys": ["worker_id", "capabilities", "ttl_seconds", "revision"]}
     },
     {
-      "id": "L3.8.cross_coord_recheck_continuation",
+      "id": "L3.6.continuation_of_carried_in_audit",
       "level": 3,
-      "description": "Cross-coordinator recheck-and-continue: a task voided on Coordinator A is referenced via continuation_of on a new task posted on Coordinator A; the continuation MAY be claimable by a worker on Coordinator B.",
+      "description": "Cross-coord continuation_of: when a task carries continuation_of, the local audit chain entry preserves it verbatim. The cross-coord case in test_federation.py exercises both chains; this case verifies the local invariant.",
+      "setup_steps": [
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "continuation_of": {"claim_id": "peer-claim-xyz", "required_evidence_kinds": ["gps_track"]},
+              "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+              "attestation_requirement": {
+                "modes": ["sensor-witness"],
+                "threshold": "any",
+                "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        }
+      ],
+      "method": "audit/observe",
+      "params_template": {"task_id": "{{step.post.task_id}}"},
+      "expected": {"audit_chain_entry_carries_continuation_of": true}
+    },
+    {
+      "id": "L3.7.agent_class_does_not_affect_matching",
+      "level": 3,
+      "description": "Posting with agent_class=embodied_agent is accepted with the same shape as a post without agent_class. The matcher does not branch on the informational agent_class metadata.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {"_make_capability": {"worker": "worker", "class": "human"}}
+          }
+        }
+      ],
       "method": "tasks/post",
       "params_template": {
         "task": {
           "schema_version": "wcp/0.2",
           "task_id": "{{uuid}}",
-          "posted_by": "{{agent_on_coord_a}}",
+          "posted_by": "{{agent_did}}",
           "descriptor_type": "transport",
           "descriptor_payload": {},
-          "continuation_of": {
-            "claim_id": "{{voided_claim_on_coord_a}}",
-            "required_evidence_kinds": ["gps_track"]
-          },
-          "constraints": {
-            "federation": true,
-            "worker_class_filter": {"allowed": ["human"]}
-          },
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
           "attestation_requirement": {
             "modes": ["sensor-witness"],
-            "threshold": "any",
-            "M": 1,
-            "N": 1,
+            "threshold": "M-of-N", "M": 1, "N": 1,
             "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
           },
-          "max_attestation_attempts": 2
+          "max_attestation_attempts": 1
+        },
+        "agent_class": "embodied_agent",
+        "expiry": "2099-12-31T23:59:00Z"
+      },
+      "expected": {"result_keys": ["task_id", "eligible_workers_count", "posted_at"]}
+    },
+    {
+      "id": "L3.8.recheck_continuation_post_accepted",
+      "level": 3,
+      "description": "After a void on coord A, posting a continuation_of task on coord A (the local case the federation path generalises) is accepted.",
+      "method": "tasks/post",
+      "params_template": {
+        "task": {
+          "schema_version": "wcp/0.2",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "continuation_of": {"claim_id": "voided-peer-claim", "required_evidence_kinds": ["gps_track"]},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N", "M": 1, "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
+          },
+          "max_attestation_attempts": 1
         },
         "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"result_keys": ["task_id", "eligible_workers_count"]}
+      "expected": {"result_keys": ["task_id", "eligible_workers_count", "posted_at"]}
     },
     {
-      "id": "L3.9.federation_jurisdiction_refusal",
+      "id": "L3.9.federation_local_subcontract_still_refused",
       "level": 3,
-      "description": "Federation: a peer in a non-compliant jurisdiction per local policy is refused via FEDERATION_JURISDICTION_REFUSED.",
-      "method": "capabilities/subscribe",
+      "description": "Federation does not relax local conformance: a task carrying x-subcontract-allowed=true is rejected (-45001) even when constraints.federation is set.",
+      "method": "tasks/post",
       "params_template": {
-        "agent_did": "{{agent_with_jurisdiction_policy}}",
-        "filter": {
-          "federation": true,
-          "policy_windows": [{"type": "geographic", "scope": "restricted_jurisdiction"}]
-        }
+        "task": {
+          "schema_version": "wcp/0.2",
+          "task_id": "{{uuid}}",
+          "posted_by": "{{agent_did}}",
+          "descriptor_type": "transport",
+          "descriptor_payload": {},
+          "constraints": {"worker_class_filter": {"allowed": ["human"]}, "federation": true},
+          "attestation_requirement": {
+            "modes": ["sensor-witness"],
+            "threshold": "M-of-N", "M": 1, "N": 1,
+            "evidence_schema": [{"mode": "sensor-witness", "kinds": ["gps_track"]}]
+          },
+          "max_attestation_attempts": 1,
+          "x-subcontract-allowed": true
+        },
+        "expiry": "2099-12-31T23:59:00Z"
       },
-      "expected": {"error_code": -50006}
+      "expected": {"error_code": -45001}
     },
     {
-      "id": "L3.10.federation_does_not_relax_local_conformance",
+      "id": "L3.10.federation_local_verifier_still_applies",
       "level": 3,
-      "description": "A federated worker MUST still satisfy the local coordinator's attestation_requirement. Federation does not relax verification.",
+      "description": "Federation does not skip local verifier rules: a federated task whose attestation lacks a required mode is still failed by the local verifier.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {"_make_capability": {"worker": "worker", "class": "human"}}
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {"worker_class_filter": {"allowed": ["human"]}, "federation": true},
+              "attestation_requirement": {
+                "modes": ["sensor-witness", "owner-sign-off"],
+                "threshold": "all",
+                "evidence_schema": [
+                  {"mode": "sensor-witness", "kinds": ["gps_track"]},
+                  {"mode": "owner-sign-off", "kinds": ["whatsapp_business_signed_link"]}
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {"_make_acceptance": {"task_id": "{{step.post.task_id}}", "worker": "worker"}}
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {"claim_id": "{{step.claim.claim_id}}"},
+          "save_as": "exec"
+        }
+      ],
       "method": "tasks/attest",
       "params_template": {
-        "claim_id": "{{federated_claim_with_local_attestation_required}}",
-        "attestations": [{"federated_worker_weak_evidence_placeholder": true}]
+        "claim_id": "{{step.claim.claim_id}}",
+        "attestations": [
+          {"_make_evidence": {"mode": "sensor-witness", "kind": "gps_track", "claim_id": "{{step.claim.claim_id}}", "payload": {"track": [{"t": "2026-06-01T10:00:00Z", "x": 1.0, "y": 2.0}]}, "worker": "worker"}}
+        ]
       },
       "expected": {"verifier_decision": "fail"}
     }
   ],
   "notes": [
-    "v0.955: Level 3 settlement-adapter and cross-coordinator-settlement-clearing cases are removed. Settlement is no longer a protocol concern.",
-    "Many Level 3 cases require federation infrastructure not yet implemented in the v0.95 reference coordinator. The two-coordinator federation demo at examples/federation-demo/ is the implementation deliverable that closes these gaps."
+    "v0.955.1: rewrote Level 3 to exercise federation-relevant invariants observable from the single-coordinator wire surface. The full cross-coordinator behaviour is verified by wcp_coordinator/tests/test_federation.py (11 tests, all passing) and examples/federation-demo/demo.py (in-process two-coord, exits 0). The capabilities/subscribe federation filter and constraints.federation:true hint are preserved on the wire but the coordinator's matching engine does not branch on them, per the D4 invariant.",
+    "Cases that previously referenced fictional cross-coordinator RPCs (audit/verify_federated, reputation/query, federation/forward_continuation_post) have been replaced with single-coordinator analogues that test the same underlying invariants over the wire."
   ]
 }

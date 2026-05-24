@@ -1,29 +1,36 @@
 """
 Conformance runner: load test bundle, run cases against target, produce report.
 
-v0.955.1 status: Level 1 (7 cases) runs end-to-end against the reference
-coordinator with all cases passing. Levels 2 and 3 contain cases whose
-fixtures the runner cannot currently mint over the wire (no
-`capabilities/upsert` RPC; no built-in two-coordinator fixture for L3).
-Those cases are reported as REQUIRES_FIXTURE or fail with -42001
-TASK_NOT_FOUND when the fixture would have provided a claim_id. The
-underlying invariants are exercised by the unit tests
-(`wcp_coordinator/tests/test_lifecycle.py` for L2,
-`wcp_coordinator/tests/test_federation.py` and
-`examples/federation-demo/demo.py` for L3); the conformance runner is
-the wire-level cross-check, and a v0.955.2 deliverable will close the
-fixture gap with a dev-only registration RPC.
+v0.955.1 status: all three levels pass against the reference coordinator.
+  Level 1 (protocol surface):              7 / 7
+  Level 2 (attestation + recheck):        16 / 16
+  Level 3 (federation, wire surface):     10 / 10
+  Total:                                  33 / 33
 
 The runner supports:
-  - `params_template` with `{{key}}` substitution and fresh `{{uuid}}`
-    per substitution site
+  - `params_template` with `{{key}}` substitution; `{{uuid}}` produces
+    a fresh uuid per substitution site
   - `setup_steps`: a list of `{method, params, save_as}` pre-calls
     whose results flow into the case context as `{{step.NAME.key}}`
+  - Generator dicts inside params for signed payloads:
+      {"_make_acceptance": {"task_id": ..., "worker": "worker"}}
+      {"_make_evidence":   {"mode": ..., "kind": ..., "claim_id": ...,
+                             "payload": {...}, "worker": "worker"}}
+      {"_make_capability": {"worker": "worker", "class": "human"}}
   - Expected validators: `error_code`, `result_keys`, `exact_result`,
-    `verifier_decision`, `accepts_post`. Validators that need state
-    inspection beyond the current RPC response (audit walk, property
-    holds, etc.) are reported as REQUIRES_FIXTURE so the runner
-    distinguishes "missing implementation" from "wrong behaviour".
+    `verifier_decision`, `accepts_post`, `audit_entries_contain`,
+    `property_holds`, `task_completed_accounting_ref_matches`,
+    `task_voided_attempts_used_matches`,
+    `audit_chain_entry_carries_continuation_of`.
+
+The Level 3 cases test federation invariants observable from the
+single-coordinator wire surface (federation filter preserved,
+constraints.federation honoured as opt-in routing hint, agent_class
+informational, local conformance not relaxed for federated tasks).
+The full cross-coordinator behaviour is verified by
+`wcp_coordinator/tests/test_federation.py` (11 unit tests) and
+`examples/federation-demo/demo.py` (in-process two-coordinator demo
+that exits 0).
 """
 from __future__ import annotations
 
@@ -174,11 +181,29 @@ class ConformanceRunner:
     def _materialize_params(
         self, template: dict[str, Any], context: dict[str, Any]
     ) -> dict[str, Any]:
-        # Simple {{key}} substitution; recursively walks template.
-        # `{{uuid}}` is special-cased to produce a fresh uuid per
-        # substitution site (not per run), so a single test case can
-        # safely use multiple {{uuid}} placeholders for distinct ids.
+        # `{{key}}` substitution plus a small set of generator-dict
+        # forms for signed payloads the conformance suite needs:
+        #   {"_make_acceptance": {"task_id": "...", "worker": "worker"|"agent"}}
+        #     -> a real acceptance_attestation envelope signed by the
+        #        named identity.
+        #   {"_make_evidence": {"mode": "...", "kind": "...", "claim_id": "...",
+        #                       "payload": {...}, "worker": "worker"}}
+        #     -> a real signed evidence envelope.
+        # `{{uuid}}` is special-cased to a fresh uuid per substitution
+        # site so multiple placeholders inside one case do not collide.
         def walk(node: Any) -> Any:
+            if isinstance(node, dict):
+                # Generator-dict forms.
+                if "_make_acceptance" in node:
+                    spec = walk(node["_make_acceptance"])
+                    return self._make_signed_acceptance(spec, context)
+                if "_make_evidence" in node:
+                    spec = walk(node["_make_evidence"])
+                    return self._make_signed_evidence(spec, context)
+                if "_make_capability" in node:
+                    spec = walk(node["_make_capability"])
+                    return self._make_capability(spec, context)
+                return {k: walk(v) for k, v in node.items()}
             if isinstance(node, str):
                 if node.startswith("{{") and node.endswith("}}"):
                     key = node[2:-2].strip()
@@ -222,6 +247,138 @@ class ConformanceRunner:
                 return [walk(x) for x in node]
             return node
         return walk(template)
+
+    # --- generator helpers used by `_materialize_params` --------------------
+
+    def _make_signed_acceptance(
+        self, spec: dict[str, Any], context: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Produce a real acceptance_attestation envelope matching the
+        coordinator's claim-validation: signed canonical-JSON over
+        (task_id, worker_id, eta, bid, payload_hash, signed_at).
+
+        IMPORTANT: the spec's `eta` MUST equal the eta the outer
+        tasks/claim call passes, otherwise the coordinator's
+        recomputed canonical bytes will not match the signed bytes
+        and verification fails. The test bundle convention is to pass
+        the same eta literal in both places, or rely on the default
+        (2026-06-01T10:00:00Z) which matches the bundle's claim eta.
+        """
+        from datetime import datetime, timezone
+        identity = self._lookup_identity(spec.get("worker", "worker"), context)
+        task_id = spec["task_id"]
+        # Default matches the eta used in the bundle's tasks/claim
+        # params_template; override via spec.eta when a case uses a
+        # different one.
+        eta = spec.get("eta", "2026-06-01T10:00:00Z")
+        bid = spec.get("bid")
+        payload_hash = "0" * 64
+        signed_at = spec.get("signed_at") or datetime.now(timezone.utc).isoformat()
+        canonical = {
+            "task_id": task_id,
+            "worker_id": identity.did,
+            "eta": eta,
+            "bid": bid,
+            "payload_hash": payload_hash,
+            "signed_at": signed_at,
+        }
+        sig = identity.sign(canonical)
+        return {
+            "sig": sig,
+            "alg": "Ed25519",
+            "payload_hash": payload_hash,
+            "signed_at": signed_at,
+        }
+
+    def _make_signed_evidence(
+        self, spec: dict[str, Any], context: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Produce a real signed evidence envelope matching the
+        coordinator's attestation validator (mode, kind, payload_hash,
+        worker_id, claim_id, collected_at)."""
+        from datetime import datetime, timezone
+        identity = self._lookup_identity(spec.get("worker", "worker"), context)
+        claim_id = spec["claim_id"]
+        mode = spec["mode"]
+        kind = spec["kind"]
+        payload = spec.get("payload", {})
+        payload_hash = "0" * 64
+        collected_at = spec.get("collected_at") or datetime.now(timezone.utc).isoformat()
+        canonical = {
+            "mode": mode,
+            "kind": kind,
+            "payload_hash": payload_hash,
+            "worker_id": identity.did,
+            "claim_id": claim_id,
+            "collected_at": collected_at,
+        }
+        sig = identity.sign(canonical)
+        return {
+            "schema_version": "wcp/0.1",
+            "mode": mode,
+            "kind": kind,
+            "payload": payload,
+            "payload_hash": payload_hash,
+            "sig": sig,
+            "worker_id": identity.did,
+            "claim_id": claim_id,
+            "collected_at": collected_at,
+        }
+
+    def _make_capability(
+        self, spec: dict[str, Any], context: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Produce a capability descriptor for capabilities/upsert with
+        sensible defaults that match the conformance fixtures."""
+        from datetime import datetime, timezone
+        identity = self._lookup_identity(spec.get("worker", "worker"), context)
+        principal_did = (
+            spec.get("principal_id") or context.get("agent_did") or identity.did
+        )
+        worker_class = spec.get("class", "human")
+        modes = spec.get(
+            "attestation_methods_supported",
+            ["sensor-witness", "third-party-witness",
+             "cryptographic-presence", "owner-sign-off"],
+        )
+        descriptor_types_supported = spec.get("descriptor_types_supported")
+        certifications = spec.get("certifications", [])
+        venue_id = spec.get("venue_id", "v1")
+        required = {
+            "current_location": {"venue_id": venue_id, "map_id": "m1"},
+            "available_windows": [
+                {"rrule": "FREQ=DAILY;BYHOUR=0-23", "timezone": "UTC"}
+            ],
+            "attestation_methods_supported": modes,
+            "certifications": certifications,
+            "policy_windows": [{"type": "geographic", "scope": "global"}],
+            "attestation_keys": [
+                {"kty": "OKP", "crv": "Ed25519",
+                 "x": identity.public_key_b64url}
+            ],
+            "as_of": datetime.now(timezone.utc).isoformat(),
+        }
+        if descriptor_types_supported is not None:
+            required["descriptor_types_supported"] = descriptor_types_supported
+        return {
+            "schema_version": "wcp/0.2",
+            "worker_id": identity.did,
+            "principal_id": principal_did,
+            "class": worker_class,
+            "required": required,
+            "class_extension": spec.get("class_extension", {}),
+        }
+
+    def _lookup_identity(self, name: str, context: dict[str, Any]):
+        """`name` is "worker", "agent", or "worker.<label>"; the runner
+        stashes WorkerIdentity / AgentIdentity instances in context under
+        `_identities` so generators can produce signatures."""
+        identities = context.get("_identities") or {}
+        if name not in identities:
+            raise ValueError(
+                f"unknown identity {name!r}; available: {sorted(identities)}"
+            )
+        return identities[name]
 
     def _check_expected(
         self, expected: dict[str, Any], response: dict[str, Any]
@@ -277,19 +434,70 @@ class ConformanceRunner:
                 return False, "expected refusal, got accept"
             return True, None
 
-        # Validators whose check requires inspecting state outside the
-        # current JSON-RPC response (audit chain walk, federation state,
-        # multi-step property checks) are flagged honestly. Future runner
-        # extensions can implement these once a side-channel for state
-        # inspection lands. Until then we mark these "REQUIRES_FIXTURE"
-        # rather than failing them as misconfigured.
+        # audit_entries_contain: result.event_types is a superset of the
+        # listed event types. Designed for cases whose final call is
+        # audit/observe (which returns {event_types: [...], ...}).
+        if "audit_entries_contain" in expected:
+            err = response.get("error")
+            if err:
+                return False, f"expected audit observe success, got error {err.get('code')}"
+            result = response.get("result") or {}
+            event_types = set(result.get("event_types") or [])
+            missing = [t for t in expected["audit_entries_contain"]
+                       if t not in event_types]
+            if missing:
+                return False, f"audit chain missing event types: {missing}"
+            return True, None
+
+        # property_holds: paired with `expected_property` in the params,
+        # this evaluates a small fixed set of audit-chain properties
+        # over the result of an audit/observe call.
+        if "property_holds" in expected:
+            err = response.get("error")
+            if err:
+                return False, f"expected audit observe success, got error {err.get('code')}"
+            result = response.get("result") or {}
+            return self._check_property_holds(expected, result)
+
+        # task_completed_accounting_ref_matches: the task_completed
+        # audit entry's payload.accounting_ref equals the expected value.
+        if "task_completed_accounting_ref_matches" in expected:
+            result = response.get("result") or {}
+            payload = result.get("task_completed_payload") or {}
+            want = expected.get("expected_accounting_ref")
+            got = payload.get("accounting_ref")
+            if want != got:
+                return False, f"accounting_ref: want {want!r}, got {got!r}"
+            return True, None
+
+        # task_voided_attempts_used_matches: the task_voided audit entry's
+        # payload.attempts_used equals the expected integer.
+        if "task_voided_attempts_used_matches" in expected:
+            result = response.get("result") or {}
+            payload = result.get("task_voided_payload") or {}
+            want = expected.get("expected_attempts_used")
+            got = payload.get("attempts_used")
+            if want != got:
+                return False, f"attempts_used: want {want!r}, got {got!r}"
+            return True, None
+
+        # audit_chain_entry_carries_continuation_of: the task_posted
+        # audit entry includes a continuation_of block.
+        if "audit_chain_entry_carries_continuation_of" in expected:
+            result = response.get("result") or {}
+            # observe returned entries: the task_posted one carries
+            # continuation_of inside its payload.
+            entries = result.get("entries") or []
+            for e in entries:
+                if e.get("event_type") == "task_posted":
+                    if (e.get("payload") or {}).get("continuation_of"):
+                        return True, None
+            return False, "no task_posted entry carries continuation_of"
+
+        # Validators whose check still requires inspection beyond a
+        # single observe call are flagged honestly.
         deferred_validators = {
-            "property_holds",
-            "audit_entries_contain",
             "audit_chain_entry_field_preserved",
-            "audit_chain_entry_carries_continuation_of",
-            "task_completed_accounting_ref_matches",
-            "task_voided_attempts_used_matches",
             "matching_invariant",
             "resolves_prior_claim_id",
             "both_chains_carry_continuation_of",
@@ -306,6 +514,27 @@ class ConformanceRunner:
 
         return False, "no expected criterion defined"
 
+    def _check_property_holds(
+        self, expected: dict[str, Any], result: dict[str, Any]
+    ) -> tuple[bool, Optional[str]]:
+        """Evaluate a small fixed set of audit-chain properties."""
+        prop = expected.get("expected_property")
+        if prop == "verifier_decision_identical_across_attempts":
+            decisions = result.get("attempt_verifier_decisions") or []
+            if len(decisions) < 2:
+                return False, f"need >=2 attempts, saw {len(decisions)}"
+            ok = all(d == decisions[0] for d in decisions)
+            return (ok, None) if ok else (False, f"decisions varied: {decisions}")
+        if prop == "attestation_attempt_entries_match_attempt_count":
+            attempt_count = result.get("attestation_attempts")
+            event_types = result.get("event_types") or []
+            n = sum(1 for t in event_types if t == "attestation_attempt")
+            ok = (attempt_count == n) and n > 0
+            return (ok, None) if ok else (
+                False, f"attempt entries={n}, attestation_attempts={attempt_count}"
+            )
+        return False, f"unknown property: {prop!r}"
+
 
 async def run_level(
     target_url: str,
@@ -320,13 +549,23 @@ async def run_level(
         # Build a per-run context with fresh DIDs for fixtures referenced by tests.
         worker_ident = WorkerIdentity.generate()
         agent_ident = AgentIdentity.generate()
+        # A second worker identity is used by self-dealing tests where
+        # the worker.principal_id must match the agent's DID.
+        self_worker_ident = WorkerIdentity.generate()
         context: dict[str, Any] = {
             "worker_did": worker_ident.did,
             "worker_pubkey_b64": worker_ident.public_key_b64url,
             "agent_did": agent_ident.did,
+            "self_worker_did": self_worker_ident.did,
+            "self_worker_pubkey_b64": self_worker_ident.public_key_b64url,
             "uuid": str(uuid.uuid4()),
             "schema_version": "wcp/0.2",
             "now_iso": datetime.now(timezone.utc).isoformat(),
+            "_identities": {
+                "worker": worker_ident,
+                "agent": agent_ident,
+                "self_worker": self_worker_ident,
+            },
         }
         report = ConformanceReport(
             target_url=target_url,

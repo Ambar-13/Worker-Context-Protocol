@@ -104,14 +104,32 @@ class Dispatcher:
     ) -> None:
         self._caps = capabilities
         self._tasks = tasks
-        # The wire surface is EIGHT RPCs (see spec/0.955.md Section 1).
-        # `tasks/execute.event` is the in-session event sub-channel of
-        # `tasks/execute`; the dispatcher exposes both keys for client
-        # convenience, but the wire-surface count is eight, not nine.
-        # `tasks/settle` was removed at v0.955; calls return
-        # -32601 METHOD_NOT_FOUND via the standard dispatch path.
+        # Eight load-bearing RPCs (paper Section 3.2 and spec/0.955.md
+        # Section 1): capabilities/list, capabilities/subscribe,
+        # tasks/post, tasks/claim, tasks/execute, tasks/attest,
+        # tasks/supervise, tasks/abort.
+        #
+        # The dispatch table also exposes three operational sub-channels
+        # that the paper treats as part of their parent RPC's lifecycle:
+        #   - tasks/execute.event   : in-session event channel of tasks/execute
+        #   - capabilities/upsert   : worker self-registration; the spec
+        #                             treats this as the write counterpart
+        #                             of capabilities/list (which, per
+        #                             spec/0.2.md §3.1, is "worker ->
+        #                             coordinator" — i.e. the worker side
+        #                             writes its descriptor up). Explicit
+        #                             method name added at v0.955.1 so
+        #                             over-the-wire conformance no longer
+        #                             requires out-of-band DB seeding.
+        #   - audit/observe         : read-only audit-chain segment fetch.
+        #                             Used by conformance to inspect chain
+        #                             contents without privileged access.
+        #
+        # `tasks/settle` was removed at v0.955; calls return -32601
+        # METHOD_NOT_FOUND via the standard dispatch path.
         self._methods: dict[str, Callable[..., Any]] = {
             "capabilities/list": self._capabilities_list,
+            "capabilities/upsert": self._capabilities_upsert,  # write sub-channel of capabilities/list
             "capabilities/subscribe": self._capabilities_subscribe,
             "tasks/post": self._tasks_post,
             "tasks/claim": self._tasks_claim,
@@ -120,6 +138,7 @@ class Dispatcher:
             "tasks/attest": self._tasks_attest,
             "tasks/supervise": self._tasks_supervise,
             "tasks/abort": self._tasks_abort,
+            "audit/observe": self._audit_observe,
         }
 
     def dispatch(self, method: str, params: dict | None) -> Any:
@@ -145,6 +164,37 @@ class Dispatcher:
 
     def _capabilities_list(self, *, worker_id: str) -> dict[str, Any]:
         return self._caps.list_capabilities(worker_id=worker_id)
+
+    def _capabilities_upsert(
+        self,
+        *,
+        worker_id: str,
+        capabilities: dict[str, Any],
+        principal_id: str,
+        ttl_seconds: int = 3600,
+    ) -> dict[str, Any]:
+        return self._caps.upsert_capabilities(
+            worker_id=worker_id,
+            capabilities=capabilities,
+            principal_id=principal_id,
+            ttl_seconds=ttl_seconds,
+        )
+
+    def _audit_observe(
+        self,
+        *,
+        claim_id: str | None = None,
+        task_id: str | None = None,
+        **_extras: Any,
+    ) -> dict[str, Any]:
+        # Read-only chain segment fetch by claim_id or task_id.
+        # Returns the entries as plain dicts plus the verify_chain
+        # outcome over the segment, so conformance tests can inspect
+        # chain properties without privileged DB access. Extra kwargs
+        # (e.g. expected_property, expected_accounting_ref) are accepted
+        # for forward compatibility but ignored at the dispatch layer;
+        # the runner's _check_property_holds reads them.
+        return self._tasks.observe_audit(claim_id=claim_id, task_id=task_id)
 
     def _capabilities_subscribe(
         self,

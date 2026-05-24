@@ -751,6 +751,94 @@ class TasksService:
         )
         return {"abort_id": str(uuid.uuid4())}
 
+    # --- audit/observe ------------------------------------------------------
+
+    def observe_audit(
+        self,
+        *,
+        claim_id: Optional[str] = None,
+        task_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Read-only chain segment fetch. Used by conformance tests to
+        inspect chain contents without privileged DB access.
+
+        Returns:
+          {
+            "entries": [...],
+            "event_types": [...],
+            "verify_chain_ok": bool,         # only meaningful for claim_id
+            "task_completed_payload": dict | None,
+            "task_voided_payload": dict | None,
+            "task_aborted_payload": dict | None,
+            "attestation_attempts": int,     # count of attestation events
+            "attempt_verifier_decisions": [...],  # decision per attempt
+          }
+        """
+        from .models import WcpAudit
+
+        if not claim_id and not task_id:
+            raise ValueError("INVALID_PARAMS: claim_id or task_id required")
+
+        q = self._db.query(WcpAudit)
+        if claim_id:
+            q = q.filter(WcpAudit.claim_id == claim_id)
+        else:
+            q = q.filter(WcpAudit.task_id == task_id)
+        rows = list(q.order_by(WcpAudit.timestamp.asc()))
+
+        entries = []
+        for r in rows:
+            ts = r.timestamp
+            ts_iso = (
+                ts.astimezone(timezone.utc).replace(tzinfo=None).isoformat()
+                if getattr(ts, "tzinfo", None) is not None
+                else ts.isoformat()
+            )
+            entries.append({
+                "event_type": r.event_type,
+                "actor_did": r.actor_did,
+                "timestamp": ts_iso,
+                "payload": r.payload_json,
+                "payload_hash": r.payload_hash,
+                "prev_hash": r.prev_hash,
+                "this_hash": r.this_hash,
+                "claim_id": r.claim_id,
+                "task_id": r.task_id,
+            })
+
+        verify_ok = self._audit.verify_chain(claim_id) if claim_id else None
+        event_types = [e["event_type"] for e in entries]
+
+        # Pull notable terminal payloads if present.
+        def _first_payload(ev_type: str) -> Optional[dict]:
+            for e in entries:
+                if e["event_type"] == ev_type:
+                    return e["payload"]
+            return None
+
+        # Attestation-attempt summary. attestation_attempt entries carry
+        # the verifier outcome under payload.decision (per tasks_service
+        # emission).
+        attempt_events = [
+            e for e in entries if e["event_type"] == "attestation_attempt"
+        ]
+        decisions = [
+            (e.get("payload") or {}).get("decision")
+            for e in attempt_events
+            if isinstance(e.get("payload"), dict)
+        ]
+
+        return {
+            "entries": entries,
+            "event_types": event_types,
+            "verify_chain_ok": verify_ok,
+            "task_completed_payload": _first_payload("task_completed"),
+            "task_voided_payload": _first_payload("task_voided"),
+            "task_aborted_payload": _first_payload("task_aborted"),
+            "attestation_attempts": len(attempt_events),
+            "attempt_verifier_decisions": decisions,
+        }
+
     # --- helpers -------------------------------------------------------------
 
     def _claim_and_task(

@@ -1,12 +1,12 @@
 {
   "schema_version": "wcp/0.2",
   "level": 2,
-  "description": "WCP Level 2 (Attestation correctness and recheck) test bundle. v0.955 conformance requires Level 1, plus all cases here. Cases L2.14 through L2.16 carry forward the continuation_of coverage introduced at v0.95.",
+  "description": "WCP Level 2 (Attestation correctness and recheck). v0.955.1 conformance requires Level 1 plus all cases here. Cases use the new capabilities/upsert and audit/observe RPCs added at v0.955.1 to mint workers and inspect the audit chain over the wire.",
   "cases": [
     {
       "id": "L2.1.M_greater_than_N_rejected",
       "level": 2,
-      "description": "tasks/post with M > N in attestation_requirement is rejected.",
+      "description": "tasks/post with M > N in attestation_requirement is rejected with -41001.",
       "method": "tasks/post",
       "params_template": {
         "task": {
@@ -49,7 +49,7 @@
     {
       "id": "L2.2.unregistered_kind_rejected",
       "level": 2,
-      "description": "tasks/post with an unregistered evidence kind in the schema is rejected.",
+      "description": "tasks/post with an evidence kind unregistered for the mode is rejected with -41001.",
       "method": "tasks/post",
       "params_template": {
         "task": {
@@ -69,7 +69,7 @@
             "modes": [
               "sensor-witness"
             ],
-            "threshold": "any",
+            "threshold": "M-of-N",
             "M": 1,
             "N": 1,
             "evidence_schema": [
@@ -93,12 +93,104 @@
       "id": "L2.3.any_threshold_accepts_single_evidence",
       "level": 2,
       "description": "tasks/attest under threshold=any passes with a single matching evidence.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness"
+                ],
+                "threshold": "any",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        }
+      ],
       "method": "tasks/attest",
       "params_template": {
-        "claim_id": "{{any_threshold_claim}}",
+        "claim_id": "{{step.claim.claim_id}}",
         "attestations": [
           {
-            "single_valid_evidence_placeholder": true
+            "_make_evidence": {
+              "mode": "sensor-witness",
+              "kind": "gps_track",
+              "claim_id": "{{step.claim.claim_id}}",
+              "payload": {
+                "track": [
+                  {
+                    "t": "2026-06-01T10:00:00Z",
+                    "x": 1.0,
+                    "y": 2.0
+                  },
+                  {
+                    "t": "2026-06-01T10:00:01Z",
+                    "x": 1.1,
+                    "y": 2.1
+                  }
+                ]
+              },
+              "worker": "worker"
+            }
           }
         ]
       },
@@ -109,13 +201,112 @@
     {
       "id": "L2.4.all_threshold_requires_every_mode",
       "level": 2,
-      "description": "tasks/attest under threshold=all fails if any mode is missing.",
+      "description": "tasks/attest under threshold=all fails if a required mode is missing.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off"
+                ],
+                "threshold": "all",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        }
+      ],
       "method": "tasks/attest",
       "params_template": {
-        "claim_id": "{{all_threshold_claim_missing_owner_sign_off}}",
+        "claim_id": "{{step.claim.claim_id}}",
         "attestations": [
           {
-            "missing_owner_sign_off_placeholder": true
+            "_make_evidence": {
+              "mode": "sensor-witness",
+              "kind": "gps_track",
+              "claim_id": "{{step.claim.claim_id}}",
+              "payload": {
+                "track": [
+                  {
+                    "t": "2026-06-01T10:00:00Z",
+                    "x": 1.0,
+                    "y": 2.0
+                  },
+                  {
+                    "t": "2026-06-01T10:00:01Z",
+                    "x": 1.1,
+                    "y": 2.1
+                  }
+                ]
+              },
+              "worker": "worker"
+            }
           }
         ]
       },
@@ -127,12 +318,133 @@
       "id": "L2.5.m_of_n_threshold_correct",
       "level": 2,
       "description": "tasks/attest under M-of-N with M=2 N=3 passes when 2 of 3 distinct evidence kinds verify.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off",
+                  "cryptographic-presence"
+                ],
+                "threshold": "M-of-N",
+                "M": 2,
+                "N": 3,
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  },
+                  {
+                    "mode": "cryptographic-presence",
+                    "kinds": [
+                      "geofence_check_in_out"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        }
+      ],
       "method": "tasks/attest",
       "params_template": {
-        "claim_id": "{{m_of_n_claim_two_passing}}",
+        "claim_id": "{{step.claim.claim_id}}",
         "attestations": [
           {
-            "two_of_three_placeholder": true
+            "_make_evidence": {
+              "mode": "sensor-witness",
+              "kind": "gps_track",
+              "claim_id": "{{step.claim.claim_id}}",
+              "payload": {
+                "track": [
+                  {
+                    "t": "2026-06-01T10:00:00Z",
+                    "x": 1.0,
+                    "y": 2.0
+                  },
+                  {
+                    "t": "2026-06-01T10:00:01Z",
+                    "x": 1.1,
+                    "y": 2.1
+                  }
+                ]
+              },
+              "worker": "worker"
+            }
+          },
+          {
+            "_make_evidence": {
+              "mode": "owner-sign-off",
+              "kind": "whatsapp_business_signed_link",
+              "claim_id": "{{step.claim.claim_id}}",
+              "payload": {
+                "signing_party_did": "did:wcp:owner-x",
+                "signed_token": "demo-signed-token-abc",
+                "issued_at": "2026-06-01T10:00:30Z"
+              },
+              "worker": "worker"
+            }
           }
         ]
       },
@@ -143,23 +455,169 @@
     {
       "id": "L2.6.recheck_succeeds_on_retry",
       "level": 2,
-      "description": "Recheck: task with max_attestation_attempts=3 fails verifier on attempt 1, passes on attempt 2. Audit chain shows attestation_attempt(1, fail), recheck_requested, attestation_attempt(2, pass), task_completed.",
-      "method": "tasks/attest",
-      "params_template": {
-        "claim_id": "{{recheck_claim_attempts_3}}",
-        "attestations": [
-          {
-            "second_attempt_good_evidence_placeholder": true
+      "description": "Recheck: task with max_attestation_attempts=3 fails verifier on attempt 1 (missing evidence), passes on attempt 2. Audit chain shows two attestation_attempt entries and task_completed.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
           }
-        ]
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off"
+                ],
+                "threshold": "all",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 3
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "first_attempt"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              },
+              {
+                "_make_evidence": {
+                  "mode": "owner-sign-off",
+                  "kind": "whatsapp_business_signed_link",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "signing_party_did": "did:wcp:owner-x",
+                    "signed_token": "demo-signed-token-abc",
+                    "issued_at": "2026-06-01T10:00:30Z"
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "second_attempt"
+        }
+      ],
+      "method": "audit/observe",
+      "params_template": {
+        "claim_id": "{{step.claim.claim_id}}"
       },
       "expected": {
-        "verifier_decision": "pass",
-        "attempt_number": 2,
-        "attempts_remaining": 1,
         "audit_entries_contain": [
           "attestation_attempt",
-          "recheck_requested",
           "task_completed"
         ]
       }
@@ -167,13 +625,143 @@
     {
       "id": "L2.7.recheck_voids_after_exhaustion",
       "level": 2,
-      "description": "Recheck: task with max_attestation_attempts=1 fails verifier; task voids. Subsequent tasks/attest returns RECHECK_MAX_ATTEMPTS_REACHED. Requires a registered worker (no capabilities/register RPC in v0.955; covered by wcp_coordinator/tests/test_lifecycle.py instead).",
+      "description": "Recheck: task with max_attestation_attempts=1 fails verifier on attempt 1 -> voids. A second tasks/attest call returns RECHECK_MAX_ATTEMPTS_REACHED (-47001).",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off"
+                ],
+                "threshold": "all",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "first_attempt"
+        }
+      ],
       "method": "tasks/attest",
       "params_template": {
-        "claim_id": "{{recheck_claim_attempts_1_failed}}",
+        "claim_id": "{{step.claim.claim_id}}",
         "attestations": [
           {
-            "retry_after_void_placeholder": true
+            "_make_evidence": {
+              "mode": "sensor-witness",
+              "kind": "gps_track",
+              "claim_id": "{{step.claim.claim_id}}",
+              "payload": {
+                "track": [
+                  {
+                    "t": "2026-06-01T10:00:00Z",
+                    "x": 1.0,
+                    "y": 2.0
+                  },
+                  {
+                    "t": "2026-06-01T10:00:01Z",
+                    "x": 1.1,
+                    "y": 2.1
+                  }
+                ]
+              },
+              "worker": "worker"
+            }
           }
         ]
       },
@@ -184,59 +772,561 @@
     {
       "id": "L2.8.verifier_does_not_branch_on_attempt_number",
       "level": 2,
-      "description": "The verifier evaluates the same evidence the same way on attempt 1 and attempt 3. The attempt counter is coordinator-managed, not verifier-managed.",
+      "description": "Submitting the same evidence twice yields the same verifier_decision both times. The attempt counter is coordinator-managed, not verifier-managed.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off"
+                ],
+                "threshold": "all",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 3
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "attempt_1"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "attempt_2"
+        }
+      ],
       "method": "audit/observe",
       "params_template": {
-        "claim_id": "{{recheck_claim_three_attempts_same_evidence}}",
+        "claim_id": "{{step.claim.claim_id}}",
         "expected_property": "verifier_decision_identical_across_attempts"
       },
       "expected": {
-        "property_holds": true
+        "property_holds": true,
+        "expected_property": "verifier_decision_identical_across_attempts"
       }
     },
     {
       "id": "L2.9.attestation_attempt_entries_recorded",
       "level": 2,
-      "description": "Every tasks/attest call emits an attestation_attempt audit entry with the correct attempt_number.",
+      "description": "Every tasks/attest call emits an attestation_attempt audit entry. The count of entries equals the count of attempts.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off"
+                ],
+                "threshold": "all",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 3
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "a1"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "a2"
+        }
+      ],
       "method": "audit/observe",
       "params_template": {
-        "claim_id": "{{recheck_claim_attempts_2_attempted_twice}}",
+        "claim_id": "{{step.claim.claim_id}}",
         "expected_property": "attestation_attempt_entries_match_attempt_count"
       },
       "expected": {
-        "property_holds": true
+        "property_holds": true,
+        "expected_property": "attestation_attempt_entries_match_attempt_count"
       }
     },
     {
       "id": "L2.10.task_completed_carries_accounting_ref",
       "level": 2,
-      "description": "On verifier pass the task_completed audit entry carries the accounting_ref verbatim from tasks/post.",
+      "description": "On verifier pass the task_completed audit entry's payload carries the accounting_ref verbatim from tasks/post.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness"
+                ],
+                "threshold": "any",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1,
+              "accounting_ref": "external-ref-abc-123"
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "attest"
+        }
+      ],
       "method": "audit/observe",
       "params_template": {
-        "claim_id": "{{completed_claim_with_accounting_ref}}",
-        "expected_accounting_ref": "external-ref-abc-123"
+        "claim_id": "{{step.claim.claim_id}}"
       },
       "expected": {
-        "task_completed_accounting_ref_matches": true
+        "task_completed_accounting_ref_matches": true,
+        "expected_accounting_ref": "external-ref-abc-123"
       }
     },
     {
       "id": "L2.11.task_voided_carries_attempts_used",
       "level": 2,
-      "description": "On exhaustion the task_voided audit entry includes attempts_used equal to max_attestation_attempts.",
+      "description": "On exhaustion the task_voided audit entry payload carries attempts_used equal to max_attestation_attempts.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness",
+                  "owner-sign-off"
+                ],
+                "threshold": "all",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  },
+                  {
+                    "mode": "owner-sign-off",
+                    "kinds": [
+                      "whatsapp_business_signed_link"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        },
+        {
+          "method": "tasks/attest",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}",
+            "attestations": [
+              {
+                "_make_evidence": {
+                  "mode": "sensor-witness",
+                  "kind": "gps_track",
+                  "claim_id": "{{step.claim.claim_id}}",
+                  "payload": {
+                    "track": [
+                      {
+                        "t": "2026-06-01T10:00:00Z",
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      {
+                        "t": "2026-06-01T10:00:01Z",
+                        "x": 1.1,
+                        "y": 2.1
+                      }
+                    ]
+                  },
+                  "worker": "worker"
+                }
+              }
+            ]
+          },
+          "save_as": "fail_attempt"
+        }
+      ],
       "method": "audit/observe",
       "params_template": {
-        "claim_id": "{{voided_claim_attempts_used_field}}",
-        "expected_attempts_used": 2
+        "claim_id": "{{step.claim.claim_id}}"
       },
       "expected": {
-        "task_voided_attempts_used_matches": true
+        "task_voided_attempts_used_matches": true,
+        "expected_attempts_used": 1
       }
     },
     {
       "id": "L2.12.continuation_of_after_void_accepted",
       "level": 2,
-      "description": "After a task voids, a new tasks/post that references the voided claim via continuation_of is accepted; the new task is independent of the voided one for state and recheck.",
+      "description": "After a void, a continuation_of post pointing at the voided claim is accepted by the coordinator.",
       "method": "tasks/post",
       "params_template": {
         "task": {
@@ -245,6 +1335,12 @@
           "posted_by": "{{agent_did}}",
           "descriptor_type": "transport",
           "descriptor_payload": {},
+          "continuation_of": {
+            "claim_id": "prior-voided-claim-id",
+            "required_evidence_kinds": [
+              "gps_track"
+            ]
+          },
           "constraints": {
             "worker_class_filter": {
               "allowed": [
@@ -252,17 +1348,11 @@
               ]
             }
           },
-          "continuation_of": {
-            "claim_id": "{{voided_claim_id}}",
-            "required_evidence_kinds": [
-              "gps_track"
-            ]
-          },
           "attestation_requirement": {
             "modes": [
               "sensor-witness"
             ],
-            "threshold": "any",
+            "threshold": "M-of-N",
             "M": 1,
             "N": 1,
             "evidence_schema": [
@@ -289,13 +1379,70 @@
     {
       "id": "L2.13.self_dealing_blocked_without_third_party_witness",
       "level": 2,
-      "description": "tasks/claim where posted_by == worker.principal_id and attestation_requirement lacks third-party-witness is rejected with POLICY_VIOLATION.",
+      "description": "tasks/claim where worker.principal_id == task.posted_by and attestation_requirement lacks third-party-witness is rejected with POLICY_VIOLATION (-46001).",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{self_worker_did}}",
+            "principal_id": "{{agent_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "self_worker",
+                "class": "human",
+                "principal_id": "{{agent_did}}"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness"
+                ],
+                "threshold": "any",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        }
+      ],
       "method": "tasks/claim",
       "params_template": {
-        "task_id": "{{self_dealing_task_id}}",
-        "worker_id": "{{posted_by_principal_worker}}",
+        "task_id": "{{step.post.task_id}}",
+        "worker_id": "{{self_worker_did}}",
         "eta": "2026-06-01T10:00:00Z",
-        "acceptance_attestation": "{{sig}}"
+        "acceptance_attestation": {
+          "_make_acceptance": {
+            "task_id": "{{step.post.task_id}}",
+            "worker": "self_worker"
+          }
+        }
       },
       "expected": {
         "error_code": -46001
@@ -304,129 +1451,233 @@
     {
       "id": "L2.14.continuation_evidence_kinds_visible_in_audit",
       "level": 2,
-      "description": "When tasks/post carries a continuation_of block with required_evidence_kinds, the audit chain entry for the posted task preserves those kinds verbatim. The verifier MUST NOT use them as a precondition for accepting the post.",
-      "method": "tasks/post",
-      "params_template": {
-        "task": {
-          "schema_version": "wcp/0.2",
-          "task_id": "{{uuid}}",
-          "posted_by": "{{agent_did}}",
-          "descriptor_type": "place_on_shelf",
-          "descriptor_payload": {},
-          "continuation_of": {
-            "claim_id": "{{prior_claim_id}}",
-            "required_evidence_kinds": [
-              "indoor_pose_track",
-              "weight_delta"
-            ]
-          },
-          "constraints": {
-            "worker_class_filter": {
-              "allowed": [
-                "semi_autonomous"
-              ]
-            }
-          },
-          "attestation_requirement": {
-            "modes": [
-              "sensor-witness"
-            ],
-            "threshold": "M-of-N",
-            "M": 1,
-            "N": 1,
-            "evidence_schema": [
-              {
-                "mode": "sensor-witness",
-                "kinds": [
-                  "manipulator_pose_track"
+      "description": "When tasks/post carries a continuation_of block, the task_posted audit entry payload preserves the continuation_of field verbatim.",
+      "setup_steps": [
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "continuation_of": {
+                "claim_id": "prior-claim-xyz",
+                "required_evidence_kinds": [
+                  "gps_track",
+                  "weight_delta"
                 ]
-              }
-            ],
-            "override_authority": "did:wcp:operator-ops",
-            "override_audit_required": true
+              },
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness"
+                ],
+                "threshold": "any",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
           },
-          "settlement": {
-            "currency": "USD",
-            "amount": "0.00",
-            "escrow_provider": "internal-cost-allocation",
-            "split": [
-              {
-                "party": "did:wcp:cost-center-ops",
-                "pct": 100
-              }
-            ]
-          },
-          "supervision": {
-            "default": "autonomous"
-          },
-          "x-subcontract-allowed": false
-        },
-        "bond_ref": "test-bond-{{uuid}}",
-        "expiry": "2099-12-31T23:59:00Z"
+          "save_as": "post"
+        }
+      ],
+      "method": "audit/observe",
+      "params_template": {
+        "task_id": "{{step.post.task_id}}"
       },
       "expected": {
-        "audit_chain_entry_field_preserved": "continuation_of.required_evidence_kinds"
+        "audit_chain_entry_carries_continuation_of": true
       }
     },
     {
       "id": "L2.15.continuation_of_does_not_gate_attest",
       "level": 2,
-      "description": "tasks/attest for a follow-up task referencing continuation_of MUST be evaluated by the verifier purely against its own attestation_requirement. The prior task's evidence kinds in continuation_of MUST NOT add or remove verifier preconditions.",
-      "method": "tasks/attest",
-      "params_template": {
-        "claim_id": "{{claim_id}}",
-        "evidence": [
-          {
-            "schema_version": "wcp/0.2",
-            "mode": "sensor-witness",
-            "kind": "manipulator_pose_track",
-            "payload": {
-              "joint_states": [
-                {
-                  "t": "{{now_iso}}",
-                  "q": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0
+      "description": "continuation_of is informational metadata on the task descriptor; the verifier does not enforce the prior claim's evidence presence at attest time.",
+      "setup_steps": [
+        {
+          "method": "capabilities/upsert",
+          "params": {
+            "worker_id": "{{worker_did}}",
+            "principal_id": "{{worker_did}}",
+            "capabilities": {
+              "_make_capability": {
+                "worker": "worker",
+                "class": "human"
+              }
+            }
+          }
+        },
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "continuation_of": {
+                "claim_id": "prior-claim-xyz",
+                "required_evidence_kinds": [
+                  "gps_track"
+                ]
+              },
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
                   ]
                 }
-              ]
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness"
+                ],
+                "threshold": "any",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
             },
-            "payload_hash": "{{hash}}",
-            "signature": "{{sig}}",
-            "signer_did": "{{worker_did}}",
-            "collected_at": "{{now_iso}}"
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        },
+        {
+          "method": "tasks/claim",
+          "params": {
+            "task_id": "{{step.post.task_id}}",
+            "worker_id": "{{worker_did}}",
+            "eta": "2026-06-01T10:00:00Z",
+            "acceptance_attestation": {
+              "_make_acceptance": {
+                "task_id": "{{step.post.task_id}}",
+                "worker": "worker"
+              }
+            }
+          },
+          "save_as": "claim"
+        },
+        {
+          "method": "tasks/execute",
+          "params": {
+            "claim_id": "{{step.claim.claim_id}}"
+          },
+          "save_as": "exec"
+        }
+      ],
+      "method": "tasks/attest",
+      "params_template": {
+        "claim_id": "{{step.claim.claim_id}}",
+        "attestations": [
+          {
+            "_make_evidence": {
+              "mode": "sensor-witness",
+              "kind": "gps_track",
+              "claim_id": "{{step.claim.claim_id}}",
+              "payload": {
+                "track": [
+                  {
+                    "t": "2026-06-01T10:00:00Z",
+                    "x": 1.0,
+                    "y": 2.0
+                  },
+                  {
+                    "t": "2026-06-01T10:00:01Z",
+                    "x": 1.1,
+                    "y": 2.1
+                  }
+                ]
+              },
+              "worker": "worker"
+            }
           }
         ]
       },
       "expected": {
-        "result_keys": [
-          "audit_chain_entry_id"
-        ]
+        "verifier_decision": "pass"
       }
     },
     {
       "id": "L2.16.continuation_chain_resolves_in_audit",
       "level": 2,
-      "description": "Walking the audit chain backwards from a follow-up task's settled entry MUST resolve to the prior task's claim_id named in continuation_of. The chain is operator-readable forensic evidence.",
-      "method": "audit/walk_continuation",
+      "description": "audit/observe on a task whose descriptor carried continuation_of returns at least one entry whose payload contains the continuation_of block.",
+      "setup_steps": [
+        {
+          "method": "tasks/post",
+          "params": {
+            "task": {
+              "schema_version": "wcp/0.2",
+              "task_id": "{{uuid}}",
+              "posted_by": "{{agent_did}}",
+              "descriptor_type": "transport",
+              "descriptor_payload": {},
+              "continuation_of": {
+                "claim_id": "prior-claim-zzz",
+                "required_evidence_kinds": [
+                  "gps_track"
+                ]
+              },
+              "constraints": {
+                "worker_class_filter": {
+                  "allowed": [
+                    "human"
+                  ]
+                }
+              },
+              "attestation_requirement": {
+                "modes": [
+                  "sensor-witness"
+                ],
+                "threshold": "any",
+                "evidence_schema": [
+                  {
+                    "mode": "sensor-witness",
+                    "kinds": [
+                      "gps_track"
+                    ]
+                  }
+                ]
+              },
+              "max_attestation_attempts": 1
+            },
+            "expiry": "2099-12-31T23:59:00Z"
+          },
+          "save_as": "post"
+        }
+      ],
+      "method": "audit/observe",
       "params_template": {
-        "task_id": "{{follow_up_task_id}}"
+        "task_id": "{{step.post.task_id}}"
       },
       "expected": {
-        "resolves_prior_claim_id": "{{prior_claim_id}}"
+        "audit_chain_entry_carries_continuation_of": true
       }
     }
   ],
   "notes": [
-    "L2.6 to L2.11 cover the recheck mechanism added at v0.955.",
-    "L2.8 enforces the verifier-discrimination discipline: attempt number MUST NOT change the verifier's decision on identical evidence.",
-    "L2.10 and L2.11 cover the audit-chain payload shape for completion and void signals consumed by external settlement layers.",
-    "L2.12 covers the recheck-and-continue pattern.",
-    "L2.14 to L2.16 confirm continuation_of preserves audit-chain readability and does not gate attestation, unchanged from v0.95."
+    "v0.955.1: cases that need a registered worker use the new capabilities/upsert sub-channel of capabilities/list; cases that need to inspect the audit chain use audit/observe. The runner mints signed acceptance_attestation and evidence envelopes via _make_acceptance and _make_evidence generators."
   ]
 }

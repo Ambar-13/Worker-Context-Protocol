@@ -99,10 +99,24 @@ def evaluate_threshold(
         return VerificationOutcome(decision="fail", reasons=all_reasons)
 
     if threshold == "all":
-        if pass_count == total and total > 0:
+        # 'all' means every REQUIRED mode in the requirement is covered
+        # by at least one passing piece of evidence. This is stricter
+        # than "every submitted evidence passes": a worker who submits
+        # only one mode's evidence when the requirement names two
+        # modes is failing, not passing.
+        required_modes = set(requirement.get("modes") or [])
+        passing_modes = {m for m, o in outcomes if o.decision == "pass"}
+        if required_modes and required_modes.issubset(passing_modes) and fail_count == 0:
             return VerificationOutcome(decision="pass")
-        if fail_count > 0:
-            return VerificationOutcome(decision="fail", reasons=all_reasons)
+        if fail_count > 0 or (required_modes - passing_modes):
+            missing = sorted(required_modes - passing_modes)
+            extra_reasons = (
+                (f"required mode(s) without passing evidence: {missing}",)
+                if missing else ()
+            )
+            return VerificationOutcome(
+                decision="fail", reasons=all_reasons + extra_reasons
+            )
         return VerificationOutcome(decision="review", reasons=all_reasons)
 
     if threshold == "M-of-N":
