@@ -197,12 +197,48 @@ class TasksService:
         }
 
     def _count_eligible(self, task: dict[str, Any]) -> int:
+        """Count workers matching both the worker_class filter and the
+        derived capability_query. The capability_query is derived from
+        the task descriptor's required attestation modes and (if
+        present) descriptor_type / location / certification needs.
+
+        This delegates to CapabilitiesService.matching_workers so the
+        structural-only-discrimination invariant holds in one place.
+        """
         constraints = task.get("constraints", {}) or {}
         wcf = (constraints.get("worker_class_filter") or {}).get("allowed") or []
-        stmt = select(WcpWorker)
-        if wcf:
-            stmt = stmt.where(WcpWorker.worker_class.in_(wcf))
-        return len(list(self._db.execute(stmt).scalars()))
+
+        # Derive the capability_query from the task descriptor. The
+        # query is structural; it does not encode anything from the
+        # opaque class_extension block.
+        capability_query: dict[str, Any] = {}
+        attestation_req = task.get("attestation_requirement") or {}
+        if attestation_req.get("modes"):
+            capability_query["attestation_methods"] = list(attestation_req["modes"])
+        descriptor_type = task.get("descriptor_type")
+        if descriptor_type:
+            capability_query["descriptor_types"] = [descriptor_type]
+        venue = (
+            ((constraints.get("location") or {}).get("venue_id"))
+            or (task.get("descriptor_payload") or {}).get("venue_id")
+        )
+        if venue:
+            capability_query["location_venue_id"] = venue
+        required_certs = constraints.get("required_certifications") or []
+        if required_certs:
+            capability_query["certifications"] = required_certs
+
+        # Lazily build a CapabilitiesService view over the same session.
+        # Importing here avoids a circular import at module load time.
+        from .capabilities_service import CapabilitiesService
+
+        caps = CapabilitiesService(self._db, self._resolver)
+        return len(
+            caps.matching_workers(
+                capability_query=capability_query,
+                worker_class_filter=wcf,
+            )
+        )
 
     def _validate_attestation_requirement(self, req: dict[str, Any]) -> None:
         if not req:

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ambar-13/Worker-Context-Protocol/spec/schemas/capability-query.json",
+  "title": "WCP capability_query",
+  "description": "Structural query passed by the matching engine. Discriminates ONLY on the worker's required block. The matcher MUST NOT read class_extension or any informational metadata (agent_class, bond_ref, etc.).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "attestation_methods": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "sensor-witness",
+          "third-party-witness",
+          "cryptographic-presence",
+          "owner-sign-off"
+        ]
+      },
+      "description": "Every method named here MUST be in the worker's required.attestation_methods_supported."
+    },
+    "descriptor_types": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "If declared, every type here MUST be in the worker's required.descriptor_types_supported. If the worker has not declared descriptor_types_supported, the query passes (worker accepts all types by default)."
+    },
+    "certifications": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Certification ids. Every id here MUST appear in the worker's required.certifications[].id."
+    },
+    "location_venue_id": {
+      "type": "string",
+      "description": "If set, MUST equal the worker's required.current_location.venue_id."
+    }
+  }
+}

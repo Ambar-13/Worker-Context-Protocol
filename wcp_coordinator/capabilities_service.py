@@ -128,10 +128,90 @@ class CapabilitiesService:
         }
 
     def matching_workers(
-        self, *, capability_query: dict[str, Any], worker_class_filter: list[str]
+        self,
+        *,
+        capability_query: dict[str, Any],
+        worker_class_filter: list[str],
     ) -> list[WcpWorker]:
-        """Simple in-process matcher for v0.1. Production replaces with index."""
+        """In-process matcher.
+
+        The matcher discriminates by STRUCTURAL properties only:
+
+        - `worker_class_filter` (a list of `WorkerClass` values from the
+          task's `constraints.worker_class_filter.allowed`)
+        - `capability_query` against the worker's REQUIRED block:
+          * `attestation_methods` — every requested method must be
+            in the worker's `required.attestation_methods_supported`
+          * `descriptor_types` — every requested descriptor type
+            must be in the worker's `required.descriptor_types_supported`
+            (absent means the worker accepts all types; the matcher
+            does not enforce when the worker has not declared)
+          * `certifications` — every requested certification id must
+            be present in the worker's `required.certifications`
+          * `location_venue_id` — must equal the worker's
+            `required.current_location.venue_id`
+
+        The matcher MUST NOT read the worker's `class_extension` block;
+        that block is opaque to the matching engine by design. This
+        invariant is enforced by `test_matching_ignores_class_extension`
+        and is the load-bearing claim of Section 4 (the D4 forcing
+        function).
+
+        Production deployments swap this in-process scan for an indexed
+        store (Postgres GIN, ElasticSearch, etc.); the discrimination
+        invariants stay the same.
+        """
         stmt = select(WcpWorker)
         if worker_class_filter:
             stmt = stmt.where(WcpWorker.worker_class.in_(worker_class_filter))
-        return list(self._db.execute(stmt).scalars())
+        candidates = list(self._db.execute(stmt).scalars())
+
+        if not capability_query:
+            return candidates
+
+        wanted_methods = set(capability_query.get("attestation_methods", []) or [])
+        wanted_descs = set(capability_query.get("descriptor_types", []) or [])
+        wanted_certs = set(capability_query.get("certifications", []) or [])
+        wanted_venue = capability_query.get("location_venue_id")
+
+        matched: list[WcpWorker] = []
+        for w in candidates:
+            required = (w.capabilities_json or {}).get("required") or {}
+
+            # attestation_methods: every requested method MUST be supported.
+            if wanted_methods:
+                supported = set(
+                    required.get("attestation_methods_supported", []) or []
+                )
+                if not wanted_methods.issubset(supported):
+                    continue
+
+            # descriptor_types: only enforced when the worker DECLARES the
+            # field. Absence means "accepts all"; declaring an empty list
+            # means "accepts none".
+            if wanted_descs and "descriptor_types_supported" in required:
+                supported_descs = set(
+                    required.get("descriptor_types_supported", []) or []
+                )
+                if not wanted_descs.issubset(supported_descs):
+                    continue
+
+            # certifications: every requested cert id MUST be present.
+            if wanted_certs:
+                worker_cert_ids = {
+                    (c or {}).get("id")
+                    for c in (required.get("certifications", []) or [])
+                }
+                if not wanted_certs.issubset(worker_cert_ids):
+                    continue
+
+            # venue: must match if requested.
+            if wanted_venue is not None:
+                worker_venue = (
+                    (required.get("current_location") or {}).get("venue_id")
+                )
+                if worker_venue != wanted_venue:
+                    continue
+
+            matched.append(w)
+        return matched
