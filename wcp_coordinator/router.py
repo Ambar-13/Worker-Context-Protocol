@@ -169,5 +169,52 @@ def make_app(
             ],
         }
 
+    @router.get("/federation/audit_chain/{claim_id}")
+    def federation_audit_chain(
+        claim_id: str, db: Session = Depends(_get_session)
+    ) -> dict[str, Any]:
+        """Federation endpoint: return this coordinator's audit chain
+        segment for the given claim_id. Peer coordinators with an
+        `audit_chain_export` trust class consume this to verify a
+        federated task's completion.
+
+        Production deployments authorize this endpoint via the peer
+        trust anchor (signed challenge / mutual TLS / pre-shared
+        bearer). The reference coordinator returns the segment to any
+        caller; deployments wanting authorization wrap this endpoint
+        in their own gateway.
+        """
+        from .models import WcpAudit
+
+        rows = list(
+            db.query(WcpAudit)
+            .filter(WcpAudit.claim_id == claim_id)
+            .order_by(WcpAudit.timestamp.asc())
+        )
+        entries = []
+        for r in rows:
+            ts = r.timestamp
+            ts_iso = (
+                ts.astimezone(__import__("datetime").timezone.utc)
+                .replace(tzinfo=None).isoformat()
+                if getattr(ts, "tzinfo", None) is not None
+                else ts.isoformat()
+            )
+            entries.append(
+                {
+                    "event_type": r.event_type,
+                    "actor_did": r.actor_did,
+                    "timestamp": ts_iso,
+                    "payload_json": r.payload_json,
+                    "payload_hash": r.payload_hash,
+                    "prev_hash": r.prev_hash,
+                    "this_hash": r.this_hash,
+                    "claim_id": r.claim_id,
+                    "task_id": r.task_id,
+                    "sig": r.sig,
+                }
+            )
+        return {"claim_id": claim_id, "entries": entries}
+
     app.include_router(router)
     return app

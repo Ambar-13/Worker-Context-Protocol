@@ -132,12 +132,38 @@ The actual demo logic lives in `demo.py`. It:
   (`federation_capability_advertised`, `federation_task_forwarded`,
   `federation_audit_chain_imported`)
 
+### Cross-process variant
+
+`demo_cross_process.py` exercises the same federation primitives
+against two coordinators in separate processes. Bring up two
+coordinators on different ports (`docker compose up -d` or two manual
+`uvicorn wcp_dev_runtime.coordinator_dev_app:app` invocations with
+different `WCP_HTTP_PORT` and `WCP_DATABASE_URL` values), then:
+
+```bash
+python examples/federation-demo/demo_cross_process.py \
+    --alpha-ws ws://localhost:9000/wcp/ws \
+    --beta-ws  ws://localhost:9001/wcp/ws
+```
+
+The script uses `WsForwarder` (federation/transport.py) to forward a
+`tasks/post` over WebSocket and `HttpChainFetcher` to pull the peer's
+audit chain segment over HTTP from the new `/wcp/federation/audit_chain/
+<claim_id>` endpoint. Exit 0 = PASS.
+
 ### Docker variant
 
-`docker-compose.yml` describes a two-container variant with separate
-Postgres backends. The in-process `demo.py` is the canonical artifact
-for the paper's Section 6 claim; the Docker variant is supplementary
-and exercises the same federation primitives over real HTTP transport.
+`docker-compose.yml` brings up coord-alpha, coord-beta, plus per-coord
+Postgres + Redis backing services. Each coordinator reads
+`WCP_FEDERATION_PEER_URL` on startup and logs a federation banner.
+Once both containers are healthy, run `demo_cross_process.py` against
+them as above.
+
+The in-process `demo.py` remains the canonical artifact for the paper's
+Section 6 claim because it is deterministic and runs in under a second
+without a container runtime. The cross-process and Docker variants are
+the proof that the WebSocket and HTTP transports work end-to-end across
+real process boundaries.
 
 ## What this proves
 

@@ -26,6 +26,7 @@ from .trust_anchor import TrustAnchor, TrustAnchorStore
 from .router import FederationRouter
 from .capability_sync import CapabilitySync
 from .audit_export import AuditExport
+from .transport import WsForwarder, HttpChainFetcher
 
 __all__ = [
     "TrustAnchor",
@@ -33,4 +34,6 @@ __all__ = [
     "FederationRouter",
     "CapabilitySync",
     "AuditExport",
+    "WsForwarder",
+    "HttpChainFetcher",
 ]
