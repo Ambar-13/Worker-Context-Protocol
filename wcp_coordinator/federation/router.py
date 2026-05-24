@@ -22,6 +22,14 @@ from .trust_anchor import TrustAnchor, TrustAnchorStore
 Forwarder = Callable[[str, str, dict[str, Any]], Awaitable[dict[str, Any]]]
 
 
+class PeerTrustAnchorRevoked(Exception):
+    """Raised by FederationRouter.forward_task when the supplied peer
+    anchor is no longer present in the trust store (the operator
+    revoked it via TrustAnchorStore.remove since the caller picked
+    the peer). The error name is part of the federation contract so
+    operator runbooks can match on it."""
+
+
 class FederationRouter:
     def __init__(
         self,
@@ -77,6 +85,15 @@ class FederationRouter:
             raise RuntimeError(
                 "FederationRouter has no forwarder configured; "
                 "set one at construction or via .with_forwarder()"
+            )
+        # If the operator revoked the peer's trust anchor since the
+        # caller picked it, refuse the forward with a defined error.
+        # Without this check we would issue cross-coordinator calls
+        # under a trust relationship the operator just torn down.
+        if self._anchors.get(peer.peer_coordinator_did) is None:
+            raise PeerTrustAnchorRevoked(
+                f"trust anchor for peer {peer.peer_coordinator_did} "
+                f"has been revoked since pick_peer; refusing to forward"
             )
         params: dict[str, Any] = {"task": task, "expiry": expiry}
         if informational:

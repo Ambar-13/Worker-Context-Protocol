@@ -86,6 +86,19 @@ The peer coordinator authenticates the federation origin and proceeds with the s
 
 Federation peers expose `/wcp/audit/<task_id>` (HTTPS GET, signed JSON response) returning the audit chain entries for a federated task. The querying coordinator verifies signatures against the peer's coordinator DID. The audit chain entries (especially the terminal `task_completed`, `task_voided`, or `task_aborted`) are the canonical record of what happened on the peer; any settlement layer that needs the cross-coordinator completion signal pulls it from here.
 
+### 5.1 Federation-layer audit-chain entry kinds
+
+The federation layer adds the following audit-chain entry kinds. They are emitted on the LOCAL coordinator's chain and are observable through `audit/observe`:
+
+| Entry kind | Emitted when |
+|---|---|
+| `federation_capability_advertised` | A peer worker becomes visible in the local subscription stream under `capability_discovery` trust class |
+| `federation_task_forwarded` | A `tasks/post` call crosses the federation boundary outbound (status=accepted or rejected) |
+| `federation_audit_chain_imported` | A peer audit chain segment was fetched and verified locally under `audit_chain_export` trust class |
+| `federation_trust_anchor_revoked` | The operator invoked `TrustAnchorStore.remove(peer_did)`; payload carries `peer_coordinator_did`, `revoked_at`, `reason` |
+
+Revocation is recorded as `federation_trust_anchor_revoked` on the audit chain; mid-session anchor invalidation is the operator's call. A `FederationRouter.forward_task` invocation against a peer whose anchor was revoked since the caller picked it raises `PeerTrustAnchorRevoked` rather than issuing the cross-coordinator call under a torn-down trust relationship.
+
 ## 6. Reputation portability across coordinators
 
 A worker's reputation is **single-DID** by spec/1.0-rc1 Section 7.1. Two coordinators that federate on `reputation_query` agree to:

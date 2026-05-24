@@ -71,7 +71,7 @@ async with agent:
 
 ## What stays the same
 
-- Wire protocol (the 8 RPCs, `acceptance_attestation` signature, audit chain).
+- Wire protocol (the ten RPCs, `acceptance_attestation` signature, audit chain).
 - Typed objects in `wcp_sdk.types` (CapabilityDescriptor, TaskDescriptor, AttestationEvidence).
 - `wcp_sdk.canonical` (canonical JSON, SHA-256).
 - `wcp_sdk.identity` (WorkerIdentity, AgentIdentity).

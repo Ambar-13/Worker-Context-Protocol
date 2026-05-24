@@ -28,3 +28,4 @@ wcp_coordinator_dev.db
 .federation-demo-*.db
 /tmp/coord-alpha.db
 /tmp/coord-beta.db
+.federation-n3-*.db

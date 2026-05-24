@@ -1,6 +1,6 @@
 # Quickstart: Run Your Own WCP Coordinator
 
-A coordinator implements the nine WCP RPCs and operates a marketplace.
+A coordinator implements the ten WCP RPCs (eight task-lifecycle + two administrative), holds the WebSocket sessions, runs the matching engine and the attestation verifier, and emits signed entries into the audit chain on every state transition.
 
 ## Option 1: Local Docker Compose
 

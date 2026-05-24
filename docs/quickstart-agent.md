@@ -57,7 +57,7 @@ async with agent:
             # feed back into next turn
 ```
 
-The same flow with OpenAI is at `integrations/openai/`; Gemini at `integrations/gemini/`; LangChain at `integrations/langchain/`. Each integration ships worked examples for at least two of the six reference domains.
+The same flow with OpenAI is at `integrations/openai/`; Gemini at `integrations/gemini/`; LangChain at `integrations/langchain/`. Each integration ships worked examples for at least two of the seven reference domains.
 
 ## 4. Subscribe to capabilities
 
@@ -86,4 +86,4 @@ Settlement, escrow, dispute, and refund were removed from the protocol at v0.955
 
 - `docs/llm-integration.md`: detailed worked examples across multiple LLM providers.
 - `docs/quickstart-coordinator.md`: run your own coordinator.
-- The six reference agents at `examples/agents/` are full end-to-end demonstrations across institutionally distinct domains.
+- The seven reference agents at `examples/agents/` are full end-to-end demonstrations across institutionally distinct domains.

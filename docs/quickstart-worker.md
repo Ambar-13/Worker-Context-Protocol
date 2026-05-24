@@ -94,4 +94,4 @@ The same flow works for the 13 other domains. Run `wcp init worker --help` for t
 - See `docs/quickstart-agent.md` for the agent side.
 - See `docs/quickstart-coordinator.md` to deploy a coordinator.
 - See `docs/llm-integration.md` to drive task posting from a Claude / GPT / Gemini agent.
-- See the six reference agents at `examples/agents/` for end-to-end demonstrations across institutionally distinct domains.
+- See the seven reference agents at `examples/agents/` for end-to-end demonstrations across institutionally distinct domains.

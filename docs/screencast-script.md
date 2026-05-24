@@ -30,9 +30,9 @@ Terminal 1: `wcp dev` (the coordinator boots; the worker connects)
 Terminal 2: `cd examples/agents/industrial-maintenance && python agent.py`
 Browser: open `http://localhost:8765`, the inspector now shows the coordinator's audit chain tail with the new task.
 
-### 02:45 - 03:30 Six domains
-Cut to a screen displaying the six reference agents (table from the README).
-Point at each: "Same eight RPCs. Different descriptor payloads. The verifier never branches on worker class."
+### 02:45 - 03:30 Seven domains
+Cut to a screen displaying the seven reference agents (table from the README).
+Point at each: "Same ten RPCs. Different descriptor payloads. The verifier never branches on worker class."
 
 ### 03:30 - 04:15 LLM integration
 Show `docs/llm-integration.md` opened to the Anthropic example.

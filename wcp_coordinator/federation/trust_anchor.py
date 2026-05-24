@@ -128,11 +128,18 @@ class TrustAnchorStore:
     """In-memory anchor store keyed by peer_coordinator_did.
 
     Production deployments swap this for a database-backed store; the
-    interface (add, get, lookup_for_url, anchors_for_class) stays the same.
+    interface (add, get, remove, all, anchors_for_class) stays the same.
+
+    An optional `audit` (AuditChain) may be passed at construction; if
+    present, `remove` will emit a `federation_trust_anchor_revoked`
+    entry on the local chain on every successful removal. Without it
+    `remove` is silent (callers that want explicit auditing can call
+    the emit_revocation_audit helper themselves).
     """
 
-    def __init__(self) -> None:
+    def __init__(self, audit: "Any" = None) -> None:
         self._by_did: dict[str, TrustAnchor] = {}
+        self._audit = audit
 
     def add(self, anchor: TrustAnchor) -> None:
         if not anchor.verify_signature():
@@ -151,3 +158,30 @@ class TrustAnchorStore:
 
     def anchors_for_class(self, trust_class: str) -> list[TrustAnchor]:
         return [a for a in self._by_did.values() if a.allows(trust_class)]
+
+    def remove(
+        self, peer_did: str, *, reason: str = ""
+    ) -> Optional[TrustAnchor]:
+        """Revoke the trust anchor for `peer_did`.
+
+        Returns the removed anchor, or None if no anchor was present
+        (idempotent on absent peer). If the store was constructed with
+        an `audit` chain, emits a `federation_trust_anchor_revoked`
+        entry naming the peer DID, the revocation timestamp, and the
+        operator-supplied reason string.
+        """
+        removed = self._by_did.pop(peer_did, None)
+        if removed is None:
+            return None
+        if self._audit is not None:
+            import time as _time
+            self._audit.append(
+                event_type="federation_trust_anchor_revoked",
+                actor_did=peer_did,
+                payload={
+                    "peer_coordinator_did": peer_did,
+                    "revoked_at": _time.time(),
+                    "reason": reason,
+                },
+            )
+        return removed

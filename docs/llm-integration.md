@@ -112,7 +112,7 @@ async with agent:
 
 ## The two-domain rotation across integrations
 
-Each integration's README names two of the six reference-agent domains for its worked example. The full corpus across the eight integrations cycles through all six domains:
+Each integration's README names two of the seven reference-agent domains for its worked example. The full corpus across the eight integrations cycles through all seven domains:
 
 | Integration | Worked-example domains |
 |---|---|
