@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"golang.org/x/crypto/curve25519"
 )
 
 // base58Alphabet is base58btc per the Multibase RFC; the standard encoding
@@ -49,10 +48,8 @@ func base58Encode(b []byte) string {
 		out[i] = '1'
 	}
 	copy(out[leading:], digits)
+	_ = n // historical: avoids a compiler complaint on very old Go releases.
 	return string(out)
-	// Avoid unused import warnings on platforms where curve25519 is referenced.
-	_ = curve25519.PointSize
-	_ = n
 }
 
 // Identity carries an Ed25519 keypair and the did:wcp identifier.

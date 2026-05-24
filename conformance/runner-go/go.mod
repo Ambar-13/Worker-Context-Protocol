@@ -1,4 +1,4 @@
-module github.com/wcp-spec/wcp-go
+module github.com/wcp-spec/wcp-conformance-go
 
 go 1.22
 
