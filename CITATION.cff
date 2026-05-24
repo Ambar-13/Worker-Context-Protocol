@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Worker Context Protocol for Mixed Workforces"
+version: "0.955"
+authors:
+  - family-names: Ambar
+    affiliation: "National University of Singapore"
+year: 2026
+doi: "10.5281/zenodo.20367519"
+url: "https://doi.org/10.5281/zenodo.20367519"
+repository-code: "https://github.com/Ambar-13/Worker-Context-Protocol"
+license: "Apache-2.0"
+type: software
+notes: "Submitted to Communications of the ACM (Research and Advances), under review."

@@ -40,7 +40,7 @@ After a fix is available, we coordinate disclosure with the reporter. Default di
 -----END PGP PUBLIC KEY BLOCK-----
 ```
 
-INTEGRATION-GAP: the PGP key has not yet been generated and published. v0.2 readers should fall back to GitHub Security Advisories.
+The PGP key block above is a placeholder; the key has not yet been generated. Until it is, prefer GitHub Security Advisories for sensitive reports.
 
 ## Threat model
 
@@ -62,8 +62,8 @@ See `spec/threat-model.md` for the STRIDE analysis per RPC and per trust boundar
 
 ## Bug bounty
 
-Pre-v1.0 final, there is no formal bug bounty. We acknowledge reporters in `CHANGELOG.md` with their consent. Post-v1.0 final, the steward MAY operate a bounty program.
+There is no formal bug bounty pre-v1.0 final. Reporters are acknowledged in `CHANGELOG.md` with their consent. The post-v1.0 steward may operate a bounty program.
 
-## Anti-trust note
+## Vendor neutrality
 
-WCP is a vendor-neutral protocol. Security reports are evaluated on technical merit regardless of the reporter's affiliation or relationship to Rentably or the steward.
+WCP is a vendor-neutral protocol. Security reports are evaluated on technical merit, regardless of the reporter's affiliation or relationship to Rentably, the steward, or any reference implementer.
