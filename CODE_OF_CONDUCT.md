@@ -36,7 +36,7 @@ This Code of Conduct applies within all community spaces (GitHub repos, discussi
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the Technical Steering Committee at conduct@wcp-spec.org (or to security@rentably.ai pre-v1.0 final). All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the Technical Steering Committee at conduct@wcp-spec.org (or to ambar13@u.nus.edu pre-v1.0 final). All complaints will be reviewed and investigated promptly and fairly.
 
 The TSC will respect the privacy and security of the reporter of any incident.
 

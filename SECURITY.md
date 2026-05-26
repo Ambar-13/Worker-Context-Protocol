@@ -14,7 +14,7 @@ Post v1.0 final, an LTS policy will be published on the wcp-spec.org domain.
 
 We accept reports via:
 
-- Email: `security@rentably.ai` (pre-v1.0 final; PGP key fingerprint published below)
+- Email: `ambar13@u.nus.edu` (pre-v1.0 final; PGP key fingerprint published below)
 - GitHub Security Advisories: https://github.com/Ambar-13/Worker-Context-Protocol/security/advisories/new
 
 **Do not** report security issues via public GitHub Issues, GitHub Discussions, or social media.
@@ -35,7 +35,7 @@ After a fix is available, we coordinate disclosure with the reporter. Default di
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 
-[PRINCIPAL TO PROVIDE: PGP public key for security@rentably.ai]
+[PRINCIPAL TO PROVIDE: PGP public key for ambar13@u.nus.edu]
 
 -----END PGP PUBLIC KEY BLOCK-----
 ```

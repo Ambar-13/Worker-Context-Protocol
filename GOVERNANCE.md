@@ -28,4 +28,4 @@ Month 12 (v1.0): donation effected; TSC at 7 members including a steward represe
 ## Contact
 
 Issues: https://github.com/Ambar-13/Worker-Context-Protocol/issues
-Security: security@rentably.ai (PGP key in repo root)
+Security: ambar13@u.nus.edu (PGP key in repo root)
